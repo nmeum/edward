@@ -24,8 +24,9 @@
 ;;> the edit buffer.
 
 (define parse-nth
-  (parse-map-substring
-    (parse-repeat+ (parse-char char-set:digit))
+  (parse-map
+    (parse-string
+      (parse-repeat+ (parse-char char-set:digit)))
     (lambda (str)
       (cons 'nth-line (string->number str)))))
 
@@ -53,14 +54,13 @@
 ;; TODO: Terminating / character is optional
 (define parse-bre
   (parse-map
-    (parse-between
-      #\/
-      (parse-repeat (parse-or parse-esc (parse-not-char #\\)))
-      #\/)
-    (lambda (lst)
-      (cons
-        'regex-forward
-        (list->string lst)))))
+    (parse-string
+      (parse-between
+        #\/
+        (parse-repeat (parse-or parse-esc (parse-not-char #\\)))
+        #\/))
+    (lambda (str)
+      (cons 'regex-forward str))))
 
 (define parse-unknown
   (lambda (r s i fk)

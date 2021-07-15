@@ -1,3 +1,9 @@
+(define (parse-string parser)
+  (parse-map
+    parser
+    (lambda (lst)
+      (list->string lst))))
+
 (define (parse-between lhs parser rhs)
   (parse-map
     (parse-seq
