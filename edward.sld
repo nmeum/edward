@@ -1,6 +1,7 @@
 (define-library (edward)
-  (import (scheme base) (srfi 14) (chibi parse))
+  (import (scheme base) (scheme file) (scheme char) (srfi 14) (scheme write))
 
-  (export parse-addr)
+  (export call-with-parse parse-stream-end? string->parse-stream parse-addr)
 
-  (include "lib/addr.scm"))
+  (include "lib/parse.scm"
+           "lib/addr.scm"))
