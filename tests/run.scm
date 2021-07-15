@@ -40,3 +40,8 @@
   (test-parse '(marked-line . "foo") parse-addr "'foo")
   (test-parse-error "unknown address format" parse-addr "'FOO")
   (test-parse-error "unknown address format" parse-addr "'F23"))
+
+(test-group "parse-bre"
+  (test-parse "foo" parse-addr "/foo/")
+  (test-parse "" parse-addr "//")
+  (test-parse "foo/bar" parse-addr "/foo\\/bar/"))

@@ -44,6 +44,22 @@
       (cons 'marked-line
             (list->string (cadr lst))))))
 
+;;> A BRE enclosed by <slash> characters ('/') shall address the first
+;;> line found by searching forwards from the line following the
+;;> current line toward the end of the edit buffer and stopping at the
+;;> first line for which the line excluding the terminating <newline>
+;;> matches the BRE.
+
+;; TODO: Terminating / character is optional
+(define parse-bre
+  (parse-map
+    (parse-between
+      #\/
+      (parse-repeat (parse-or parse-esc (parse-not-char #\\)))
+      #\/)
+    (lambda (lst)
+      (list->string lst))))
+
 (define parse-unknown
   (lambda (r s i fk)
     (fk s i "unknown address format")))
@@ -54,4 +70,5 @@
     parse-last
     parse-nth
     parse-mark
+    parse-bre
     parse-unknown))
