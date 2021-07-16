@@ -171,14 +171,19 @@
 ;;>  (4) ;      → . ; $
 ;;>  (5) ; addr → . ; addr
 ;;>  (6) addr ; → addr ; addr
+;;>
+;;> Any <blank> characters included between addresses, address separators,
+;;> or address offsets shall be ignored.
 
 (define parse-addr-range
   (parse-map
     (parse-seq
       (parse-optional parse-addr)
+      (parse-ignore parse-blanks)
       (parse-or
         (parse-char #\,)
         (parse-char #\;))
+      (parse-ignore parse-blanks)
       (parse-optional parse-addr))
 
     (match-lambda

@@ -122,4 +122,18 @@
       (make-addr '(nth-line . 9000))
       #\,
       (make-addr '(nth-line . 9001)))
-    parse-addr-range "9000,9001"))
+    parse-addr-range "9000,9001")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 23))
+      #\,
+      (make-addr '(nth-line . 42)))
+    parse-addr-range "23    ,   42")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 23) '(23 42))
+      #\,
+      (make-addr '(nth-line . 42) '(42 23)))
+    parse-addr-range "23  +23 +42,  42 +42   +23"))
