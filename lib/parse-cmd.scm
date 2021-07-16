@@ -18,4 +18,5 @@
 (define parse-cmd
   ;; TODO: Autogenerate from list created by define-command.
   (parse-or
-    parse-append))
+    parse-append
+    (parse-fail "unknown command")))
