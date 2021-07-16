@@ -1,19 +1,23 @@
+(define command-parsers '())
+(define (register-command proc)
+  (set! command-parsers (cons proc command-parsers)))
+
 (define-syntax define-command
   (syntax-rules ()
-    ((define-command (NAME HANDLER) BODY ...)
-      (define NAME
-       (parse-map
-         BODY ...
-         (lambda (args) (cons HANDLER args)))))))
+    ((define-command (DESC HANDLER) BODY ...)
+      (register-command
+        (parse-map
+          BODY ...
+          (lambda (args) (cons HANDLER args)))))))
 
-(define-command (parse-append handle-append)
+(define-command ("Append Command" handle-append)
   (parse-map
     (parse-seq
       (parse-default parse-addr (make-addr '(current-line)))
       (parse-char #\a))
     init))
 
-(define-command (parse-write handle-write)
+(define-command ("Write Command" handle-write)
   (parse-seq
     (parse-default parse-addr-range
                    (list
@@ -27,8 +31,4 @@
 ;;;;
 
 (define parse-cmd
-  ;; TODO: Autogenerate from list created by define-command.
-  (parse-or
-    parse-append
-    parse-write
-    (parse-fail "unknown command")))
+  (apply parse-or command-parsers))
