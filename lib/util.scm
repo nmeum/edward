@@ -1,3 +1,7 @@
+(define (parse-fail msg)
+  (lambda (r s i fk)
+    (fk s i msg)))
+
 (define (parse-string parser)
   (parse-map
     parser

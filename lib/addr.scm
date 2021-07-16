@@ -62,10 +62,6 @@
     (lambda (str)
       (cons 'regex-forward str))))
 
-(define parse-unknown
-  (lambda (r s i fk)
-    (fk s i "unknown address format")))
-
 (define parse-addr
   (parse-or
     parse-current
@@ -73,4 +69,4 @@
     parse-nth
     parse-mark
     parse-bre
-    parse-unknown))
+    (parse-fail "unknown address format")))
