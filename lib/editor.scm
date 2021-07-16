@@ -20,34 +20,29 @@
                                (cons l (read-all)))))))
         (%make-text-editor filename (read-all) 0 0)))))
 
-(define (add-offset editor off)
-  (let* ((total-off (apply + off))
-         (buffer (text-editor-buffer editor))
-         (nline (+ total-off (text-editor-line editor))))
+(define (%goto editor off line)
+  (let* ((buffer (text-editor-buffer editor))
+         (total-off (apply + off))
+         (nline (+ total-off line (text-editor-line editor))))
     (if (or
           (> 0 nline)
           (> nline (length buffer)))
       (error "invalid final address value")
       (text-editor-line-set! editor nline))))
 
-(define (goto-line editor line)
-  (if (or
-        (> 0 line)
-        (> line (length (text-editor-buffer editor))))
-    (error "invalid line value")
-    (text-editor-line-set! editor line)))
+(define goto
+  (case-lambda
+    ((editor off)
+     (%goto editor off (text-editor-line editor)))
+    ((editor off line)
+     (%goto editor off line))))
 
 (define goto-addr
   (match-lambda*
     ((e ((current-line) off))
-     (add-offset e off))
+     (goto e off))
     ((e ((last-line) off))
-     ;; TODO: Need to reset on error
-     ;;
-     ;; Doing this separatly doesn't take into account that the
-     ;; intermediate value maybe out of bounds but not the final one.
-     (goto-line e (length (text-editor-buffer e)))
-     (add-offset e off))))
+     (goto e off (length (text-editor-buffer e))))))
 
 (define (append-text editor text)
   (let ((buf  (text-editor-buffer editor))
