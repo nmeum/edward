@@ -15,7 +15,7 @@
     string->number))
 
 (define parse-blanks
-  (parse-repeat+ (parse-char char-set:blank)))
+  (parse-repeat (parse-char char-set:blank)))
 
 (define (parse-between lhs parser rhs)
   (parse-map

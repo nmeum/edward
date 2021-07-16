@@ -86,7 +86,7 @@
 ;;> number. A <plus-sign> or <hyphen-minus> character not followed by a
 ;;> decimal number shall address the current line plus or minus 1.
 
-(define parse-relative
+(define parse-offset
   (parse-map
     (parse-seq
       (parse-or
@@ -97,11 +97,18 @@
       (let* ((fst (car lst))
              (snd (cadr lst))
              (num (if snd snd 1)))
-        (cons 'relative
-              (if (eqv? fst #\-)
-                (- 0 num) num))))))
+        (if (eqv? fst #\-)
+          (- 0 num) num)))))
 
-(define parse-addr
+(define parse-relative
+  (parse-map
+    parse-offset
+    (lambda (num)
+      (cons 'relative num))))
+
+;; Utility procedure for parsing addresses without offset.
+
+(define %parse-addr
   (parse-or
     parse-current
     parse-last
@@ -111,3 +118,30 @@
     parse-backward-bre
     parse-relative
     (parse-fail "unknown address format")))
+
+;;> Addresses can be followed by zero or more address offsets,
+;;> optionally <blank>-separated. Address offsets are constructed
+;;> as follows:
+;;>
+;;>  * A <plus-sign> or <hyphen-minus> character followed by a decimal
+;;>    number shall add or subtract, respectively, the indicated number of
+;;>    lines to or from the address. A <plus-sign> or <hyphen-minus
+;;>    character not followed by a decimal number shall add or subtract 1
+;;>    to or from the address.
+;;>
+;;>  * A decimal number shall add the indicated number of lines to the address.
+
+(define parse-addr-offsets
+  (parse-repeat
+    (parse-map
+      (parse-seq
+        (parse-ignore parse-blanks)
+        (parse-or
+          parse-offset
+          parse-digits))
+      car)))
+
+(define parse-addr
+  (parse-seq
+    %parse-addr
+    parse-addr-offsets))

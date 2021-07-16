@@ -32,29 +32,37 @@
 (test-parse 'last-line     parse-addr "$")
 
 (test-group "parse nth line"
-  (test-parse '(nth-line . 42) parse-addr "42")
+  (test-parse '((nth-line . 42) ()) parse-addr "42")
   (test-parse-error "unknown address format" parse-addr "4x2")
   (test-parse-error "unknown address format" parse-addr "42."))
 
 (test-group "parse mark"
-  (test-parse '(marked-line . "foo") parse-addr "'foo")
+  (test-parse '((marked-line . "foo") ()) parse-addr "'foo")
   (test-parse-error "unknown address format" parse-addr "'FOO")
   (test-parse-error "unknown address format" parse-addr "'F23"))
 
 (test-group "parse-forward-bre"
-  (test-parse '(regex-forward . "foo") parse-addr "/foo/")
-  (test-parse '(regex-forward . "") parse-addr "//")
-  (test-parse '(regex-forward . "foo/bar") parse-addr "/foo\\/bar/")
-  (test-parse '(regex-forward . "f.*") parse-addr "/f.*")
-  (test-parse '(regex-forward . "f??") parse-addr "/f??/"))
+  (test-parse '((regex-forward . "foo") ()) parse-addr "/foo/")
+  (test-parse '((regex-forward . "") ()) parse-addr "//")
+  (test-parse '((regex-forward . "foo/bar") ()) parse-addr "/foo\\/bar/")
+  (test-parse '((regex-forward . "f.*") ()) parse-addr "/f.*")
+  (test-parse '((regex-forward . "f??") ()) parse-addr "/f??/"))
 
 (test-group "parse-backward-bre"
-  (test-parse '(regex-backward . "foo") parse-addr "?foo?")
-  (test-parse '(regex-backward . "") parse-addr "??")
-  (test-parse '(regex-backward . "foo?bar") parse-addr "?foo\\?bar?"))
+  (test-parse '((regex-backward . "foo") ()) parse-addr "?foo?")
+  (test-parse '((regex-backward . "") ()) parse-addr "??")
+  (test-parse '((regex-backward . "foo?bar") ()) parse-addr "?foo\\?bar?"))
 
 (test-group "parse-relative"
-  (test-parse '(relative . 5)   parse-addr "+5")
-  (test-parse '(relative . -42) parse-addr "-42")
-  (test-parse '(relative . 1)   parse-addr "+")
-  (test-parse '(relative . -1)  parse-addr "-"))
+  (test-parse '((relative . 5) ())   parse-addr "+5")
+  (test-parse '((relative . -42) ()) parse-addr "-42")
+  (test-parse '((relative . 1) ())   parse-addr "+")
+  (test-parse '((relative . -1) ())  parse-addr "-"))
+
+(test-group "parse offsets"
+  (test-parse '((nth-line . 2342) (1)) parse-addr "2342 +1")
+  (test-parse '((relative . 5) (1 2 3)) parse-addr "+5 1 2 3")
+  (test-parse '((marked-line . "foobar") (23 42)) parse-addr "'foobar 23    42")
+  (test-parse '((regex-forward . "foo") (-1 2 -3)) parse-addr "/foo/ -1 2 -3")
+  (test-parse '((regex-backward . "bar") (+2342)) parse-addr "?bar?+2342")
+  (test-parse '((nth-line . 23) (-5 +5)) parse-addr "23-5+5"))
