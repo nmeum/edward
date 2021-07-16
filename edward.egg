@@ -1,7 +1,7 @@
 ((author "Sören Tempel")
  (synopsis "Savage implementation of the ed(1) text editor")
  (license "GPLv3")
- (dependencies r7rs srfi-14 matchable)
+ (dependencies r7rs srfi-1 srfi-14 matchable)
  (test-dependencies test)
  (components
    (extension edward
