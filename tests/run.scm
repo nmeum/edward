@@ -28,8 +28,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test-parse 'current-line  parse-addr ".")
-(test-parse 'last-line     parse-addr "$")
+(test-parse '(current-line) parse-addr ".")
+(test-parse '(last-line)    parse-addr "$")
 
 (test-group "parse nth line"
   (test-parse '((nth-line . 42) ()) parse-addr "42")
@@ -66,3 +66,60 @@
   (test-parse '((regex-forward . "foo") (-1 2 -3)) parse-addr "/foo/ -1 2 -3")
   (test-parse '((regex-backward . "bar") (+2342)) parse-addr "?bar?+2342")
   (test-parse '((nth-line . 23) (-5 +5)) parse-addr "23-5+5"))
+
+(test-group "address ranges"
+  (test-parse
+    (list
+      (make-addr '(nth-line . 1))
+      #\,
+      (make-addr '(last-line)))
+    parse-addr-range ",")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 1))
+      #\,
+      (make-addr '(nth-line . 2342)))
+    parse-addr-range ",2342")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 4223))
+      #\,
+      (make-addr '(nth-line . 4223)))
+    parse-addr-range "4223,")
+
+  (test-parse
+    (list
+      (make-addr '(current-line))
+      #\;
+      (make-addr '(last-line)))
+    parse-addr-range ";")
+
+  (test-parse
+    (list
+      (make-addr '(current-line))
+      #\;
+      (make-addr '(nth-line . 9001)))
+    parse-addr-range ";9001")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 42))
+      #\;
+      (make-addr '(nth-line . 42)))
+    parse-addr-range "42;")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 2342))
+      #\;
+      (make-addr '(nth-line . 4223)))
+    parse-addr-range "2342;4223")
+
+  (test-parse
+    (list
+      (make-addr '(nth-line . 9000))
+      #\,
+      (make-addr '(nth-line . 9001)))
+    parse-addr-range "9000,9001"))

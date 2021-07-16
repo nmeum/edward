@@ -1,5 +1,15 @@
 ;;> \section{Addresses in ed}
 
+;;> An address is a list consisting of an address specification and a
+;;> (possibly empty) list of offsets which should be applied to this
+;;> address specification. An address specification is a pair consisting
+;;> of a symbol and an optional argument.
+
+(define make-addr
+  (case-lambda
+    ((addr) (list addr '()))
+    ((addr off) (list addr off))))
+
 ;; The text in this section is aligned with the `Addresses in ed`
 ;; section in the POSIX-1.2008 specification of `ed(1)`.
 
@@ -9,7 +19,7 @@
   (parse-map
     (parse-char #\.)
     (lambda (ch)
-      'current-line)))
+      '(current-line))))
 
 ;;> The <dollar-sign> character ('$') shall address the last line of
 ;;> the edit buffer.
@@ -18,7 +28,7 @@
   (parse-map
     (parse-char #\$)
     (lambda (ch)
-      'last-line)))
+      '(last-line))))
 
 ;;> The positive decimal number \var{n} shall address the nth line of
 ;;> the edit buffer.
@@ -145,3 +155,46 @@
   (parse-seq
     %parse-addr
     parse-addr-offsets))
+
+;;> Addresses shall be separated from each other by a <comma> (',') or
+;;> <semicolon> character (';'). In the case of a <semicolon> separator,
+;;> the current line ('.') shall be set to the first address, and only then
+;;> will the second address be calculated.
+;;>
+;;> Addresses can be omitted on either side of the <comma> or <semicolon>
+;;> separator, in which case the resulting address pairs shall be as
+;;> follows:
+;;>
+;;>  (1) ,      → 1 , $
+;;>  (2) , addr → 1 , addr
+;;>  (3) addr , → addr , addr
+;;>  (4) ;      → . ; $
+;;>  (5) ; addr → . ; addr
+;;>  (6) addr ; → addr ; addr
+
+(define parse-addr-range
+  (parse-map
+    (parse-seq
+      (parse-optional parse-addr)
+      (parse-or
+        (parse-char #\,)
+        (parse-char #\;))
+      (parse-optional parse-addr))
+
+    (match-lambda
+      ((#f #\, #f)
+       (list (make-addr '(nth-line . 1))
+             #\,
+             (make-addr '(last-line))))
+      ((#f #\, addr)
+       (list (make-addr '(nth-line . 1)) #\, addr))
+      ((addr #\, #f)
+       (list addr #\, addr))
+      ((#f #\; #f)
+       (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
+      ((#f #\; addr)
+       (list (make-addr '(current-line)) #\; addr))
+      ((addr #\; #f)
+       (list addr #\; addr))
+      ((addr1 sep addr2)
+       (list addr1 sep addr2)))))
