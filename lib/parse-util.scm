@@ -10,10 +10,7 @@
 
 (define (parse-between lhs parser rhs)
   (parse-map
-    (parse-seq
-      (parse-char lhs)
-      parser
-      (parse-char rhs))
+    (parse-seq lhs parser rhs)
     cadr))
 
 (define parse-esc

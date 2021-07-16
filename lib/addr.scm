@@ -47,18 +47,20 @@
 
 ;;> A BRE enclosed by <slash> characters ('/') shall address the first
 ;;> line found by searching forwards from the line following the
-;;> current line toward the end of the edit buffer and stopping at the
-;;> first line for which the line excluding the terminating <newline>
-;;> matches the BRE.
+;;> current line toward the end of the edit buffer. The second <slash>
+;;> can be omitted at the end of a command line. Within the BRE, a
+;;> <backslash>-<slash> pair ("\/") shall represent a literal <slash>
+;;> instead of the BRE delimiter.
 
-;; TODO: Terminating / character is optional
 (define parse-bre
   (parse-map
     (parse-string
       (parse-between
-        #\/
-        (parse-repeat (parse-or parse-esc (parse-not-char #\\)))
-        #\/))
+        (parse-char #\/)
+        (parse-repeat (parse-or parse-esc (parse-not-char #\/)))
+        (parse-or
+          (parse-char #\/)
+          parse-end)))
     (lambda (str)
       (cons 'regex-forward str))))
 

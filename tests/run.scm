@@ -44,4 +44,5 @@
 (test-group "parse-bre"
   (test-parse '(regex-forward . "foo") parse-addr "/foo/")
   (test-parse '(regex-forward . "") parse-addr "//")
-  (test-parse '(regex-forward . "foo/bar") parse-addr "/foo\\/bar/"))
+  (test-parse '(regex-forward . "foo/bar") parse-addr "/foo\\/bar/")
+  (test-parse '(regex-forward . "f.*") parse-addr "/f.*"))
