@@ -8,6 +8,7 @@
   (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr parse-addr parse-addr-range)
   (export parse-cmd)
+  (export make-text-editor)
 
   (include "lib/editor.scm"
            "lib/parse.scm"
