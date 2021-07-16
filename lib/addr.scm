@@ -58,7 +58,9 @@
       (parse-repeat (parse-or parse-esc (parse-not-char #\\)))
       #\/)
     (lambda (lst)
-      (list->string lst))))
+      (cons
+        'regex-forward
+        (list->string lst)))))
 
 (define parse-unknown
   (lambda (r s i fk)
