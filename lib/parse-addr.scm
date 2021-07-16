@@ -19,7 +19,7 @@
   (parse-map
     (parse-char #\.)
     (lambda (ch)
-      '(current-line))))
+      (cons 'current-line '()))))
 
 ;;> The <dollar-sign> character ('$') shall address the last line of
 ;;> the edit buffer.
@@ -28,7 +28,7 @@
   (parse-map
     (parse-char #\$)
     (lambda (ch)
-      '(last-line))))
+      (cons 'last-line '()))))
 
 ;;> The positive decimal number \var{n} shall address the nth line of
 ;;> the edit buffer.

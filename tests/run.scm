@@ -28,8 +28,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test-parse '(current-line) parse-addr ".")
-(test-parse '(last-line)    parse-addr "$")
+(test-parse '((current-line) ()) parse-addr ".")
+(test-parse '((last-line) ())    parse-addr "$")
 
 (test-group "parse nth line"
   (test-parse '((nth-line . 42) ()) parse-addr "42")
