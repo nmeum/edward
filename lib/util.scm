@@ -2,7 +2,7 @@
 
 (define (sublist lst start end)
   (if (>= end start)
-    (error "invaldi sublist specification")
+    (error "invalid sublist specification")
     (let ((l (drop lst start)))
       (drop-right l (- (length lst) end)))))
 
