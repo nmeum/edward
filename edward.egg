@@ -10,4 +10,5 @@
                 "edward.sld"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"
-                "./lib/addr.scm"))))
+                "./lib/addr.scm"
+                "./lib/cmd.scm"))))

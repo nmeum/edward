@@ -5,9 +5,11 @@
 
           (scheme write))
 
-  (export call-with-parse parse-stream-end? string->parse-stream)
+  (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr parse-addr parse-addr-range)
+  (export parse-command)
 
   (include "lib/parse.scm"
            "lib/parse-util.scm"
-           "lib/addr.scm"))
+           "lib/addr.scm"
+           "lib/cmd.scm"))
