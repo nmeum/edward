@@ -41,8 +41,14 @@
   (test-parse-error "unknown address format" parse-addr "'FOO")
   (test-parse-error "unknown address format" parse-addr "'F23"))
 
-(test-group "parse-bre"
+(test-group "parse-forward-bre"
   (test-parse '(regex-forward . "foo") parse-addr "/foo/")
   (test-parse '(regex-forward . "") parse-addr "//")
   (test-parse '(regex-forward . "foo/bar") parse-addr "/foo\\/bar/")
-  (test-parse '(regex-forward . "f.*") parse-addr "/f.*"))
+  (test-parse '(regex-forward . "f.*") parse-addr "/f.*")
+  (test-parse '(regex-forward . "f??") parse-addr "/f??/"))
+
+(test-group "parse-backward-bre"
+  (test-parse '(regex-backward . "foo") parse-addr "?foo?")
+  (test-parse '(regex-backward . "") parse-addr "??")
+  (test-parse '(regex-backward . "foo?bar") parse-addr "?foo\\?bar?"))
