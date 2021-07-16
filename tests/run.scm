@@ -52,3 +52,9 @@
   (test-parse '(regex-backward . "foo") parse-addr "?foo?")
   (test-parse '(regex-backward . "") parse-addr "??")
   (test-parse '(regex-backward . "foo?bar") parse-addr "?foo\\?bar?"))
+
+(test-group "parse-relative"
+  (test-parse '(relative . 5)   parse-addr "+5")
+  (test-parse '(relative . -42) parse-addr "-42")
+  (test-parse '(relative . 1)   parse-addr "+")
+  (test-parse '(relative . -1)  parse-addr "-"))

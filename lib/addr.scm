@@ -81,6 +81,26 @@
     (lambda (str)
       (cons 'regex-backward str))))
 
+;;> A <plus-sign> ('+') or <hyphen-minus> character ('-') followed by a
+;;> decimal number shall address the current line plus or minus the
+;;> number. A <plus-sign> or <hyphen-minus> character not followed by a
+;;> decimal number shall address the current line plus or minus 1.
+
+(define parse-relative
+  (parse-map
+    (parse-seq
+      (parse-or
+        (parse-char #\+)
+        (parse-char #\-))
+      (parse-optional parse-digits))
+    (lambda (lst)
+      (let* ((fst (car lst))
+             (snd (cadr lst))
+             (num (if snd snd 1)))
+        (cons 'relative
+              (if (eqv? fst #\-)
+                (- 0 num) num))))))
+
 (define parse-addr
   (parse-or
     parse-current
@@ -89,4 +109,5 @@
     parse-mark
     parse-forward-bre
     parse-backward-bre
+    parse-relative
     (parse-fail "unknown address format")))
