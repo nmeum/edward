@@ -67,10 +67,9 @@
   (let* ((editor (make-text-editor filename))
          (eval-input (lambda (input)
                        (let* ((s (string->parse-stream input))
-                              (r (parse-fully parse-cmd s))
-                              (handler (car r))
-                              (args    (cadr r)))
-                         (handler editor args)))))
+                              (r (parse-fully parse-cmd s)))
+                         (apply (car r)
+                                (cons editor (cdr r)))))))
     (repl ": " eval-input)))
 
 (define (input-mode-read)
@@ -88,3 +87,7 @@
   (let ((text (input-mode-read)))
     (append-text editor text)))
     ;; TODO: Update current line
+
+(define (handle-write editor range filename)
+  (display "range: ") (display range) (newline)
+  (display "filename: ") (display filename) (newline))

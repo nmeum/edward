@@ -4,7 +4,7 @@
       (define NAME
        (parse-map
          BODY ...
-         (lambda (args) (list HANDLER args)))))))
+         (lambda (args) (cons HANDLER args)))))))
 
 (define-command (parse-append handle-append)
   (parse-map
@@ -13,10 +13,22 @@
       (parse-char #\a))
     car))
 
+(define-command (parse-write handle-write)
+  (parse-seq
+    (parse-default parse-addr-range
+                   (list
+                     (make-addr '(nth-line . 1))
+                     #\,
+                     (make-addr '(last-line))))
+    (parse-ignore (parse-char #\w))
+    (parse-ignore parse-blanks)
+    (parse-string (parse-repeat parse-anything))))
+
 ;;;;
 
 (define parse-cmd
   ;; TODO: Autogenerate from list created by define-command.
   (parse-or
     parse-append
+    parse-write
     (parse-fail "unknown command")))
