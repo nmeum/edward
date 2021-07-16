@@ -29,3 +29,4 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (include-relative "parse-addr.scm")
+(include-relative "parse-cmd.scm")
