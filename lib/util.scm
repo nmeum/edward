@@ -1,7 +1,7 @@
 ;; Return sublist with start inclusive and end exclusive.
 
 (define (sublist lst start end)
-  (if (>= end start)
+  (if (>= start end)
     (error "invalid sublist specification")
     (let ((l (drop lst start)))
       (drop-right l (- (length lst) end)))))
