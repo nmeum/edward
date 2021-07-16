@@ -14,6 +14,12 @@
       (parse-repeat+ (parse-char char-set:digit)))
     string->number))
 
+(define (parse-default parser def)
+  (parse-map
+    (parse-optional parser)
+    (lambda (x)
+      (if x x def))))
+
 (define parse-blanks
   (parse-repeat (parse-char char-set:blank)))
 
