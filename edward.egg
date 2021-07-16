@@ -9,6 +9,7 @@
               (source "edward.scm")
               (source-dependencies
                 "edward.sld"
+                "./lib/util.scm"
                 "./lib/editor.scm"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"

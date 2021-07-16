@@ -11,7 +11,7 @@
     (parse-seq
       (parse-default parse-addr (make-addr '(current-line)))
       (parse-char #\a))
-    car))
+    init))
 
 (define-command (parse-write handle-write)
   (parse-seq
