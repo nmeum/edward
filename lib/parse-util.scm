@@ -14,6 +14,9 @@
       (parse-repeat+ (parse-char char-set:digit)))
     string->number))
 
+(define parse-blanks
+  (parse-repeat+ (parse-char char-set:blank)))
+
 (define (parse-between lhs parser rhs)
   (parse-map
     (parse-seq lhs parser rhs)
