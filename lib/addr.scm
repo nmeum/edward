@@ -25,10 +25,9 @@
 
 (define parse-nth
   (parse-map
-    (parse-string
-      (parse-repeat+ (parse-char char-set:digit)))
-    (lambda (str)
-      (cons 'nth-line (string->number str)))))
+    parse-digits
+    (lambda (num)
+      (cons 'nth-line num))))
 
 ;;> The <apostrophe>-x character pair ("'x") shall address the line
 ;;> marked with the mark name character \var{x}, which shall be a lowercase

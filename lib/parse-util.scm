@@ -8,6 +8,12 @@
     (lambda (lst)
       (list->string lst))))
 
+(define parse-digits
+  (parse-map
+    (parse-string
+      (parse-repeat+ (parse-char char-set:digit)))
+    string->number))
+
 (define (parse-between lhs parser rhs)
   (parse-map
     (parse-seq lhs parser rhs)
