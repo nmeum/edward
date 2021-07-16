@@ -8,7 +8,8 @@
               (source "edward.scm")
               (source-dependencies
                 "edward.sld"
+                "./lib/editor.scm"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"
-                "./lib/addr.scm"
-                "./lib/cmd.scm"))))
+                "./lib/parse-addr.scm"
+                "./lib/parse-cmd.scm"))))

@@ -13,15 +13,9 @@
       (parse-char #\a))
     car))
 
-(define handle-append
-  (case-lambda
-    ((addr)
-     (begin
-       (display "appending text at ") (display addr) (newline)))))
-
 ;;;;
 
-(define parse-command
+(define parse-cmd
   ;; TODO: Autogenerate from list created by define-command.
   (parse-seq
     parse-append))
