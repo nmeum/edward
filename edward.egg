@@ -9,5 +9,5 @@
               (source-dependencies
                 "edward.sld"
                 "./lib/parse.scm"
-                "./lib/util.scm"
+                "./lib/parse-util.scm"
                 "./lib/addr.scm"))))
