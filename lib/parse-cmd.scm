@@ -17,5 +17,5 @@
 
 (define parse-cmd
   ;; TODO: Autogenerate from list created by define-command.
-  (parse-seq
+  (parse-or
     parse-append))
