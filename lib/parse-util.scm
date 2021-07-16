@@ -34,3 +34,16 @@
       (parse-char #\\)
       parse-anything)
     cadr))
+
+;; Like parse-seq but skip blanks **before** each parser.
+
+(define (parse-blanks-seq . o)
+  (define (%parse-blanks-seq lst)
+    (parse-seq-list
+      (apply append
+             (zip (make-list
+                        (length lst)
+                        (parse-ignore parse-blanks))
+                  lst))))
+
+  (%parse-blanks-seq o))
