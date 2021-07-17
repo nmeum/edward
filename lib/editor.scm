@@ -40,6 +40,23 @@
 (define (goto-addr editor addr)
   (goto editor (addr->line editor addr)))
 
+(define (get-range editor range)
+  (define (%get-range editor start end)
+    (let ((sline (addr->line editor start))
+          (eline (addr->line editor end)))
+      (sublist (text-editor-buffer editor) sline eline)))
+
+  ;; In the case of a <semicolon> separator, the current line ('.') shall
+  ;; be set to the first address, and only then will the second address be
+  ;; calculated. This feature can be used to determine the starting line
+  ;; for forwards and backwards searches.
+  (match range
+    ((fst #\; snd)
+     (goto-addr fst)
+     (%get-range editor fst snd))
+    ((fst #\, snd)
+     (%get-range editor fst snd))))
+
 (define (append-text editor text)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
