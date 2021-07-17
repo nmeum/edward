@@ -12,8 +12,8 @@
   (export start-editor)
 
   (include "lib/util.scm"
-           "lib/editor.scm"
            "lib/parse.scm"
            "lib/parse-util.scm"
            "lib/parse-addr.scm"
-           "lib/parse-cmd.scm"))
+           "lib/editor.scm"
+           "lib/cmd.scm"))

@@ -77,16 +77,3 @@
       (if (equal? input ".")
         '()
         (cons input (input-mode-read))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (handle-append editor addr)
-  (goto-addr editor addr)
-  (append-text editor (input-mode-read))
-
-  ;; Current line shall become the address of the last inserted line.
-  (goto-line (length (text-editor-buffer editor))))
-
-(define (handle-write editor range filename)
-  (display "range: ") (display range) (newline)
-  (display "filename: ") (display filename) (newline))
