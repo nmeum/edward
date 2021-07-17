@@ -1,3 +1,14 @@
+;; Like display but always adds a trailing newline.
+
+(define println
+  (case-lambda
+    ((obj port) (%println obj port))
+    ((obj) (%println obj (current-output-port)))))
+
+(define (%println obj port)
+  (display obj port)
+  (newline port))
+
 ;; Return true if the given string is the empty string.
 
 (define (empty-string? str)

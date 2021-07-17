@@ -57,8 +57,14 @@
 ;; standard output,
 
 (define (handle-write editor range filename)
-  (display "range: ") (display range) (newline)
-  (display "filename: ") (display filename) (newline))
+  (let ((fn (if (empty-string? filename)
+              (editor-filename editor) filename)))
+    (call-with-output-file fn
+      (lambda (port)
+        (let ((s (buffer->string (get-range editor range))))
+          (write-string s port)
+          ;; Assuming write-string *always* writes all bytes.
+          (println (string-length s)))))))
 
 (define-command ("Write Command" handle-write)
   (parse-blanks-seq
