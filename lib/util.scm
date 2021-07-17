@@ -1,3 +1,8 @@
+;; Return true if the given string is the empty string.
+
+(define (empty-string? str)
+  (zero? (string-length str)))
+
 ;; Return sublist with start inclusive and end exclusive.
 
 (define (sublist lst start end)
