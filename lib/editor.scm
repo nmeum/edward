@@ -30,9 +30,9 @@
 
 (define addr->line
   (match-lambda*
-    ((e (current-line off))
+    ((e ('(current-line) off))
      (%addr->line e off (text-editor-line e)))
-    ((e  ((last-line off)))
+    ((e ('(last-line) off))
      (%addr->line e off (length (text-editor-buffer e))))))
 
 (define (goto editor line)
