@@ -84,9 +84,10 @@
 
 (define (handle-append editor addr)
   (goto-addr editor addr)
-  (let ((text (input-mode-read)))
-    (append-text editor text)))
-    ;; TODO: Update current line
+  (append-text editor (input-mode-read))
+
+  ;; Current line shall become the address of the last inserted line.
+  (goto-line (length (text-editor-buffer editor))))
 
 (define (handle-write editor range filename)
   (display "range: ") (display range) (newline)
