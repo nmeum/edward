@@ -13,9 +13,9 @@
         (read-all)))))
 
 (define (buffer->string buffer)
-  (fold (lambda (x ys)
-          (string-append x "\n" ys))
-        "" '("foo" "bar")))
+  (fold-right (lambda (x ys)
+                (string-append x "\n" ys))
+              "" buffer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
