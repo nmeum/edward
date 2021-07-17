@@ -18,7 +18,7 @@
                                (cons l (read-all)))))))
         (%make-text-editor filename (read-all) 0)))))
 
-(define (%goto editor off line)
+(define (%addr->line editor off line)
   (let* ((buffer (text-editor-buffer editor))
          (total-off (apply + off))
          (nline (+ total-off line (text-editor-line editor))))
@@ -26,21 +26,19 @@
           (> 0 nline)
           (> nline (length buffer)))
       (error "invalid final address value")
-      (text-editor-line-set! editor nline))))
+      nline)))
 
-(define goto
-  (case-lambda
-    ((editor off)
-     (%goto editor off (text-editor-line editor)))
-    ((editor off line)
-     (%goto editor off line))))
-
-(define goto-addr
+(define addr->line
   (match-lambda*
-    ((e ((current-line) off))
-     (goto e off))
-    ((e ((last-line) off))
-     (goto e off (length (text-editor-buffer e))))))
+    ((e (current-line off))
+     (%addr->line e off (text-editor-line e)))
+    ((e  ((last-line off)))
+     (%addr->line e off (length (text-editor-buffer e))))))
+
+(define (goto editor line)
+  (text-editor-line-set! editor line))
+(define (goto-addr editor addr)
+  (goto editor (addr->line editor addr)))
 
 (define (append-text editor text)
   (let ((buf  (text-editor-buffer editor))
