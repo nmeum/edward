@@ -1,3 +1,24 @@
+;; This file implements a text editor on top of a line-buffer. The
+;; buffer is just a list of string where each string represents a
+;; line, newlines not included.
+
+(define (file->buffer filename)
+  (call-with-input-file filename
+    (lambda (port)
+      (letrec ((read-all (lambda ()
+                           (let ((l (read-line port)))
+                             (if (eof-object? l)
+                               '()
+                               (cons l (read-all)))))))
+        (read-all)))))
+
+(define (buffer->string buffer)
+  (fold (lambda (x ys)
+          (string-append x "\n" ys))
+        "" '("foo" "bar")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Text-Editor
   (%make-text-editor filename buffer line)
   text-editor?
@@ -9,14 +30,13 @@
   (line text-editor-line text-editor-line-set!))
 
 (define (make-text-editor filename)
-  (call-with-input-file filename
-    (lambda (port)
-      (letrec ((read-all (lambda ()
-                           (let ((l (read-line port)))
-                             (if (eof-object? l)
-                               '()
-                               (cons l (read-all)))))))
-        (%make-text-editor filename (read-all) 0)))))
+  (%make-text-editor filename (file->buffer filename) 0))
+
+(define (editor-filename editor)
+  (let ((fn (text-editor-filename editor)))
+    (if (empty-string? fn)
+      (error "no file name specified")
+      fn)))
 
 (define (%addr->line editor off line)
   (let* ((buffer (text-editor-buffer editor))
