@@ -1,14 +1,12 @@
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line column)
+  (%make-text-editor filename buffer line)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename)
   ;; List of strings representing all lines in the file.
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
-  (line text-editor-line text-editor-line-set!)
-  ;; Current column line in the buffer.
-  (column text-editor-column))
+  (line text-editor-line text-editor-line-set!))
 
 (define (make-text-editor filename)
   (call-with-input-file filename
@@ -18,7 +16,7 @@
                              (if (eof-object? l)
                                '()
                                (cons l (read-all)))))))
-        (%make-text-editor filename (read-all) 0 0)))))
+        (%make-text-editor filename (read-all) 0)))))
 
 (define (%goto editor off line)
   (let* ((buffer (text-editor-buffer editor))
