@@ -29,7 +29,7 @@
   (append-text editor (input-mode-read))
 
   ;; Current line shall become the address of the last inserted line.
-  (goto-line (length (text-editor-buffer editor))))
+  (goto (length (text-editor-buffer editor))))
 
 (define-command ("Append Command" handle-append)
   (parse-map
