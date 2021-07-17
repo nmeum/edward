@@ -17,6 +17,8 @@
       (parse-ignore (parse-char #\a)))
     ;; XXX: For some reason parse-ignore doesn't work for the last
     ;; element in a parse-seq sequence, thus we remove it using init.
+    ;;
+    ;; See: https://github.com/ashinn/chibi-scheme/issues/757
     init))
 
 (define-command ("Write Command" handle-write)
