@@ -56,6 +56,8 @@
 ;; is successful, the number of bytes written shall be written to
 ;; standard output,
 
+;; TODO: Implement support for !file
+
 (define (handle-write editor range filename)
   (let ((fn (if (empty-string? filename)
               (editor-filename editor) filename)))
