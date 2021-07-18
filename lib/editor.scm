@@ -102,21 +102,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (repl prompt proc)
-  (display prompt)
-  (flush-output-port)
+  (unless (empty-string? prompt)
+    (display prompt)
+    (flush-output-port))
+
   (let ((input (read-line)))
     (unless (eof-object? input)
       (proc input)
       (repl prompt proc))))
 
-(define (start-editor filename)
+(define (start-editor prompt filename)
   (let* ((editor (make-text-editor filename))
          (eval-input (lambda (input)
                        (let* ((s (string->parse-stream input))
                               (r (parse-fully parse-cmd s)))
                          (apply (car r)
                                 (cons editor (cdr r)))))))
-    (repl ": " eval-input)))
+    (repl prompt eval-input)))
 
 (define (input-mode-read)
   (let ((input (read-line)))

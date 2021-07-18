@@ -1,7 +1,7 @@
 ((author "Sören Tempel")
  (synopsis "Savage implementation of the ed(1) text editor")
  (license "GPLv3")
- (dependencies r7rs srfi-1 srfi-14 matchable)
+ (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable)
  (test-dependencies test)
  (components
    (extension edward
@@ -14,4 +14,6 @@
                 "./lib/parse-util.scm"
                 "./lib/parse-addr.scm"
                 "./lib/editor.scm"
-                "./lib/cmd.scm"))))
+                "./lib/cmd.scm"))
+   (program edward
+            (source "bin/edward.scm"))))
