@@ -40,7 +40,7 @@
 (define (make-text-editor filename)
   (let ((e (%make-text-editor filename '() 0)))
     (unless (empty-string? filename)
-      (handle-read e (make-addr '(last-line)) filename))
+      (exec-read e (make-addr '(last-line)) filename))
     e))
 
 (define (editor-filename editor)

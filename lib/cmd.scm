@@ -24,14 +24,14 @@
 ;; Address 0 shall be valid for this command; it shall cause the
 ;; appended text to be placed at the beginning of the buffer.
 
-(define (handle-append editor addr)
+(define (exec-append editor addr)
   (goto-addr editor addr)
   (append-text editor (input-mode-read))
 
   ;; Current line shall become the address of the last inserted line.
   (goto editor (length (text-editor-buffer editor))))
 
-(define-command ("Append Command" handle-append)
+(define-command ("Append Command" exec-append)
   (parse-map
     (parse-blanks-seq
       (parse-default parse-addr (make-addr '(current-line)))
@@ -53,7 +53,7 @@
 ;; unless there is no remembered pathname. Address 0 shall be valid for
 ;; r and shall cause the file to be read at the beginning of the buffer.
 
-(define (handle-read editor addr filename)
+(define (exec-read editor addr filename)
   (goto-addr editor addr)
   (let* ((f (if (empty-string? filename)
               (editor-filename editor)
@@ -65,7 +65,7 @@
     (append-text editor (car r))
     (println (cdr r))))
 
-(define-command ("Read Command" handle-read)
+(define-command ("Read Command" exec-read)
   (parse-blanks-seq
     (parse-default parse-addr (make-addr '(last-line)))
     (parse-ignore (parse-char #\r))
@@ -87,7 +87,7 @@
 
 ;; TODO: Implement support for !file
 
-(define (handle-write editor range filename)
+(define (exec-write editor range filename)
   (let ((fn (if (empty-string? filename)
               (editor-filename editor) filename)))
     (call-with-output-file fn
@@ -97,7 +97,7 @@
           ;; Assuming write-string *always* writes all bytes.
           (println (string-length s)))))))
 
-(define-command ("Write Command" handle-write)
+(define-command ("Write Command" exec-write)
   (parse-blanks-seq
     (parse-default parse-addr-range
                    (list
