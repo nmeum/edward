@@ -62,6 +62,10 @@
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
 
+;; Move editor cursor to specified line/address. Line 1 is the first
+;; line, specifying 0 as a line moves the cursor **before** the first
+;; line.
+
 (define (goto editor line)
   (text-editor-line-set! editor line))
 (define (goto-addr editor addr)
@@ -71,7 +75,9 @@
   (define (%get-range editor start end)
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
-      (sublist (text-editor-buffer editor) sline eline)))
+      (if (zero? sline)
+        (error "ranges cannot start at address zero")
+        (sublist (text-editor-buffer editor) (dec sline) eline))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
   ;; be set to the first address, and only then will the second address be
