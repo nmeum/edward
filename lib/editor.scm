@@ -53,7 +53,14 @@
     ((e ('(current-line) off))
      (%addr->line e off (text-editor-line e)))
     ((e ('(last-line) off))
-     (%addr->line e off (length (text-editor-buffer e))))))
+     (%addr->line e off (length (text-editor-buffer e))))
+    ((e (('nth-line . line) off))
+     (%addr->line e off line))
+    ;; TODO: marked-line
+    ;; TODO: regex-forward
+    ;; TODO: regex-backward
+    ((e (('relative . rel) off))
+     (%addr->line e off (+ (text-editor-line e) rel)))))
 
 (define (goto editor line)
   (text-editor-line-set! editor line))
