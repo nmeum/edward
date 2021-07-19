@@ -11,6 +11,22 @@
   (test-parse-cmd "custom address with offset"
     (list (make-addr '(last-line . ()) '(42))) "$+42 a"))
 
+(test-group "read command"
+  (test-parse-cmd "no arguments"
+    (list
+      (make-addr '(last-line))
+      "") "r")
+
+  (test-parse-cmd "custom address"
+    (list
+      (make-addr '(nth-line . 42))
+      "") "42r")
+
+  (test-parse-cmd "custom address and file"
+    (list
+      (make-addr '(regex-backward . "foo") '(23 -42))
+      "foobar") "?foo? +23 -42 r foobar"))
+
 (test-group "write command"
   (test-parse-cmd "no arguments"
     (list
