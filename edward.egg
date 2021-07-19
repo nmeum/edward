@@ -16,4 +16,5 @@
                 "./lib/editor.scm"
                 "./lib/cmd.scm"))
    (program bin/edward
-            (install-name "edward"))))
+            (install-name "edward")
+            (component-dependencies edward))))
