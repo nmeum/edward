@@ -1,0 +1,5 @@
+r testdata/input-file
+$a
+foobar
+.
+w

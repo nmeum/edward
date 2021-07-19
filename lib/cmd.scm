@@ -68,7 +68,7 @@
               (editor-filename editor)
               filename))
          (r (file->buffer f)))
-    (unless (empty-string? (text-editor-filename editor))
+    (if (empty-string? (text-editor-filename editor))
       (text-editor-filename-set! editor f))
 
     (append-text editor (car r))
