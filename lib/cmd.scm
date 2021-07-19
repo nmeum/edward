@@ -52,6 +52,9 @@
 ;; commands). The currently remembered pathname shall not be changed
 ;; unless there is no remembered pathname. Address 0 shall be valid for
 ;; r and shall cause the file to be read at the beginning of the buffer.
+;;
+;; The current line number shall be set to the address of the last line
+;; read in.
 
 (define (exec-read editor addr filename)
   (goto-addr editor addr)
@@ -63,6 +66,8 @@
       (text-editor-filename-set! editor f))
 
     (append-text editor (car r))
+    (goto editor (length (text-editor-buffer editor)))
+
     (println (cdr r))))
 
 (define-command ("Read Command" exec-read)
