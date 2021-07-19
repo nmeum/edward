@@ -52,7 +52,7 @@
 (define (%addr->line editor off line)
   (let* ((buffer (text-editor-buffer editor))
          (total-off (apply + off))
-         (nline (+ total-off line (text-editor-line editor))))
+         (nline (+ total-off line)))
     (if (or
           (> 0 nline)
           (> nline (length buffer)))
