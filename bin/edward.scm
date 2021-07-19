@@ -40,6 +40,6 @@
     ((file)
      (start-editor prompt-char file))
     (()
-     (error "usage without file not supported yet"))
+     (start-editor prompt-char ""))
     (_
      (error "specify one file or no files"))))

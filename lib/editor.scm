@@ -3,14 +3,22 @@
 ;; line, newlines not included.
 
 (define (file->buffer filename)
+  (define (%file->buffer port numbytes)
+    (let ((l (read-line port)))
+      (if (eof-object? l)
+        (list numbytes)
+        (cons l
+              (%file->buffer port
+                ;; inc for newline stripped by read-line
+                ;; XXX: Buggy if last line is not not terminated with \n.
+                (inc (+ numbytes (string-length l))))))))
+
   (call-with-input-file filename
     (lambda (port)
-      (letrec ((read-all (lambda ()
-                           (let ((l (read-line port)))
-                             (if (eof-object? l)
-                               '()
-                               (cons l (read-all)))))))
-        (read-all)))))
+      (let ((r (%file->buffer port 0)))
+        (if (eqv? (length r) 1)
+          (cons '() (car r))
+          (cons (init r) (last r)))))))
 
 (define (buffer->string buffer)
   (fold-right (lambda (x ys)
@@ -23,14 +31,17 @@
   (%make-text-editor filename buffer line)
   text-editor?
   ;; Name of the file currently being edited.
-  (filename text-editor-filename)
+  (filename text-editor-filename text-editor-filename-set!)
   ;; List of strings representing all lines in the file.
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
   (line text-editor-line text-editor-line-set!))
 
 (define (make-text-editor filename)
-  (%make-text-editor filename (file->buffer filename) 0))
+  (let ((e (%make-text-editor filename '() 0)))
+    (unless (empty-string? filename)
+      (handle-read e (make-addr '(last-line)) filename))
+    e))
 
 (define (editor-filename editor)
   (let ((fn (text-editor-filename editor)))
@@ -94,10 +105,11 @@
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
   (text-editor-buffer-set! editor
-    (list
-      (take buf line)
-      text
-      (drop buf line)))))
+    (apply append
+      (list
+        (take buf line)
+        text
+        (drop buf line))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

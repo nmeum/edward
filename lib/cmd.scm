@@ -42,6 +42,35 @@
     ;; See: https://github.com/ashinn/chibi-scheme/issues/757
     init))
 
+;; Read Command
+;;
+;;   ($)r [file]
+;;
+;; The r command shall read in the file named by the pathname file and
+;; append it after the addressed line. If no file argument is given, the
+;; currently remembered pathname, if any, shall be used (see the e and f
+;; commands). The currently remembered pathname shall not be changed
+;; unless there is no remembered pathname. Address 0 shall be valid for
+;; r and shall cause the file to be read at the beginning of the buffer.
+
+(define (handle-read editor addr filename)
+  (goto-addr editor addr)
+  (let* ((f (if (empty-string? filename)
+              (editor-filename editor)
+              filename))
+         (r (file->buffer f)))
+    (unless (empty-string? (text-editor-filename editor))
+      (text-editor-filename-set! editor f))
+
+    (append-text editor (car r))
+    (println (cdr r))))
+
+(define-command ("Read Command" handle-read)
+  (parse-blanks-seq
+    (parse-default parse-addr (make-addr '(last-line)))
+    (parse-ignore (parse-char #\r))
+    (parse-string (parse-repeat parse-anything))))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
