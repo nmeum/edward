@@ -15,5 +15,5 @@
                 "./lib/parse-addr.scm"
                 "./lib/editor.scm"
                 "./lib/cmd.scm"))
-   (program edward
-            (source "bin/edward.scm"))))
+   (program bin/edward
+            (install-name "edward"))))
