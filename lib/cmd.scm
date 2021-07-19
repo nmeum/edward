@@ -10,6 +10,12 @@
           BODY ...
           (lambda (args) (cons HANDLER args)))))))
 
+;; TODO: Implement support for !file
+
+(define parse-filename
+  (parse-string
+    (parse-repeat (parse-not-char char-set:blank))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Append Comand
@@ -74,7 +80,7 @@
   (parse-blanks-seq
     (parse-default parse-addr (make-addr '(last-line)))
     (parse-ignore (parse-char #\r))
-    (parse-string (parse-repeat parse-anything))))
+    parse-filename))
 
 ;; Write Command
 ;;
@@ -89,8 +95,6 @@
 ;; commands); the current line number shall be unchanged. If the command
 ;; is successful, the number of bytes written shall be written to
 ;; standard output,
-
-;; TODO: Implement support for !file
 
 (define (exec-write editor range filename)
   (let ((fn (if (empty-string? filename)
@@ -110,7 +114,7 @@
                      #\,
                      (make-addr '(last-line))))
     (parse-ignore (parse-char #\w))
-    (parse-string (parse-repeat parse-anything))))
+    parse-filename))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
