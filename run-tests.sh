@@ -7,6 +7,9 @@ banner() {
 	printf "##\n# %s\n##\n\n" "${1}"
 }
 
+banner "Build"
+chicken-install -n && echo
+
 banner "Unit Tests"
 chicken-install -n -test
 
