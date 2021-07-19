@@ -38,15 +38,9 @@
   (goto editor (length (text-editor-buffer editor))))
 
 (define-command ("Append Command" exec-append)
-  (parse-map
-    (parse-blanks-seq
-      (parse-default parse-addr (make-addr '(current-line)))
-      (parse-ignore (parse-char #\a)))
-    ;; XXX: For some reason parse-ignore doesn't work for the last
-    ;; element in a parse-seq sequence, thus we remove it using init.
-    ;;
-    ;; See: https://github.com/ashinn/chibi-scheme/issues/757
-    init))
+  (parse-blanks-seq
+    (parse-default parse-addr (make-addr '(current-line)))
+    (parse-ignore (parse-char #\a))))
 
 ;; Read Command
 ;;
