@@ -20,7 +20,7 @@
 
 (define silent
   (option
-    '(#\p "prompt") #f #f
+    '(#\s "silent") #f #f
     (lambda (o n x vals)
       (set! silent-mode #t)
       vals)))
@@ -35,11 +35,15 @@
       cons
       '())))
 
+(define (run-editor filename)
+  (let ((editor (make-text-editor filename silent-mode)))
+    (editor-start editor prompt-char)))
+
 (let* ((files (cdr (parse-args (list help prompt silent)))))
   (match files
     ((file)
-     (start-editor prompt-char file))
+     (run-editor file))
     (()
-     (start-editor prompt-char ""))
+     (run-editor ""))
     (_
      (error "specify one file or no files"))))

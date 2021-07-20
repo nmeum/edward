@@ -68,7 +68,7 @@
     (append-text editor (car r))
     (goto editor (length (text-editor-buffer editor)))
 
-    (println (cdr r))))
+    (editor-println editor (cdr r))))
 
 (define-command ("Read Command" exec-read)
   (parse-blanks-seq
@@ -98,7 +98,7 @@
         (let ((s (buffer->string (get-range editor range))))
           (write-string s port)
           ;; Assuming write-string *always* writes all bytes.
-          (println (string-length s)))))))
+          (editor-println editor (string-length s)))))))
 
 (define-command ("Write Command" exec-write)
   (parse-blanks-seq

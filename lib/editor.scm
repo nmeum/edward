@@ -28,17 +28,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line)
+  (%make-text-editor filename buffer line silent?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
   ;; List of strings representing all lines in the file.
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
-  (line text-editor-line text-editor-line-set!))
+  (line text-editor-line text-editor-line-set!)
+  ;; Whether the editor is in silent mode (ed -s option).
+  (silent? text-editor-silent?))
 
-(define (make-text-editor filename)
-  (let ((e (%make-text-editor filename '() 0)))
+(define (make-text-editor filename silent?)
+  (let ((e (%make-text-editor filename '() 0 silent?)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename))
     e))
@@ -48,6 +50,12 @@
     (if (empty-string? fn)
       (error "no file name specified")
       fn)))
+
+;; Print objs, but only if the editor is not in silent mode.
+
+(define (editor-println editor . objs)
+  (unless (text-editor-silent? editor)
+    (apply fprintln (cons (current-output-port) objs))))
 
 (define (%addr->line editor off line)
   (let* ((buffer (text-editor-buffer editor))
@@ -115,6 +123,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (editor-start editor prompt)
+  (let* ((eval-input (lambda (input)
+                       (let* ((s (string->parse-stream input))
+                              (r (parse-fully parse-cmd s)))
+                         (apply (car r)
+                                (cons editor (cdr r)))))))
+    (repl prompt eval-input)))
+
 (define (repl prompt proc)
   (unless (empty-string? prompt)
     (display prompt)
@@ -124,15 +140,6 @@
     (unless (eof-object? input)
       (proc input)
       (repl prompt proc))))
-
-(define (start-editor prompt filename)
-  (let* ((editor (make-text-editor filename))
-         (eval-input (lambda (input)
-                       (let* ((s (string->parse-stream input))
-                              (r (parse-fully parse-cmd s)))
-                         (apply (car r)
-                                (cons editor (cdr r)))))))
-    (repl prompt eval-input)))
 
 (define (input-mode-read)
   (let ((input (read-line)))
