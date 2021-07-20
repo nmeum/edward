@@ -50,7 +50,7 @@
                        (let* ((s (string->parse-stream input))
                               (r (parse-fully parse-cmd s)))
                          (apply (car r)
-                                (cons editor (cdr r)))))))
+                                editor (cdr r))))))
     (repl prompt eval-input)))
 
 (define (editor-filename editor)
@@ -63,7 +63,7 @@
 
 (define (editor-println editor . objs)
   (unless (text-editor-silent? editor)
-    (apply fprintln (cons (current-output-port) objs))))
+    (apply fprintln (current-output-port) objs)))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
