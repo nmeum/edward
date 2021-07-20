@@ -53,7 +53,18 @@
                                 editor (cdr r))))))
     (repl prompt eval-input)))
 
-(define (editor-filename editor)
+;; Return the currently configured filename, if no default is given it
+;; is an error if no filename is configured for the given editor.
+
+(define editor-filename
+  (case-lambda
+    ((editor) (%editor-filename editor))
+    ((editor default)
+     (if (empty-string? default)
+       (%editor-filename editor)
+       default))))
+
+(define (%editor-filename editor)
   (let ((fn (text-editor-filename editor)))
     (if (empty-string? fn)
       (error "no file name specified")

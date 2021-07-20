@@ -58,9 +58,7 @@
 
 (define (exec-read editor addr filename)
   (editor-goto editor addr)
-  (let* ((f (if (empty-string? filename)
-              (editor-filename editor)
-              filename))
+  (let* ((f (editor-filename editor filename))
          (r (file->buffer f)))
     (if (empty-string? (text-editor-filename editor))
       (text-editor-filename-set! editor f))
@@ -91,8 +89,7 @@
 ;; standard output,
 
 (define (exec-write editor range filename)
-  (let ((fn (if (empty-string? filename)
-              (editor-filename editor) filename)))
+  (let ((fn (editor-filename editor filename)))
     (call-with-output-file fn
       (lambda (port)
         (let ((s (buffer->string (editor-range editor range))))
