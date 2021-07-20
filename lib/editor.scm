@@ -45,6 +45,14 @@
       (exec-read e (make-addr '(last-line)) filename))
     e))
 
+(define (editor-start editor prompt)
+  (let* ((eval-input (lambda (input)
+                       (let* ((s (string->parse-stream input))
+                              (r (parse-fully parse-cmd s)))
+                         (apply (car r)
+                                (cons editor (cdr r)))))))
+    (repl prompt eval-input)))
+
 (define (editor-filename editor)
   (let ((fn (text-editor-filename editor)))
     (if (empty-string? fn)
@@ -56,6 +64,48 @@
 (define (editor-println editor . objs)
   (unless (text-editor-silent? editor)
     (apply fprintln (cons (current-output-port) objs))))
+
+;; Move editor cursor to specified line/address. Line 1 is the first
+;; line, specifying 0 as a line moves the cursor **before** the first
+;; line.
+
+(define (editor-goto-line editor line)
+  (text-editor-line-set! editor line))
+(define (editor-goto-addr editor addr)
+  (editor-goto-line editor (addr->line editor addr)))
+
+(define (editor-range editor range)
+  (define (%editor-range editor start end)
+    (if (null? (text-editor-buffer editor))
+      '()
+      (let ((sline (addr->line editor start))
+            (eline (addr->line editor end)))
+        (if (zero? sline)
+          (error "ranges cannot start at address zero")
+          (sublist (text-editor-buffer editor) (dec sline) eline)))))
+
+  ;; In the case of a <semicolon> separator, the current line ('.') shall
+  ;; be set to the first address, and only then will the second address be
+  ;; calculated. This feature can be used to determine the starting line
+  ;; for forwards and backwards searches.
+  (match range
+    ((fst #\; snd)
+     (editor-goto-addr fst)
+     (%editor-range editor fst snd))
+    ((fst #\, snd)
+     (%editor-range editor fst snd))))
+
+(define (editor-append editor text)
+  (let ((buf  (text-editor-buffer editor))
+        (line (text-editor-line editor)))
+  (text-editor-buffer-set! editor
+    (apply append
+      (list
+        (take buf line)
+        text
+        (drop buf line))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (%addr->line editor off line)
   (let* ((buffer (text-editor-buffer editor))
@@ -80,66 +130,6 @@
     ;; TODO: regex-backward
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
-
-;; Move editor cursor to specified line/address. Line 1 is the first
-;; line, specifying 0 as a line moves the cursor **before** the first
-;; line.
-
-(define (goto editor line)
-  (text-editor-line-set! editor line))
-(define (goto-addr editor addr)
-  (goto editor (addr->line editor addr)))
-
-(define (get-range editor range)
-  (define (%get-range editor start end)
-    (if (null? (text-editor-buffer editor))
-      '()
-      (let ((sline (addr->line editor start))
-            (eline (addr->line editor end)))
-        (if (zero? sline)
-          (error "ranges cannot start at address zero")
-          (sublist (text-editor-buffer editor) (dec sline) eline)))))
-
-  ;; In the case of a <semicolon> separator, the current line ('.') shall
-  ;; be set to the first address, and only then will the second address be
-  ;; calculated. This feature can be used to determine the starting line
-  ;; for forwards and backwards searches.
-  (match range
-    ((fst #\; snd)
-     (goto-addr fst)
-     (%get-range editor fst snd))
-    ((fst #\, snd)
-     (%get-range editor fst snd))))
-
-(define (append-text editor text)
-  (let ((buf  (text-editor-buffer editor))
-        (line (text-editor-line editor)))
-  (text-editor-buffer-set! editor
-    (apply append
-      (list
-        (take buf line)
-        text
-        (drop buf line))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (editor-start editor prompt)
-  (let* ((eval-input (lambda (input)
-                       (let* ((s (string->parse-stream input))
-                              (r (parse-fully parse-cmd s)))
-                         (apply (car r)
-                                (cons editor (cdr r)))))))
-    (repl prompt eval-input)))
-
-(define (repl prompt proc)
-  (unless (empty-string? prompt)
-    (display prompt)
-    (flush-output-port))
-
-  (let ((input (read-line)))
-    (unless (eof-object? input)
-      (proc input)
-      (repl prompt proc))))
 
 (define (input-mode-read)
   (let ((input (read-line)))

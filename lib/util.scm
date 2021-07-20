@@ -7,6 +7,18 @@
   (for-each (lambda (obj) (display obj port)) objs)
   (newline port))
 
+;; Create a REPL and execute proc for each input.
+
+(define (repl prompt proc)
+  (unless (empty-string? prompt)
+    (display prompt)
+    (flush-output-port))
+
+  (let ((input (read-line)))
+    (unless (eof-object? input)
+      (proc input)
+      (repl prompt proc))))
+
 ;; Return true if the given string is the empty string.
 
 (define (empty-string? str)

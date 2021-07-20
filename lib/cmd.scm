@@ -31,11 +31,11 @@
 ;; appended text to be placed at the beginning of the buffer.
 
 (define (exec-append editor addr)
-  (goto-addr editor addr)
-  (append-text editor (input-mode-read))
+  (editor-goto-addr editor addr)
+  (editor-append editor (input-mode-read))
 
   ;; Current line shall become the address of the last inserted line.
-  (goto editor (length (text-editor-buffer editor))))
+  (editor-goto-line editor (length (text-editor-buffer editor))))
 
 (define-command ("Append Command" exec-append)
   (parse-blanks-seq
@@ -57,7 +57,7 @@
 ;; read in.
 
 (define (exec-read editor addr filename)
-  (goto-addr editor addr)
+  (editor-goto-addr editor addr)
   (let* ((f (if (empty-string? filename)
               (editor-filename editor)
               filename))
@@ -65,8 +65,8 @@
     (if (empty-string? (text-editor-filename editor))
       (text-editor-filename-set! editor f))
 
-    (append-text editor (car r))
-    (goto editor (length (text-editor-buffer editor)))
+    (editor-append editor (car r))
+    (editor-goto-line editor (length (text-editor-buffer editor)))
 
     (editor-println editor (cdr r))))
 
@@ -95,7 +95,7 @@
               (editor-filename editor) filename)))
     (call-with-output-file fn
       (lambda (port)
-        (let ((s (buffer->string (get-range editor range))))
+        (let ((s (buffer->string (editor-range editor range))))
           (write-string s port)
           ;; Assuming write-string *always* writes all bytes.
           (editor-println editor (string-length s)))))))
