@@ -8,7 +8,8 @@ banner() {
 }
 
 banner "Build"
-chicken-install -n && echo
+chicken-install -n
+echo
 
 banner "Unit Tests"
 chicken-install -n -test
