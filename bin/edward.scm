@@ -2,21 +2,21 @@
 (import (scheme base) (scheme process-context)
         (edward) (srfi 37) (matchable))
 
-(define prompt-char "")
-(define silent-mode #f)
+(define prompt "")
+(define silent? #f)
 
-(define prompt
+(define prompt-opt
   (option
     '(#\p "prompt") #t #t
     (lambda (o n x vals)
-      (set! prompt-char x)
+      (set! prompt x)
       vals)))
 
-(define silent
+(define silent-opt
   (option
     '(#\s "silent") #f #f
     (lambda (o n x vals)
-      (set! silent-mode #t)
+      (set! silent? #t)
       vals)))
 
 (define (parse-args flags)
@@ -30,10 +30,10 @@
       '())))
 
 (define (run-editor filename)
-  (let ((editor (make-text-editor filename silent-mode)))
-    (editor-start editor prompt-char)))
+  (let ((editor (make-text-editor filename silent?)))
+    (editor-start editor prompt)))
 
-(let* ((files (cdr (parse-args (list prompt silent)))))
+(let* ((files (cdr (parse-args (list prompt-opt silent-opt)))))
   (match files
     ((file)
      (run-editor file))
