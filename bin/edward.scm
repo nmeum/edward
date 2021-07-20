@@ -5,12 +5,6 @@
 (define prompt-char "")
 (define silent-mode #f)
 
-(define help
-  (option
-    '(#\h "help") #f #f
-    (lambda _
-      (usage))))
-
 (define prompt
   (option
     '(#\p "prompt") #t #t
@@ -39,7 +33,7 @@
   (let ((editor (make-text-editor filename silent-mode)))
     (editor-start editor prompt-char)))
 
-(let* ((files (cdr (parse-args (list help prompt silent)))))
+(let* ((files (cdr (parse-args (list prompt silent)))))
   (match files
     ((file)
      (run-editor file))
