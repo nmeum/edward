@@ -100,12 +100,11 @@
 (define (editor-append editor text)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
-  (text-editor-buffer-set! editor
-    (apply append
-      (list
-        (take buf line)
-        text
-        (drop buf line))))))
+    (text-editor-buffer-set! editor
+                             (append
+                               (take buf line)
+                               text
+                               (drop buf line)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
