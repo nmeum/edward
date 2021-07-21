@@ -120,7 +120,7 @@
   (let ((fn (editor-filename editor filename)))
     (call-with-output-file fn
       (lambda (port)
-        (let ((s (buffer->string (editor-range editor range))))
+        (let ((s (buffer->string (editor-get-range editor range))))
           (write-string s port)
           ;; Assuming write-string *always* writes all bytes.
           (editor-println editor (string-length s)))))))

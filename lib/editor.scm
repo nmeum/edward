@@ -87,8 +87,8 @@
     ;; Else: Target is an address.
     (text-editor-line-set! editor (addr->line editor target))))
 
-(define (editor-range editor range)
-  (define (%editor-range editor start end)
+(define (editor-get-range editor range)
+  (define (%editor-get-range editor start end)
     (if (null? (text-editor-buffer editor))
       '()
       (let ((sline (addr->line editor start))
@@ -104,9 +104,9 @@
   (match range
     ((fst #\; snd)
      (editor-goto fst)
-     (%editor-range editor fst snd))
+     (%editor-get-range editor fst snd))
     ((fst #\, snd)
-     (%editor-range editor fst snd))))
+     (%editor-get-range editor fst snd))))
 
 (define (editor-append! editor text)
   (let ((buf  (text-editor-buffer editor))
