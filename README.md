@@ -27,6 +27,17 @@ For development setups, one can build `edward` as follows:
 
 This will create an executable binary in `./bin/edward`.
 
+## Tests
+
+This repository contains both unit tests and integration tests. The
+latter require a reference implementation of a POSIX.1-2008 compatible
+ed implementation. For instance, [GNU ed][gnu ed]. The reference
+implementation is determined from the `REF_IMPL` environment variable.
+
+Both unit and integration tests can be run using:
+
+	$ ./run-tests.sh
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it
@@ -44,3 +55,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
+[gnu ed]: https://www.gnu.org/software/ed/
