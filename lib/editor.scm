@@ -87,15 +87,13 @@
     ;; Else: Target is an address.
     (text-editor-line-set! editor (addr->line editor target))))
 
-(define (editor-get-range editor range)
-  (define (%editor-get-range editor start end)
-    (if (null? (text-editor-buffer editor))
-      '()
-      (let ((sline (addr->line editor start))
-            (eline (addr->line editor end)))
-        (if (zero? sline)
-          (error "ranges cannot start at address zero")
-          (sublist (text-editor-buffer editor) (dec sline) eline)))))
+(define (editor-range editor range)
+  (define (%editor-range editor start end)
+    (let ((sline (addr->line editor start))
+          (eline (addr->line editor end)))
+      (if (zero? sline)
+        (error "ranges cannot start at address zero")
+        (values sline eline))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
   ;; be set to the first address, and only then will the second address be
@@ -104,9 +102,16 @@
   (match range
     ((fst #\; snd)
      (editor-goto fst)
-     (%editor-get-range editor fst snd))
+     (%editor-range editor fst snd))
     ((fst #\, snd)
-     (%editor-get-range editor fst snd))))
+     (%editor-range editor fst snd))))
+
+(define (editor-get-range editor range)
+  (if (null? (text-editor-buffer editor))
+    '()
+    (let-values (((sline eline) (editor-range editor range)))
+      (sublist (text-editor-buffer editor)
+               (dec sline) eline))))
 
 (define (editor-append! editor text)
   (let ((buf  (text-editor-buffer editor))
@@ -118,15 +123,12 @@
                                (drop buf line)))))
 
 (define (editor-remove! editor range)
-  (let ((sline (addr->line editor (first range)))
-        (eline (addr->line editor (last range)))
-        (buffer (text-editor-buffer editor)))
-    (if (zero? sline)
-      (error "ranges cannot start at address zero")
-      (text-editor-buffer-set! editor
-        (append
-          (sublist buffer 0 (dec sline))
-          (sublist buffer eline (length buffer)))))))
+  (let-values (((sline eline) (editor-range editor range))
+               ((buffer) (text-editor-buffer editor)))
+    (text-editor-buffer-set! editor
+      (append
+        (sublist buffer 0 (dec sline))
+        (sublist buffer eline (length buffer))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
