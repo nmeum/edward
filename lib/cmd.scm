@@ -11,6 +11,9 @@
             BODY ...)
           (lambda (args) (cons HANDLER args)))))))
 
+(define (parse-cmd ch)
+  (parse-ignore (parse-char ch)))
+
 ;; TODO: Implement support for !file
 
 (define parse-filename
@@ -38,7 +41,7 @@
 
 (define-command ("Append Command" exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
-  (parse-ignore (parse-char #\a)))
+  (parse-cmd #\a))
 
 ;; Change Command
 ;;
@@ -77,7 +80,7 @@
                    (make-addr '(current-line))
                    #\,
                    (make-addr '(current-line))))
-  (parse-ignore (parse-char #\c)))
+  (parse-cmd #\c))
 
 ;; Read Command
 ;;
@@ -107,7 +110,7 @@
 
 (define-command ("Read Command" exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
-  (parse-ignore (parse-char #\r))
+  (parse-cmd #\r)
   parse-filename)
 
 ;; Delete Command
@@ -134,7 +137,7 @@
                    (make-addr '(current-line))
                    #\,
                    (make-addr '(current-line))))
-  (parse-ignore (parse-char #\d)))
+  (parse-cmd #\d))
 
 ;; Edit Command
 ;;
@@ -152,7 +155,7 @@
   (exec-read editor (make-addr '(last-line)) filename))
 
 (define-command ("Edit Command" exec-edit)
-  (parse-ignore (parse-char #\e))
+  (parse-cmd #\e)
   parse-filename)
 
 ;; Filename Command
@@ -170,7 +173,7 @@
   (editor-println editor (editor-filename editor)))
 
 (define-command ("Filename Command" exec-filename)
-  (parse-ignore (parse-char #\f))
+  (parse-cmd #\f)
   parse-filename)
 
 ;; Help Command
@@ -187,7 +190,7 @@
       (display-error e))))
 
 (define-command ("Help Command" exec-help)
-  (parse-ignore (parse-char #\h)))
+  (parse-cmd #\h))
 
 ;; Help-Mode Command
 ;;
@@ -207,7 +210,7 @@
       (exec-help editor))))
 
 (define-command ("Help-Mode Command" exec-help-mode)
-  (parse-ignore (parse-char #\H)))
+  (parse-cmd #\H))
 
 ;; Write Command
 ;;
@@ -238,7 +241,7 @@
                    (make-addr '(nth-line . 1))
                    #\,
                    (make-addr '(last-line))))
-  (parse-ignore (parse-char #\w))
+  (parse-cmd #\w)
   parse-filename)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
