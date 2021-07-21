@@ -74,6 +74,34 @@
     (parse-ignore (parse-char #\r))
     parse-filename))
 
+;; Delete Command
+;;
+;;   (.,.)d
+;;
+;; The d command shall delete the addressed lines from the buffer. The
+;; address of the line after the last line deleted shall become the
+;; current line number; if the lines deleted were originally at the end
+;; of the buffer, the current line number shall be set to the address of
+;; the new last line; if no lines remain in the buffer, the current line
+;; number shall be set to zero.
+
+(define (exec-delete editor range)
+  (let ((saddr (addr->line editor (first range))))
+    (editor-remove! editor range)
+    (if (null? (text-editor-buffer editor))
+      (editor-goto editor 0)
+      (editor-goto editor (min (length (text-editor-buffer editor))
+                               saddr)))))
+
+(define-command ("Delete Command" exec-delete)
+  (parse-blanks-seq
+    (parse-default parse-addr-range
+                   (list
+                     (make-addr '(current-line))
+                     #\,
+                     (make-addr '(current-line))))
+    (parse-ignore (parse-char #\d))))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]

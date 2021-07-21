@@ -117,6 +117,17 @@
                                text
                                (drop buf line)))))
 
+(define (editor-remove! editor range)
+  (let ((sline (addr->line editor (first range)))
+        (eline (addr->line editor (last range)))
+        (buffer (text-editor-buffer editor)))
+    (if (zero? sline)
+      (error "ranges cannot start at address zero")
+      (text-editor-buffer-set! editor
+        (append
+          (sublist buffer 0 (dec sline))
+          (sublist buffer eline (length buffer)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (%addr->line editor off line)
