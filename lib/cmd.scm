@@ -102,6 +102,26 @@
                      (make-addr '(current-line))))
     (parse-ignore (parse-char #\d))))
 
+;; Edit Command
+;;
+;;   e [file]
+;;
+;; The e command shall delete the entire contents of the buffer and then
+;; read in the file named by the pathname file. The current line number
+;; shall be set to the address of the last line of the buffer. If no
+;; pathname is given, the currently remembered pathname, if any, shall
+;; be used (see the f command). The number of bytes read shall be
+;; written to standard output.
+
+(define (exec-edit editor filename)
+  (text-editor-buffer-set! editor '())
+  (exec-read editor (make-addr '(last-line)) filename))
+
+(define-command ("Edit Command" exec-edit)
+  (parse-blanks-seq
+    (parse-ignore (parse-char #\e))
+    parse-filename))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
