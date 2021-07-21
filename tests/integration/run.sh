@@ -59,16 +59,16 @@ for test in *; do
 	run_editor "${EDWARD}" "${TESTCWD}.actual" "${test}/testdata" "${opts}" \
 		> "${ACTUAL}" < "${cmds}"
 
-	diff=$(diff -u "${EXPECTED}" "${ACTUAL}")
+	diff=$(diff -ur "${TESTCWD}.expected" "${TESTCWD}.actual")
 	if [ $? -ne 0 ]; then
-		printf "FAIL: Standard output didn't match.\n\n"
+		printf "FAIL: Modified files differ.\n\n"
 		printf "%s\n" "${diff}"
 		exit 1
 	fi
 
-	diff=$(diff -ur "${TESTCWD}.expected" "${TESTCWD}.actual")
+	diff=$(diff -u "${EXPECTED}" "${ACTUAL}")
 	if [ $? -ne 0 ]; then
-		printf "FAIL: Modified files differ.\n\n"
+		printf "FAIL: Standard output didn't match.\n\n"
 		printf "%s\n" "${diff}"
 		exit 1
 	fi
