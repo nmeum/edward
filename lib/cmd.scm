@@ -122,6 +122,25 @@
     (parse-ignore (parse-char #\e))
     parse-filename))
 
+;; Filename Command
+;;
+;;   f [file]
+;;
+;; If file is given, the f command shall change the currently remembered
+;; pathname to file; whether the name is changed or not, it shall then
+;; write the (possibly new) currently remembered pathname to the
+;; standard output.
+
+(define (exec-filename editor filename)
+  (unless (empty-string? filename)
+    (text-editor-filename-set! editor filename))
+  (editor-println editor (editor-filename editor)))
+
+(define-command ("Filename Command" exec-filename)
+  (parse-blanks-seq
+    (parse-ignore (parse-char #\f))
+    parse-filename))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
