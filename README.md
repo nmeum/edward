@@ -16,7 +16,6 @@ If a correctly configured chicken toolchain is available run:
 	$ chicken-install
 
 This will compile `edward` and add the binary to your `$PATH`.
-Additionally, it will perform some basic functionality tests.
 
 ### Building without installing
 
