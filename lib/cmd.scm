@@ -106,7 +106,7 @@
     (editor-append! editor (car r))
     (editor-goto! editor (length (text-editor-buffer editor)))
 
-    (editor-println editor (cdr r))))
+    (editor-verbose editor (cdr r))))
 
 (define-command ("Read Command" exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
@@ -167,7 +167,7 @@
 (define (exec-filename editor filename)
   (unless (empty-string? filename)
     (text-editor-filename-set! editor filename))
-  (editor-println editor (editor-filename editor)))
+  (editor-verbose editor (editor-filename editor)))
 
 (define-command ("Filename Command" exec-filename)
   (parse-cmd #\f)
@@ -230,7 +230,7 @@
         (let ((s (buffer->string (editor-get-range editor range))))
           (write-string s port)
           ;; Assuming write-string *always* writes all bytes.
-          (editor-println editor (string-length s)))))))
+          (editor-verbose editor (string-length s)))))))
 
 (define-command ("Write Command" exec-write)
   (parse-default parse-addr-range

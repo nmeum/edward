@@ -91,7 +91,7 @@
 
 ;; Print objs, but only if the editor is not in silent mode.
 
-(define (editor-println editor . objs)
+(define (editor-verbose editor . objs)
   (unless (text-editor-silent? editor)
     (apply fprintln (current-output-port) objs)))
 
