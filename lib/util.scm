@@ -7,6 +7,9 @@
   (for-each (lambda (obj) (display obj port)) objs)
   (newline port))
 
+(define (println . objs)
+  (apply fprintln (current-output-port) objs))
+
 ;; Create a REPL and execute proc for each input.
 
 (define (repl prompt proc)
