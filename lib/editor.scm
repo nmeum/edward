@@ -28,7 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line silent?)
+  (%make-text-editor filename buffer line error silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -36,22 +36,41 @@
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
   (line text-editor-line text-editor-line-set!)
+  ;; Last error object encountered (for h and H command).
+  (error text-editor-error text-editor-error-set!)
   ;; Whether the editor is in silent mode (ed -s option).
-  (silent? text-editor-silent?))
+  (silent? text-editor-silent?)
+  ;; Whether help mode is activated (H command).
+  (help? text-editor-help? text-editor-help-set!))
 
 (define (make-text-editor filename silent?)
-  (let ((e (%make-text-editor filename '() 0 silent?)))
+  (let ((e (%make-text-editor filename '() 0 #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename))
     e))
 
 (define (editor-start editor prompt)
-  (let* ((eval-input (lambda (input)
-                       (let* ((s (string->parse-stream input))
-                              (r (parse-fully parse-cmd s)))
-                         (apply (car r)
-                                editor (cdr r))))))
-    (repl prompt eval-input)))
+  ;; If an invalid command is entered, ed shall write the string: "?\n"
+  ;; (followed by an explanatory message if help mode has been enabled
+  ;; via the H command) to standard output and shall continue in command
+  ;; mode with the current line number unchanged.
+  (define (eval-input input)
+    (call-with-current-continuation
+      (lambda (k)
+        (with-exception-handler
+          (lambda (eobj)
+            (println "?")
+            (text-editor-error-set! editor eobj)
+            (when (text-editor-help? editor)
+              (println (error-object-message eobj)))
+            (k '()))
+          (lambda ()
+            (let* ((s (string->parse-stream input))
+                   (r (parse-fully parse-cmd s)))
+              (apply (car r)
+                     editor (cdr r))))))))
+
+  (repl prompt eval-input))
 
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.

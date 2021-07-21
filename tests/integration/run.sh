@@ -15,7 +15,7 @@ run_editor() {
 	opt="${4}"
 
 	mkdir "${cwd}"
-	cp -r "${dat}" "${cwd}"
+	[ -d "${dat}" ] && cp -r "${dat}" "${cwd}"
 	cd "${cwd}"
 
 	if [ -s "${opt}" ]; then

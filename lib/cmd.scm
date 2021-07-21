@@ -141,6 +141,44 @@
     (parse-ignore (parse-char #\f))
     parse-filename))
 
+;; Help Command
+;;
+;;   h
+;;
+;; The h command shall write a short message to standard output that
+;; explains the reason for the most recent '?' notification. The current
+;; line number shall be unchanged.
+
+(define (exec-help editor)
+  (let ((e (text-editor-error editor)))
+    (when e
+      (println (error-object-message e)))))
+
+(define-command ("Help Command" exec-help)
+  (parse-blanks-seq
+    (parse-ignore (parse-char #\h))))
+
+;; Help-Mode Command
+;;
+;;   H
+;;
+;; The H command shall cause ed to enter a mode in which help messages
+;; (see the h command) shall be written to standard output for all
+;; subsequent '?' notifications. The H command alternately shall turn
+;; this mode on and off; it is initially off. If the help-mode is being
+;; turned on, the H command also explains the previous '?' notification,
+;; if there was one. The current line number shall be unchanged.
+
+(define (exec-help-mode editor)
+  (let ((prev-help? (text-editor-help? editor)))
+    (text-editor-help-set! editor (not prev-help?))
+    (when (not prev-help?)
+      (exec-help editor))))
+
+(define-command ("Help-Mode Command" exec-help-mode)
+  (parse-blanks-seq
+    (parse-ignore (parse-char #\H))))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
