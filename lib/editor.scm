@@ -108,7 +108,7 @@
     ((fst #\, snd)
      (%editor-range editor fst snd))))
 
-(define (editor-append editor text)
+(define (editor-append! editor text)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
     (text-editor-buffer-set! editor
