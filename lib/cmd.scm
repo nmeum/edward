@@ -263,6 +263,33 @@
   (parse-cmd #\m)
   parse-addr)
 
+;; Copy Command
+;;
+;;  (.,.)taddress
+;;
+;; The t command shall be equivalent to the m command, except that a
+;; copy of the addressed lines shall be placed after address address
+;; (which can be 0); the current line number shall be set to the address
+;; of the last line added.
+
+(define (exec-copy editor range addr)
+  (if (editor-in-range editor range addr)
+    (error "invalid copy destination")
+    (let ((data (editor-get-range editor range))
+          (target (addr->line editor addr)))
+      (editor-goto! editor addr)
+      (let ((last-inserted (editor-append! editor data)))
+        (editor-goto! editor last-inserted)))))
+
+(define-command ("Copy Command" exec-copy)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\t)
+  parse-addr)
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
