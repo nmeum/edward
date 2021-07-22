@@ -31,9 +31,9 @@
 ;; appended text to be placed at the beginning of the buffer.
 
 (define (exec-append editor addr)
-  (editor-goto editor addr)
+  (editor-goto! editor addr)
   (let ((last-inserted (editor-append! editor (input-mode-read))))
-    (editor-goto editor last-inserted)))
+    (editor-goto! editor last-inserted)))
 
 (define-command ("Append Command" exec-append)
   (parse-blanks-seq
@@ -64,13 +64,12 @@
 (define (exec-change editor range)
   (let ((saddr (addr->line editor (first range))))
     (editor-remove! editor range)
-    (editor-goto editor (max 0 (dec saddr)))
+    (editor-goto! editor (max 0 (dec saddr)))
 
     (let ((in (input-mode-read)))
       (if (null? in)
-        (editor-goto editor (min (length (text-editor-buffer editor))
-                                 saddr))
-        (editor-goto editor (editor-append! editor in))))))
+        (editor-goto! editor (min (length (text-editor-buffer editor)) saddr))
+        (editor-goto! editor (editor-append! editor in))))))
 
 (define-command ("Change Command" exec-change)
   (parse-blanks-seq
@@ -96,14 +95,14 @@
 ;; read in.
 
 (define (exec-read editor addr filename)
-  (editor-goto editor addr)
+  (editor-goto! editor addr)
   (let* ((f (editor-filename editor filename))
          (r (file->buffer f)))
     (if (empty-string? (text-editor-filename editor))
       (text-editor-filename-set! editor f))
 
     (editor-append! editor (car r))
-    (editor-goto editor (length (text-editor-buffer editor)))
+    (editor-goto! editor (length (text-editor-buffer editor)))
 
     (editor-println editor (cdr r))))
 
@@ -128,9 +127,8 @@
   (let ((saddr (addr->line editor (first range))))
     (editor-remove! editor range)
     (if (null? (text-editor-buffer editor))
-      (editor-goto editor 0)
-      (editor-goto editor (min (length (text-editor-buffer editor))
-                               saddr)))))
+      (editor-goto! editor 0)
+      (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
 
 (define-command ("Delete Command" exec-delete)
   (parse-blanks-seq

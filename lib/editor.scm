@@ -99,7 +99,7 @@
 ;; line, specifying 0 as a line moves the cursor **before** the first
 ;; line. Target can either be a line number or an address.
 
-(define (editor-goto editor target)
+(define (editor-goto! editor target)
   (if (number? target)
     ;; Target is a line number.
     (text-editor-line-set! editor target)
@@ -120,7 +120,7 @@
   ;; for forwards and backwards searches.
   (match range
     ((fst #\; snd)
-     (editor-goto fst)
+     (editor-goto! fst)
      (%editor-range editor fst snd))
     ((fst #\, snd)
      (%editor-range editor fst snd))))
