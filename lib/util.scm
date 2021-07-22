@@ -10,6 +10,26 @@
 (define (println . objs)
   (apply fprintln (current-output-port) objs))
 
+;; Print error with provided irritants (if any).
+
+(define display-error
+  (case-lambda
+    ((eobj port)
+     (%display-error eobj port))
+    ((eobj)
+     (%display-error eobj (current-output-port)))))
+
+(define (%display-error eobj port)
+  (let ((msg (error-object-message eobj)))
+    (if (null? (error-object-irritants eobj))
+      (fprintln port msg)
+      (begin
+        (display msg port)
+        (display ": " port)
+        (for-each (lambda (i) (write-simple i port))
+                  (error-object-irritants eobj))
+        (newline port)))))
+
 ;; Create a REPL and execute proc for each input.
 
 (define (repl prompt proc)

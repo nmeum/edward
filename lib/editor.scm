@@ -62,7 +62,7 @@
             (println "?")
             (text-editor-error-set! editor eobj)
             (when (text-editor-help? editor)
-              (println (error-object-message eobj)))
+              (display-error eobj))
             (k '()))
           (lambda ()
             (let* ((s (string->parse-stream input))

@@ -152,7 +152,7 @@
 (define (exec-help editor)
   (let ((e (text-editor-error editor)))
     (when e
-      (println (error-object-message e)))))
+      (display-error e))))
 
 (define-command ("Help Command" exec-help)
   (parse-blanks-seq
