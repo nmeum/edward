@@ -231,6 +231,38 @@
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 
+;; Move Command
+;;
+;;   (,.,)maddress
+;;
+;; The m command shall reposition the addressed lines after the line
+;; addressed by address.  Address 0 shall be valid for address and cause
+;; the addressed lines to be moved to the beginning of the buffer. It
+;; shall be an error if address address falls within the range of moved
+;; lines. The current line number shall be set to the address of the
+;; last line moved.
+
+(define (exec-move editor range addr)
+  (if (editor-in-range editor range addr)
+    (error "invalid move destination")
+    (let ((data (editor-get-range editor range))
+          (target (addr->line editor addr)))
+      (exec-delete editor range)
+      (editor-goto! editor (min target
+                                (length (text-editor-buffer editor))))
+
+      (let ((last-inserted (editor-append! editor data)))
+        (editor-goto! editor last-inserted)))))
+
+(define-command ("Move Command" exec-move)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\m)
+  parse-addr)
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]

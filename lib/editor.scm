@@ -132,6 +132,11 @@
       (sublist (text-editor-buffer editor)
                (dec sline) eline))))
 
+(define (editor-in-range editor range addr)
+  (let-values (((sline eline) (editor-range editor range))
+               ((line) (addr->line editor addr)))
+    (and (>= line sline) (< line eline))))
+
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
