@@ -42,9 +42,9 @@
 
 ;; Change Command
 ;;
-;;  (.,.)c
-;;  <text>
-;;  .
+;;   (.,.)c
+;;   <text>
+;;   .
 ;;
 ;; The c command shall delete the addressed lines, then accept input
 ;; text that replaces these lines; the current line shall be set to the
