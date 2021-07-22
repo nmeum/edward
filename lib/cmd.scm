@@ -209,6 +209,28 @@
 (define-command ("Help-Mode Command" exec-help-mode)
   (parse-cmd #\H))
 
+;; Insert Command
+;;
+;;   (.)i
+;;   <text>
+;;   .
+;;
+;; The i command shall insert the given text before the addressed line;
+;; the current line is set to the last inserted line or, if there was
+;; none, to the addressed line. This command differs from the a command
+;; only in the placement of the input text. Address 0 shall be valid for
+;; this command; it shall be interpreted as if address 1 were specified.
+
+(define (exec-insert editor addr)
+  (let ((line (addr->line editor addr)))
+    (editor-goto! editor (max (dec line) 0))
+    (let ((last-inserted (editor-append! editor (input-mode-read))))
+      (editor-goto! editor last-inserted))))
+
+(define-command ("Insert Command" exec-insert)
+  (parse-default parse-addr (make-addr '(current-line)))
+  (parse-cmd #\i))
+
 ;; Write Command
 ;;
 ;;   (1,$)w [file]
