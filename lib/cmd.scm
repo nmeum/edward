@@ -32,10 +32,8 @@
 
 (define (exec-append editor addr)
   (editor-goto editor addr)
-  (let ((cline (text-editor-line editor))
-        (input (input-mode-read)))
-    (editor-append! editor input)
-    (editor-goto editor (+ cline (length input)))))
+  (let ((last-inserted (editor-append! editor (input-mode-read))))
+    (editor-goto editor last-inserted)))
 
 (define-command ("Append Command" exec-append)
   (parse-blanks-seq
@@ -65,19 +63,14 @@
 
 (define (exec-change editor range)
   (let ((saddr (addr->line editor (first range))))
-    ;; XXX: Use exec-delete here?
     (editor-remove! editor range)
     (editor-goto editor (max 0 (dec saddr)))
 
-    ;; XXX: Duplication with append code
-    (let ((cline (text-editor-line editor))
-          (input (input-mode-read)))
-      (if (null? input)
+    (let ((in (input-mode-read)))
+      (if (null? in)
         (editor-goto editor (min (length (text-editor-buffer editor))
                                  saddr))
-        (begin
-          (editor-append! editor input)
-          (editor-goto editor (+ cline (length input))))))))
+        (editor-goto editor (editor-append! editor in))))))
 
 (define-command ("Change Command" exec-change)
   (parse-blanks-seq

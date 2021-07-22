@@ -132,6 +132,9 @@
       (sublist (text-editor-buffer editor)
                (dec sline) eline))))
 
+;; Append the text at the current address, return line number
+;; of last inserted line.
+
 (define (editor-append! editor text)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
@@ -139,7 +142,8 @@
                              (append
                                (take buf line)
                                text
-                               (drop buf line)))))
+                               (drop buf line)))
+    (+ line (length text))))
 
 (define (editor-remove! editor range)
   (let-values (((sline eline) (editor-range editor range))
