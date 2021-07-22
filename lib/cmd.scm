@@ -7,7 +7,8 @@
     ((define-command (DESC HANDLER) BODY ...)
       (register-command
         (parse-map
-          BODY ...
+          (parse-blanks-seq
+            BODY ...)
           (lambda (args) (cons HANDLER args)))))))
 
 ;; TODO: Implement support for !file
@@ -36,9 +37,8 @@
     (editor-goto! editor last-inserted)))
 
 (define-command ("Append Command" exec-append)
-  (parse-blanks-seq
-    (parse-default parse-addr (make-addr '(current-line)))
-    (parse-ignore (parse-char #\a))))
+  (parse-default parse-addr (make-addr '(current-line)))
+  (parse-ignore (parse-char #\a)))
 
 ;; Change Command
 ;;
@@ -72,13 +72,12 @@
         (editor-goto! editor (editor-append! editor in))))))
 
 (define-command ("Change Command" exec-change)
-  (parse-blanks-seq
-    (parse-default parse-addr-range
-                   (list
-                     (make-addr '(current-line))
-                     #\,
-                     (make-addr '(current-line))))
-    (parse-ignore (parse-char #\c))))
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-ignore (parse-char #\c)))
 
 ;; Read Command
 ;;
@@ -107,10 +106,9 @@
     (editor-println editor (cdr r))))
 
 (define-command ("Read Command" exec-read)
-  (parse-blanks-seq
-    (parse-default parse-addr (make-addr '(last-line)))
-    (parse-ignore (parse-char #\r))
-    parse-filename))
+  (parse-default parse-addr (make-addr '(last-line)))
+  (parse-ignore (parse-char #\r))
+  parse-filename)
 
 ;; Delete Command
 ;;
@@ -131,13 +129,12 @@
       (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
 
 (define-command ("Delete Command" exec-delete)
-  (parse-blanks-seq
-    (parse-default parse-addr-range
-                   (list
-                     (make-addr '(current-line))
-                     #\,
-                     (make-addr '(current-line))))
-    (parse-ignore (parse-char #\d))))
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-ignore (parse-char #\d)))
 
 ;; Edit Command
 ;;
@@ -155,9 +152,8 @@
   (exec-read editor (make-addr '(last-line)) filename))
 
 (define-command ("Edit Command" exec-edit)
-  (parse-blanks-seq
-    (parse-ignore (parse-char #\e))
-    parse-filename))
+  (parse-ignore (parse-char #\e))
+  parse-filename)
 
 ;; Filename Command
 ;;
@@ -174,9 +170,8 @@
   (editor-println editor (editor-filename editor)))
 
 (define-command ("Filename Command" exec-filename)
-  (parse-blanks-seq
-    (parse-ignore (parse-char #\f))
-    parse-filename))
+  (parse-ignore (parse-char #\f))
+  parse-filename)
 
 ;; Help Command
 ;;
@@ -192,8 +187,7 @@
       (display-error e))))
 
 (define-command ("Help Command" exec-help)
-  (parse-blanks-seq
-    (parse-ignore (parse-char #\h))))
+  (parse-ignore (parse-char #\h)))
 
 ;; Help-Mode Command
 ;;
@@ -213,8 +207,7 @@
       (exec-help editor))))
 
 (define-command ("Help-Mode Command" exec-help-mode)
-  (parse-blanks-seq
-    (parse-ignore (parse-char #\H))))
+  (parse-ignore (parse-char #\H)))
 
 ;; Write Command
 ;;
@@ -240,14 +233,13 @@
           (editor-println editor (string-length s)))))))
 
 (define-command ("Write Command" exec-write)
-  (parse-blanks-seq
-    (parse-default parse-addr-range
-                   (list
-                     (make-addr '(nth-line . 1))
-                     #\,
-                     (make-addr '(last-line))))
-    (parse-ignore (parse-char #\w))
-    parse-filename))
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(nth-line . 1))
+                   #\,
+                   (make-addr '(last-line))))
+  (parse-ignore (parse-char #\w))
+  parse-filename)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
