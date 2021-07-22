@@ -43,3 +43,8 @@
         #\,
         (make-addr '(current-line) '(10)))
       "foobar") ".,.+10wfoobar"))
+
+(test-group "miscellaneous"
+  (test-parse-cmd "parse command with trailing blanks"
+    (list (make-addr '(nth-line . 2342)))
+    "2342a     "))

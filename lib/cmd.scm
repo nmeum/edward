@@ -177,4 +177,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define parse-cmd
-  (apply parse-or command-parsers))
+  ;; Strip trailing blanks after parsed command.
+  (parse-map
+    (parse-seq
+      (apply parse-or command-parsers)
+      parse-blanks)
+    car))
