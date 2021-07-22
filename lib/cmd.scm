@@ -241,6 +241,24 @@
   (parse-cmd #\w)
   parse-filename)
 
+;; Line Number Command
+;;
+;;  ($)=
+;;
+;; The line number of the addressed line shall be written to standard
+;; output in the following format:
+;;
+;;   "%d\n", <line number>
+;;
+;; The current line number shall be unchanged by this command.
+
+(define (exec-line-number editor addr)
+  (println (text-editor-line editor)))
+
+(define-command ("Line Number Command" exec-line-number)
+  (parse-default parse-addr (make-addr '(last-line)))
+  (parse-cmd #\=))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define parse-cmd
