@@ -42,6 +42,52 @@
     (parse-default parse-addr (make-addr '(current-line)))
     (parse-ignore (parse-char #\a))))
 
+;; Change Command
+;;
+;;  (.,.)c
+;;  <text>
+;;  .
+;;
+;; The c command shall delete the addressed lines, then accept input
+;; text that replaces these lines; the current line shall be set to the
+;; address of the last line input; or, if there were none, at the line
+;; after the last line deleted; if the lines deleted were originally at
+;; the end of the buffer, the current line number shall be set to the
+;; address of the new last line; if no lines remain in the buffer, the
+;; current line number shall be set to zero. Address 0 shall be valid
+;; for this command; it shall be interpreted as if address 1 were
+;; specified.
+
+;; XXX handling of address 0 is actually somewhat disputed:
+;;
+;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
+;;   * https://austingroupbugs.net/view.php?id=1130
+
+(define (exec-change editor range)
+  (let ((saddr (addr->line editor (first range))))
+    ;; XXX: Use exec-delete here?
+    (editor-remove! editor range)
+    (editor-goto editor (max 0 (dec saddr)))
+
+    ;; XXX: Duplication with append code
+    (let ((cline (text-editor-line editor))
+          (input (input-mode-read)))
+      (if (null? input)
+        (editor-goto editor (min (length (text-editor-buffer editor))
+                                 saddr))
+        (begin
+          (editor-append! editor input)
+          (editor-goto editor (+ cline (length input))))))))
+
+(define-command ("Change Command" exec-change)
+  (parse-blanks-seq
+    (parse-default parse-addr-range
+                   (list
+                     (make-addr '(current-line))
+                     #\,
+                     (make-addr '(current-line))))
+    (parse-ignore (parse-char #\c))))
+
 ;; Read Command
 ;;
 ;;   ($)r [file]
