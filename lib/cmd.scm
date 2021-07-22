@@ -32,10 +32,10 @@
 
 (define (exec-append editor addr)
   (editor-goto editor addr)
-  (editor-append! editor (input-mode-read))
-
-  ;; Current line shall become the address of the last inserted line.
-  (editor-goto editor (length (text-editor-buffer editor))))
+  (let ((cline (text-editor-line editor))
+        (input (input-mode-read)))
+    (editor-append! editor input)
+    (editor-goto editor (+ cline (length input)))))
 
 (define-command ("Append Command" exec-append)
   (parse-blanks-seq
