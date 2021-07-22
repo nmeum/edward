@@ -1,6 +1,6 @@
 (define (parse-fail msg)
-  (lambda (r s i fk)
-    (fk s i msg)))
+  (lambda (source index sk fk)
+    (fk source index msg)))
 
 (define (parse-string parser)
   (parse-map

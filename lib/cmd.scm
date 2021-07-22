@@ -1,4 +1,4 @@
-(define command-parsers '())
+(define command-parsers (list (parse-fail "Unknown command")))
 (define (register-command proc)
   (set! command-parsers (cons proc command-parsers)))
 
