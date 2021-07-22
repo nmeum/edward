@@ -1,10 +1,15 @@
 (define-library (edward)
-  (import (scheme base) (scheme file) (scheme char) (scheme case-lambda)
+  (import (scheme base)
+          (scheme file)
+          (scheme char)
+          (scheme case-lambda)
+          (scheme process-context)
+          (scheme write)
+
           (srfi 1)
           (srfi 14)
-          (matchable)
 
-          (scheme write))
+          (matchable))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr parse-addr parse-addr-range)

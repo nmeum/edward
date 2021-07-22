@@ -281,6 +281,19 @@
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\=))
 
+;; Quit Without Checking Command
+;;
+;;   Q
+;;
+;; The Q command shall cause ed to exit without checking whether changes
+;; have been made in the buffer since the last w command.
+
+(define (exec-quit editor)
+  (exit))
+
+(define-command ("Quit Without Checking Command" exec-quit)
+  (parse-cmd #\Q))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define parse-cmd
