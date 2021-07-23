@@ -3,7 +3,9 @@
 The goal of this project is creating an implementation of the
 [`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
 [CHICKEN Scheme][chicken]. The basic structure works more or less,
-however, only a few commands have been implemented so far.
+however, only a few commands and features have been implemented so far.
+Take a look at `./tests/integration` to see what gets tested against a
+reference implementation currently and therefore presumably works.
 
 ## Installation
 
