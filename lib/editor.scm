@@ -150,6 +150,15 @@
                                (drop buf line)))
     (+ line (length text))))
 
+(define (editor-join! editor range)
+  (let-values (((sline eline) (editor-range editor range))
+               ((buffer) (text-editor-buffer editor)))
+    (text-editor-buffer-set! editor
+      (append
+        (take buffer (dec sline))
+        (list (apply string-append (sublist buffer (dec sline) eline)))
+        (drop buffer eline)))))
+
 (define (editor-remove! editor range)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))

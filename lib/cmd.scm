@@ -231,6 +231,31 @@
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 
+;; Join Command
+;;
+;;   (.,.+1)j
+;;
+;; The j command shall join contiguous lines by removing the appropriate
+;; <newline> characters. If exactly one address is given, this command
+;; shall do nothing. If lines are joined, the current line number shall
+;; be set to the address of the joined line; otherwise, the current line
+;; number shall be unchanged.
+
+(define (exec-join editor range)
+  (let ((start (addr->line editor (first range)))
+        (end (addr->line editor (last range))))
+    (unless (eqv? start end)
+      (editor-join! editor range)
+      (editor-goto! editor start))))
+
+(define-command ("Join Command" exec-join)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line) '(1))))
+  (parse-cmd #\j))
+
 ;; Move Command
 ;;
 ;;   (,.,)maddress
