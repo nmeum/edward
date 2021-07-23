@@ -1,5 +1,5 @@
 ((author "Sören Tempel")
- (synopsis "Savage implementation of the ed(1) text editor")
+ (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
  (license "GPLv3")
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable)
  (test-dependencies test)

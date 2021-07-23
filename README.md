@@ -1,17 +1,13 @@
-# edward
-
-An implementation of the [`ed(1)`][ed posix] text editor in [CHICKEN Scheme][chicken].
-
 ## Status
 
-The basic structure works more or less, however, only a few commands
-have been implemented so far. Ideally, all commands mandated by
-POSIX.1-2008 should be implemented at some point. Furthermore, it should
-also be possible to define custom commands in the future.
+The goal of this project is creating an implementation of the
+[`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
+[CHICKEN Scheme][chicken]. The basic structure works more or less,
+however, only a few commands have been implemented so far.
 
 ## Installation
 
-If a correctly configured chicken toolchain is available run:
+If a correctly configured CHICKEN toolchain is available run:
 
 	$ chicken-install
 
@@ -31,7 +27,7 @@ This will create an executable binary in `./bin/edward`.
 This repository contains both unit tests and integration tests. The
 latter require a reference implementation of a POSIX.1-2008 compatible
 ed implementation. For instance, [GNU ed][gnu ed]. The reference
-implementation is determined from the `REF_IMPL` environment variable.
+implementation is determined using the `REF_IMPL` environment variable.
 
 Both unit and integration tests can be run using:
 
