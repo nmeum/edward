@@ -49,10 +49,9 @@
   (parse-map
     (parse-seq
       (parse-char #\')
-      (parse-repeat+ (parse-char char-set:lower-case)))
+      (parse-char char-set:lower-case))
     (lambda (lst)
-      (cons 'marked-line
-            (list->string (cadr lst))))))
+      (cons 'marked-line (cadr lst)))))
 
 ;; Utility procedure for parsing BRE addresses.
 

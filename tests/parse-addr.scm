@@ -7,7 +7,7 @@
   (test-parse-error "unknown address format" parse-addr "42."))
 
 (test-group "parse mark"
-  (test-parse '((marked-line . "foo") ()) parse-addr "'foo")
+  (test-parse '((marked-line . #\x) ()) parse-addr "'x")
   (test-parse-error "unknown address format" parse-addr "'FOO")
   (test-parse-error "unknown address format" parse-addr "'F23"))
 
@@ -32,7 +32,7 @@
 (test-group "parse offsets"
   (test-parse '((nth-line . 2342) (1)) parse-addr "2342 +1")
   (test-parse '((relative . 5) (1 2 3)) parse-addr "+5 1 2 3")
-  (test-parse '((marked-line . "foobar") (23 42)) parse-addr "'foobar 23    42")
+  (test-parse '((marked-line . #\f) (23 42)) parse-addr "'f 23    42")
   (test-parse '((regex-forward . "foo") (-1 2 -3)) parse-addr "/foo/ -1 2 -3")
   (test-parse '((regex-backward . "bar") (+2342)) parse-addr "?bar?+2342")
   (test-parse '((nth-line . 23) (-5 +5)) parse-addr "23-5+5"))
