@@ -256,6 +256,24 @@
                    (make-addr '(current-line) '(1))))
   (parse-cmd #\j))
 
+;; Mark Command
+;;
+;;  (.)kx
+;;
+;; The k command shall mark the addressed line with name x, which the
+;; application shall ensure is a lowercase letter from the portable
+;; character set. The address "'x" shall then refer to this line; the
+;; current line number shall be unchanged.
+
+(define (exec-mark editor addr mark)
+  (editor-mark-line
+    editor (addr->line editor addr) mark))
+
+(define-command ("Mark Command" exec-mark)
+  (parse-default parse-addr (make-addr '(current-line)))
+  (parse-cmd #\k)
+  (parse-char char-set:lower-case))
+
 ;; Move Command
 ;;
 ;;   (,.,)maddress

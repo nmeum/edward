@@ -28,7 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line error silent? help?)
+  (%make-text-editor filename buffer line error marks silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -38,13 +38,16 @@
   (line text-editor-line text-editor-line-set!)
   ;; Last error object encountered (for h and H command).
   (error text-editor-error text-editor-error-set!)
+  ;; Assoc lists of marks for this editor.
+  ;; XXX: Since data is never deleted from an assoc list this leaks memory.
+  (marks text-editor-marks text-editor-marks-set!)
   ;; Whether the editor is in silent mode (ed -s option).
   (silent? text-editor-silent?)
   ;; Whether help mode is activated (H command).
   (help? text-editor-help? text-editor-help-set!))
 
 (define (make-text-editor filename silent?)
-  (let ((e (%make-text-editor filename '() 0 #f silent? #f)))
+  (let ((e (%make-text-editor filename '() 0 #f '() silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename))
     e))
@@ -94,6 +97,13 @@
 (define (editor-verbose editor . objs)
   (unless (text-editor-silent? editor)
     (apply fprintln (current-output-port) objs)))
+
+(define (editor-mark-line editor line mark)
+  (text-editor-marks-set! editor
+    (alist-cons mark line (text-editor-marks editor))))
+
+(define (editor-get-mark editor mark)
+  (cdr (assv mark (text-editor-marks editor))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
@@ -187,7 +197,8 @@
      (%addr->line e off (length (text-editor-buffer e))))
     ((e (('nth-line . line) off))
      (%addr->line e off line))
-    ;; TODO: marked-line
+    ((e (('marked-line . mark) off))
+     (%addr->line e off (editor-get-mark e mark)))
     ;; TODO: regex-forward
     ;; TODO: regex-backward
     ((e (('relative . rel) off))
