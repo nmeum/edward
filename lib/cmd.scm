@@ -383,6 +383,35 @@
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\=))
 
+;; Number Command
+;;
+;;   (.,.)n
+;;
+;; The n command shall write to standard output the addressed lines,
+;; preceding each line by its line number and a <tab>; the current line
+;; number shall be set to the address of the last line written. The n
+;; command can be appended to any command other than e, E, f, q, Q, r,
+;; w, or !.
+
+;; TODO: Allow appending number command to other commands.
+
+(define (exec-number editor range)
+  (for-each
+    (lambda (pair)
+      (println (car pair) "\t" (cadr pair)))
+    (let ((lst (editor-get-range editor range))
+          (sline (addr->line editor (first range)))
+          (eline (addr->line editor (last range))))
+      (zip (iota (inc (- eline sline)) sline) lst))))
+
+(define-command ("Number Command" exec-number)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\n))
+
 ;; Quit Without Checking Command
 ;;
 ;;   Q
