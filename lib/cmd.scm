@@ -2,14 +2,33 @@
 (define (register-command proc)
   (set! command-parsers (cons proc command-parsers)))
 
+;; However, any command (except e, E, f, q, Q, r, w, and !) can be
+;; suffixed by the letter l, n, or p; in which case, except for the l,
+;; n, and p commands, the command shall be executed and then the new
+;; current line shall be written as described below under the l, n, and
+;; p commands.
+
 (define-syntax define-command
-  (syntax-rules ()
-    ((define-command (DESC HANDLER) BODY ...)
-      (register-command
-        (parse-map
-          (parse-blanks-seq
-            BODY ...)
-          (lambda (args) (cons HANDLER args)))))))
+  (syntax-rules (edit-cmd file-cmd)
+    ((define-command (edit-cmd HANDLER) BODY ...)
+     (register-command
+       (parse-map
+         (parse-blanks-seq
+           BODY ...)
+         (lambda (args) (cons HANDLER args)))))
+    ((define-command (file-cmd HANDLER) BODY ...)
+     (register-command
+       (parse-map
+         (parse-blanks-seq
+           BODY ...
+           parse-print-cmd)
+         (lambda (orig-args)
+           (cons
+             (lambda (editor . args)
+               (apply HANDLER editor args)
+               (let ((pcmd (last orig-args)))
+                 (apply (car pcmd) editor (cdr pcmd))))
+             (init orig-args))))))))
 
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
@@ -39,7 +58,7 @@
   (let ((last-inserted (editor-append! editor (input-mode-read))))
     (editor-goto! editor last-inserted)))
 
-(define-command ("Append Command" exec-append)
+(define-command (edit-cmd exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\a))
 
@@ -74,7 +93,7 @@
         (editor-goto! editor (min (length (text-editor-buffer editor)) saddr))
         (editor-goto! editor (editor-append! editor in))))))
 
-(define-command ("Change Command" exec-change)
+(define-command (edit-cmd exec-change)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -108,7 +127,7 @@
 
     (editor-verbose editor (cdr r))))
 
-(define-command ("Read Command" exec-read)
+(define-command (edit-cmd exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\r)
   parse-filename)
@@ -131,7 +150,7 @@
       (editor-goto! editor 0)
       (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
 
-(define-command ("Delete Command" exec-delete)
+(define-command (edit-cmd exec-delete)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -151,7 +170,7 @@
   (text-editor-buffer-set! editor '())
   (exec-read editor (make-addr '(last-line)) filename))
 
-(define-command ("Edit Without Checking Command" exec-edit)
+(define-command (edit-cmd exec-edit)
   (parse-cmd #\E)
   parse-filename)
 
@@ -169,7 +188,7 @@
     (text-editor-filename-set! editor filename))
   (editor-verbose editor (editor-filename editor)))
 
-(define-command ("Filename Command" exec-filename)
+(define-command (edit-cmd exec-filename)
   (parse-cmd #\f)
   parse-filename)
 
@@ -186,7 +205,7 @@
     (when e
       (display-error e))))
 
-(define-command ("Help Command" exec-help)
+(define-command (edit-cmd exec-help)
   (parse-cmd #\h))
 
 ;; Help-Mode Command
@@ -206,7 +225,7 @@
     (when (not prev-help?)
       (exec-help editor))))
 
-(define-command ("Help-Mode Command" exec-help-mode)
+(define-command (edit-cmd exec-help-mode)
   (parse-cmd #\H))
 
 ;; Insert Command
@@ -227,7 +246,7 @@
     (let ((last-inserted (editor-append! editor (input-mode-read))))
       (editor-goto! editor last-inserted))))
 
-(define-command ("Insert Command" exec-insert)
+(define-command (edit-cmd exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 
@@ -248,7 +267,7 @@
       (editor-join! editor range)
       (editor-goto! editor start))))
 
-(define-command ("Join Command" exec-join)
+(define-command (edit-cmd exec-join)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -269,7 +288,7 @@
   (editor-mark-line
     editor (addr->line editor addr) mark))
 
-(define-command ("Mark Command" exec-mark)
+(define-command (edit-cmd exec-mark)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\k)
   (parse-char char-set:lower-case))
@@ -297,7 +316,7 @@
       (let ((last-inserted (editor-append! editor data)))
         (editor-goto! editor last-inserted)))))
 
-(define-command ("Move Command" exec-move)
+(define-command (edit-cmd exec-move)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -324,7 +343,7 @@
       (let ((last-inserted (editor-append! editor data)))
         (editor-goto! editor last-inserted)))))
 
-(define-command ("Copy Command" exec-copy)
+(define-command (edit-cmd exec-copy)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -356,7 +375,7 @@
           ;; Assuming write-string *always* writes all bytes.
           (editor-verbose editor (string-length s)))))))
 
-(define-command ("Write Command" exec-write)
+(define-command (edit-cmd exec-write)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(nth-line . 1))
@@ -379,7 +398,7 @@
 (define (exec-line-number editor addr)
   (println (text-editor-line editor)))
 
-(define-command ("Line Number Command" exec-line-number)
+(define-command (edit-cmd exec-line-number)
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\=))
 
@@ -404,7 +423,7 @@
           (eline (addr->line editor (last range))))
       (zip (iota (inc (- eline sline)) sline) lst))))
 
-(define-command ("Number Command" exec-number)
+(define-command (edit-cmd exec-number)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -422,7 +441,7 @@
 (define (exec-quit editor)
   (exit))
 
-(define-command ("Quit Without Checking Command" exec-quit)
+(define-command (edit-cmd exec-quit)
   (parse-cmd #\Q))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -432,5 +451,6 @@
   (parse-map
     (parse-seq
       (apply parse-or command-parsers)
+      ;; The command letter can be preceded by zero or more <blank> characters.
       parse-blanks)
     car))
