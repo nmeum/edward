@@ -1,5 +1,5 @@
 (define (test-parse-cmd desc expected input)
-  (test desc expected (cdr (%test-parse parse-cmd input))))
+  (test desc expected (cdr (%test-parse parse-cmds input))))
 
 (test-group "append command"
   (test-parse-cmd "no arguments"
@@ -47,4 +47,8 @@
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
     (list (make-addr '(nth-line . 2342)))
-    "2342a     "))
+    "2342a     ")
+
+  (test-parse-cmd "append command with suffixed printing command"
+    (list (make-addr '(nth-line . 42)))
+     "42an"))

@@ -8,27 +8,44 @@
 ;; current line shall be written as described below under the l, n, and
 ;; p commands.
 
+(define parse-print-cmd
+  (parse-strip-blanks
+    (parse-map
+      (parse-char (char-set #\l #\n #\p))
+      (lambda (x)
+        ;; Current line shall be written described below under the l, n, and p commands.
+        (let ((cur (list (make-addr '(current-line))
+                         #\,
+                         (make-addr '(current-line)))))
+          (case x
+            ((#\n) (list exec-number cur))
+            (else (error "not implemented"))))))))
+
 (define-syntax define-command
   (syntax-rules (edit-cmd file-cmd)
-    ((define-command (edit-cmd HANDLER) BODY ...)
+    ((define-command (file-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
          (parse-blanks-seq
            BODY ...)
          (lambda (args) (cons HANDLER args)))))
-    ((define-command (file-cmd HANDLER) BODY ...)
+    ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
          (parse-blanks-seq
            BODY ...
-           parse-print-cmd)
+           ;; TODO: No blanks between these
+           (parse-optional parse-print-cmd))
          (lambda (orig-args)
            (cons
              (lambda (editor . args)
                (apply HANDLER editor args)
                (let ((pcmd (last orig-args)))
-                 (apply (car pcmd) editor (cdr pcmd))))
+                 (when pcmd
+                  (apply (car pcmd) editor (cdr pcmd)))))
              (init orig-args))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
@@ -127,7 +144,7 @@
 
     (editor-verbose editor (cdr r))))
 
-(define-command (edit-cmd exec-read)
+(define-command (file-cmd exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\r)
   parse-filename)
@@ -188,7 +205,7 @@
     (text-editor-filename-set! editor filename))
   (editor-verbose editor (editor-filename editor)))
 
-(define-command (edit-cmd exec-filename)
+(define-command (file-cmd exec-filename)
   (parse-cmd #\f)
   parse-filename)
 
@@ -375,7 +392,7 @@
           ;; Assuming write-string *always* writes all bytes.
           (editor-verbose editor (string-length s)))))))
 
-(define-command (edit-cmd exec-write)
+(define-command (file-cmd exec-write)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(nth-line . 1))
@@ -441,7 +458,7 @@
 (define (exec-quit editor)
   (exit))
 
-(define-command (edit-cmd exec-quit)
+(define-command (file-cmd exec-quit)
   (parse-cmd #\Q))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
