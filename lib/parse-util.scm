@@ -35,6 +35,15 @@
       parse-anything)
     cadr))
 
+;; Invoke given parser and strip trailing blanks (if any).
+
+(define (parse-strip-blanks parser)
+  (parse-map
+    (parse-seq
+      parser
+      parse-blanks)
+    car))
+
 ;; Like parse-seq but skip blanks **before** each parser.
 
 (define (parse-blanks-seq . o)
