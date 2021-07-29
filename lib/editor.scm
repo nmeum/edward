@@ -69,7 +69,7 @@
             (k '()))
           (lambda ()
             (let* ((s (string->parse-stream input))
-                   (r (parse-fully parse-cmd s)))
+                   (r (parse-fully parse-cmds s)))
               (apply (car r)
                      editor (cdr r))))))))
 

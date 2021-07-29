@@ -446,11 +446,5 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define parse-cmd
-  ;; Strip trailing blanks after parsed command.
-  (parse-map
-    (parse-seq
-      (apply parse-or command-parsers)
-      ;; The command letter can be preceded by zero or more <blank> characters.
-      parse-blanks)
-    car))
+(define parse-cmds
+  (parse-strip-blanks (apply parse-or command-parsers)))
