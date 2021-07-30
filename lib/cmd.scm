@@ -18,9 +18,9 @@
                          #\,
                          (make-addr '(current-line)))))
           (case x
+            ((#\l) (error "l command not implemented"))
             ((#\n) (list exec-number cur))
-            ((#\p) (list exec-print cur))
-            (else (error "not implemented"))))))))
+            ((#\p) (list exec-print cur))))))))
 
 (define-syntax define-command
   (syntax-rules (edit-cmd file-cmd)
