@@ -32,9 +32,8 @@
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
-         (parse-blanks-seq
-           BODY ...
-           ;; TODO: No blanks between these
+         (parse-seq
+           (parse-blanks-seq BODY ...)
            (parse-optional parse-print-cmd))
          (lambda (orig-args)
            (cons
@@ -43,7 +42,7 @@
                (let ((pcmd (last orig-args)))
                  (when pcmd
                   (apply (car pcmd) editor (cdr pcmd)))))
-             (init orig-args))))))))
+             (car orig-args))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

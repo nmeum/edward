@@ -51,4 +51,7 @@
 
   (test-parse-cmd "append command with suffixed printing command"
     (list (make-addr '(nth-line . 42)))
-     "42an"))
+     "42an")
+
+  (test-parse-error "Unknown command" parse-cmds "Qn")
+  (test-parse-error "Unknown command" parse-cmds "a n"))
