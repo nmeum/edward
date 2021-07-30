@@ -429,13 +429,14 @@
 ;; w, or !.
 
 (define (exec-number editor range)
-  (for-each
-    (lambda (pair)
-      (println (car pair) "\t" (cadr pair)))
-    (let ((lst (editor-get-range editor range))
-          (sline (addr->line editor (first range)))
-          (eline (addr->line editor (last range))))
-      (zip (iota (inc (- eline sline)) sline) lst))))
+  (let ((lst (editor-get-range editor range))
+        (sline (addr->line editor (first range)))
+        (eline (addr->line editor (last range))))
+    (for-each
+      (lambda (pair)
+        (println (car pair) "\t" (cadr pair)))
+      (zip (iota (inc (- eline sline)) sline) lst))
+    (editor-goto! editor eline)))
 
 (define-command (edit-cmd exec-number)
   (parse-default parse-addr-range
