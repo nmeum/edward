@@ -428,8 +428,6 @@
 ;; command can be appended to any command other than e, E, f, q, Q, r,
 ;; w, or !.
 
-;; TODO: Allow appending number command to other commands.
-
 (define (exec-number editor range)
   (for-each
     (lambda (pair)
