@@ -483,6 +483,26 @@
 (define-command (file-cmd exec-quit)
   (parse-cmd #\Q))
 
+;; Null Command
+;;
+;;  (.+1)
+;;
+;; An address alone on a line shall cause the addressed line to be
+;; written. A <newline> alone shall be equivalent to "+1p".  The current
+;; line number shall be set to the address of the written line.
+
+(define (exec-null editor addr)
+  (let ((line (addr->line editor addr)))
+    (if (zero? line)
+      (error "invalid address")
+      (begin
+        (println (list-ref (text-editor-buffer editor) (dec line)))
+        (editor-goto! editor line)))))
+
+(define-command (edit-cmd exec-null)
+  (parse-default parse-addr (make-addr '(current-line) '(+1)))
+  (parse-ignore parse-eof-object))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define parse-cmds

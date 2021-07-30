@@ -35,6 +35,14 @@
       parse-anything)
     cadr))
 
+;; Parses successfully at end of input, fails otherwise.
+
+(define parse-eof-object
+  (lambda (source index sk fk)
+    (if (parse-stream-end? source index)
+      (sk #t source index fk)
+      (fk source index "expected at end of input"))))
+
 ;; Invoke given parser and strip trailing blanks (if any).
 
 (define (parse-strip-blanks parser)
