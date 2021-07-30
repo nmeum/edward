@@ -19,6 +19,7 @@
                          (make-addr '(current-line)))))
           (case x
             ((#\n) (list exec-number cur))
+            ((#\p) (list exec-print cur))
             (else (error "not implemented"))))))))
 
 (define-syntax define-command
@@ -445,6 +446,29 @@
                    #\,
                    (make-addr '(current-line))))
   (parse-cmd #\n))
+
+;; Print Command
+;;
+;;  (.,.)p
+;;
+;; The p command shall write to standard output the addressed lines; the
+;; current line number shall be set to the address of the last line
+;; written. The p command can be appended to any command other than e,
+;; E, f, q, Q, r, w, or !.
+
+(define (exec-print editor range)
+  (let ((lst (editor-get-range editor range))
+        (end (addr->line editor (last range))))
+  (for-each println lst)
+  (editor-goto! editor end)))
+
+(define-command (edit-cmd exec-print)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\p))
 
 ;; Quit Without Checking Command
 ;;
