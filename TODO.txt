@@ -1,0 +1,21 @@
+* scheme macro for expanding addresses specified in the ed standard to
+  the correct scheme list data type
+* allowing passing single address to commands which expect range (e.g.
+  delete)
+* implement commands which require conformation (q, e, …)
+	* return editor state in each command handler?
+	* extract command char in parser and store that in editor state?
+* make sure zero address is handled correctly everywhere
+* consider switching to a CHICKEN inline documentation tool
+	* https://wiki.call-cc.org/eggref/5/scm2wiki
+	* …
+* improve comments at the beginning of lib/cmds.scm
+	* explain what kind of commands exist
+	* explain chaining with print command, …
+* don't print twice when chaining print commands
+	* implementation-defined behaviour in ed specification
+* improve error messages. For example, parser error should state the
+  input line where the error occurred (useful if input is a file)
+* add support for regular expression addresses
+	* requires implementing POSIX BRE in Scheme or rely on CHICKEN's
+	  foreign function interface to use the POSIX C implementation
