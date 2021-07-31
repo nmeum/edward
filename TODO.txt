@@ -14,3 +14,5 @@
 * add support for regular expression addresses
 	* requires implementing POSIX BRE in Scheme or rely on CHICKEN's
 	  foreign function interface to use the POSIX C implementation
+* implement support of using write with shell command line (! file prefix)
+* implement "consequences of errors" section correctly
