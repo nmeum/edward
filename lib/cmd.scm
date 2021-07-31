@@ -224,6 +224,31 @@
                    (make-addr '(current-line))))
   (parse-cmd #\d))
 
+;; Edit Command
+;;
+;;  e [file]
+;;
+;; The e command shall delete the entire contents of the buffer and then
+;; read in the file named by the pathname file. The current line number
+;; If no pathname is given, the currently remembered pathname, if any,
+;; shall be used (see the f command). All marks shall be discarded upon
+;; the completion of a successful e command. If the buffer has changed
+;; since the last time the entire buffer was written, the user shall be
+;; warned, as described previously.
+
+;; TODO: Code duplication with %exec-quit, refactor into macro?
+
+(define (%exec-edit editor filename)
+  (if (or
+        (eqv? (text-editor-prevcmd editor) '%exec-editor)
+        (not (text-editor-modified? editor)))
+    (exec-edit editor filename)
+    (editor-help editor "Warning: buffer modified")))
+
+(define-command (file-cmd %exec-edit)
+  (parse-cmd #\e)
+  parse-filename)
+
 ;; Edit Without Checking Command
 ;;
 ;;   E [file]
