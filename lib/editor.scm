@@ -36,7 +36,7 @@
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
   (line text-editor-line text-editor-line-set!)
-  ;; Last error object encountered (for h and H command).
+  ;; Last error message encountered (for h and H command).
   (error text-editor-error text-editor-error-set!)
   ;; Assoc lists of marks for this editor.
   ;; XXX: Since data is never deleted from an assoc list this leaks memory.
@@ -67,11 +67,8 @@
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
-            (text-editor-error-set! editor eobj)
             (text-editor-set-prevcmd! editor #f)
-            (println "?") ;; TODO: Consider using editor-help here
-            (when (text-editor-help? editor)
-              (display-error eobj))
+            (editor-error editor (error-object-message eobj))
             (k '()))
           (lambda ()
             (let* ((s (string->parse-stream input))
@@ -104,12 +101,14 @@
   (unless (text-editor-silent? editor)
     (apply println objs)))
 
-;; Print `?` followed by objs (if the editor is in help mode).
+;; Print `?` followed by msg (if the editor is in help mode).
+;; Also set the current editor error accordingly (if any).
 
-(define (editor-help editor . objs)
+(define (editor-error editor msg)
+  (text-editor-error-set! editor msg)
   (println "?")
   (when (text-editor-help? editor)
-    (apply println objs)))
+    (println msg)))
 
 (define (editor-mark-line editor line mark)
   (text-editor-marks-set! editor

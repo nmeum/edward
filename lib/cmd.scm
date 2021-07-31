@@ -100,7 +100,8 @@
              (eqv? (text-editor-prevcmd editor) (quote NAME))
              (not (text-editor-modified? editor)))
          (apply PROC editor args)
-         (editor-help editor "Warning: buffer modified"))))))
+         ;; XXX: Can't use error here as the return value is not propagated then.
+         (editor-error editor "Warning: buffer modified"))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -305,9 +306,9 @@
 ;; line number shall be unchanged.
 
 (define (exec-help editor)
-  (let ((e (text-editor-error editor)))
-    (when e
-      (display-error e))))
+  (let ((msg (text-editor-error editor)))
+    (when msg
+      (editor-error editor msg))))
 
 (define-command (edit-cmd exec-help)
   (parse-cmd #\h))
