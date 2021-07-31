@@ -234,9 +234,11 @@
 
 (define (exec-edit editor filename)
   (text-editor-buffer-set! editor '())
-  (exec-read editor (make-addr '(last-line)) filename))
+  (text-editor-marks-set! editor '())
+  (exec-read editor (make-addr '(last-line))
+             (editor-filename editor filename)))
 
-(define-command (edit-cmd exec-edit)
+(define-command (file-cmd exec-edit)
   (parse-cmd #\E)
   parse-filename)
 
