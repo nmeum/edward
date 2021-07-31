@@ -23,13 +23,20 @@
             ((#\p) (list exec-print cur))))))))
 
 (define-syntax define-command
-  (syntax-rules (edit-cmd file-cmd)
+  (syntax-rules (edit-cmd print-cmd file-cmd)
     ((define-command (file-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
          (parse-blanks-seq
            BODY ...)
          (lambda (args) (cons HANDLER args)))))
+    ((define-command (print-cmd HANDLER) BODY ...)
+     (register-command
+       (parse-map
+         (parse-seq
+           (parse-blanks-seq BODY ...)
+           (parse-ignore (parse-optional parse-print-cmd)))
+         (lambda (args) (cons HANDLER (car args))))))
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -439,7 +446,7 @@
       (zip (iota (inc (- eline sline)) sline) lst))
     (editor-goto! editor eline)))
 
-(define-command (edit-cmd exec-number)
+(define-command (print-cmd exec-number)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))
@@ -462,7 +469,7 @@
   (for-each println lst)
   (editor-goto! editor end)))
 
-(define-command (edit-cmd exec-print)
+(define-command (print-cmd exec-print)
   (parse-default parse-addr-range
                  (list
                    (make-addr '(current-line))

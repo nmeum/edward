@@ -12,8 +12,6 @@
 * improve comments at the beginning of lib/cmds.scm
 	* explain what kind of commands exist
 	* explain chaining with print command, …
-* don't print twice when chaining print commands
-	* implementation-defined behaviour in ed specification
 * improve error messages. For example, parser error should state the
   input line where the error occurred (useful if input is a file)
 * add support for regular expression addresses
