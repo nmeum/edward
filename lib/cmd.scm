@@ -1,8 +1,18 @@
+;; Commands in ed
+;;
+;; Commands to ed have a simple and regular structure: zero, one, or two
+;; addresses followed by a single-character command, possibly followed
+;; by parameters to that command. These addresses specify one or more
+;; lines in the buffer. Every command that requires addresses has
+;; default addresses (shown in parentheses), so that the addresses very
+;; often can be omitted. Implemented ed commands are listed below.
+
 (define command-parsers (list (parse-fail "Unknown command")))
 (define (register-command proc)
   (set! command-parsers (cons proc command-parsers)))
 
-;; However, any command (except e, E, f, q, Q, r, w, and !) can be
+;; It is generally invalid for more than one command to appear on a
+;; line. However, any command (except e, E, f, q, Q, r, w, and !) can be
 ;; suffixed by the letter l, n, or p; in which case, except for the l,
 ;; n, and p commands, the command shall be executed and then the new
 ;; current line shall be written as described below under the l, n, and
@@ -21,6 +31,17 @@
             ((#\l) (error "l command not implemented"))
             ((#\n) (list exec-number cur))
             ((#\p) (list exec-print cur))))))))
+
+;; In order to allow adding a l, n, or p suffix to certain commands,
+;; edward dinstinguishes three kinds of commands: (1) print commands,
+;; i.e. the l, n, and p commands, which can be used as a suffix to (2)
+;; editor commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !
+;; commands which cannot be suffixed with a print command). Command
+;; parsers are defined using the macro below, as part of this definition
+;; each command is assigned to one of the aforedmentioned groups.
+;; Additionally, a handler is specified for each command, the parser
+;; created by the macro returns the handler and the arguments passed to
+;; the command on a succesfull parse.
 
 (define-syntax define-command
   (syntax-rules (edit-cmd print-cmd file-cmd)
@@ -54,10 +75,21 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Parse a command character within a parse-blanks-seq / parse-seq. This
+;; character is ignored in the parse-blanks-seq and as such not
+;; returned.
+
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
 
-;; TODO: Implement support for !file
+;; Parses a filename which is then read/written by ed.
+;;
+;; TODO: The file parameter, **must** be separated from the command
+;; letter by one or more <blank> characters.
+;;
+;; TODO: If file is replaced by '!', the rest of the line shall be taken
+;; to be a shell command line whose output is to be read. Such a shell
+;; command line shall not be remembered as the current file.
 
 (define parse-filename
   (parse-string
@@ -511,6 +543,14 @@
   (parse-ignore parse-eof-object))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Parse any of the commands listed above and strip any trailing blanks
+;; as the command letter can be preceded by zero or more <blank>
+;; characters.
+;;
+;; Returns a list where car is the handler for the parsed commands and
+;; cdr are the arguments which are supposed to be passed to this
+;; handler.
 
 (define parse-cmds
   (parse-strip-blanks (apply parse-or command-parsers)))

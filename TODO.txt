@@ -9,9 +9,6 @@
 * consider switching to a CHICKEN inline documentation tool
 	* https://wiki.call-cc.org/eggref/5/scm2wiki
 	* …
-* improve comments at the beginning of lib/cmds.scm
-	* explain what kind of commands exist
-	* explain chaining with print command, …
 * improve error messages. For example, parser error should state the
   input line where the error occurred (useful if input is a file)
 * add support for regular expression addresses
