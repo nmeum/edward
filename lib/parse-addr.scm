@@ -1,5 +1,5 @@
-;; \section{Addresses in ed}
-
+;; Addresses in ed
+;;
 ;; An address is a list consisting of an address specification and a
 ;; (possibly empty) list of offsets which should be applied to this
 ;; address specification. An address specification is a pair consisting
