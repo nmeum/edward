@@ -1,6 +1,13 @@
 (define (inc n) (+ n 1))
 (define (dec n) (- n 1))
 
+;; Return a procedure executing proc and then returing ret.
+
+(define (with-ret proc ret)
+  (lambda (arg . args)
+    (apply proc arg args)
+    ret))
+
 ;; Like display but prints multiple objects and adds trailing newline.
 
 (define (fprintln port . objs)

@@ -53,14 +53,20 @@
        (parse-map
          (parse-blanks-seq
            BODY ...)
-         (lambda (args) (cons HANDLER args)))))
+         (lambda (args)
+           (cons
+             (with-ret HANDLER (quote HANDLER))
+             args)))))
     ((define-command (print-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
            (parse-ignore (parse-optional parse-print-cmd)))
-         (lambda (args) (cons HANDLER (car args))))))
+         (lambda (args)
+           (cons
+             (with-ret HANDLER (quote HANDLER))
+             (car args))))))
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -73,7 +79,8 @@
                (apply HANDLER editor args)
                (let ((pcmd (last orig-args)))
                  (when pcmd
-                  (apply (car pcmd) editor (cdr pcmd)))))
+                   (apply (car pcmd) editor (cdr pcmd))))
+               (quote HANDLER))
              (car orig-args))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -432,7 +439,9 @@
         (let ((s (buffer->string (editor-get-range editor range))))
           (write-string s port)
           ;; Assuming write-string *always* writes all bytes.
-          (editor-verbose editor (string-length s)))))))
+          (editor-verbose editor (string-length s)))))
+    ;; TODO: Only do this if the entire buffer was written.
+    (text-editor-set-modified! editor #f)))
 
 (define-command (file-cmd exec-write)
   (parse-default parse-addr-range
@@ -511,6 +520,24 @@
                    #\,
                    (make-addr '(current-line))))
   (parse-cmd #\p))
+
+;; Quit Command
+;;
+;;   q
+;;
+;; The q command shall cause ed to exit. If the buffer has changed since
+;; the last time the entire buffer was written, the user shall be warned,
+;; as described previously.
+
+(define (%exec-quit editor)
+  (if (or
+        (eqv? (text-editor-prevcmd editor) '%exec-quit)
+        (not (text-editor-modified? editor)))
+    (exec-quit editor)
+    (editor-help editor "Warning: buffer modified")))
+
+(define-command (file-cmd %exec-quit)
+  (parse-cmd #\q))
 
 ;; Quit Without Checking Command
 ;;

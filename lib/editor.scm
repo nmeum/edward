@@ -28,7 +28,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line error marks silent? help?)
+  (%make-text-editor filename buffer line error marks state modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -41,15 +41,20 @@
   ;; Assoc lists of marks for this editor.
   ;; XXX: Since data is never deleted from an assoc list this leaks memory.
   (marks text-editor-marks text-editor-marks-set!)
+  ;; Symbol with previous handler name executed by the editor or #f if none.
+  (state text-editor-prevcmd text-editor-set-prevcmd!)
+  ;; Whether the editor has been modified since the last write.
+  (modified? text-editor-modified? text-editor-set-modified!)
   ;; Whether the editor is in silent mode (ed -s option).
   (silent? text-editor-silent?)
   ;; Whether help mode is activated (H command).
   (help? text-editor-help? text-editor-help-set!))
 
 (define (make-text-editor filename silent?)
-  (let ((e (%make-text-editor filename '() 0 #f '() silent? #f)))
+  (let ((e (%make-text-editor filename '() 0 #f '() #f #f silent? #f)))
     (unless (empty-string? filename)
-      (exec-read e (make-addr '(last-line)) filename))
+      (exec-read e (make-addr '(last-line)) filename)
+      (text-editor-set-modified! e #f))
     e))
 
 (define (editor-start editor prompt)
@@ -62,16 +67,17 @@
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
-            (println "?")
             (text-editor-error-set! editor eobj)
+            (text-editor-set-prevcmd! editor #f)
+            (println "?") ;; TODO: Consider using editor-help here
             (when (text-editor-help? editor)
               (display-error eobj))
             (k '()))
           (lambda ()
             (let* ((s (string->parse-stream input))
                    (r (parse-fully parse-cmds s)))
-              (apply (car r)
-                     editor (cdr r))))))))
+              (text-editor-set-prevcmd! editor
+                (apply (car r) editor (cdr r)))))))))
 
   (repl prompt eval-input))
 
@@ -96,7 +102,14 @@
 
 (define (editor-verbose editor . objs)
   (unless (text-editor-silent? editor)
-    (apply fprintln (current-output-port) objs)))
+    (apply println objs)))
+
+;; Print `?` followed by objs (if the editor is in help mode).
+
+(define (editor-help editor . objs)
+  (println "?")
+  (when (text-editor-help? editor)
+    (apply println objs)))
 
 (define (editor-mark-line editor line mark)
   (text-editor-marks-set! editor
@@ -151,6 +164,7 @@
 ;; of last inserted line.
 
 (define (editor-append! editor text)
+  (text-editor-set-modified! editor #t)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
     (text-editor-buffer-set! editor
@@ -161,6 +175,7 @@
     (+ line (length text))))
 
 (define (editor-join! editor range)
+  (text-editor-set-modified! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (text-editor-buffer-set! editor
@@ -170,6 +185,7 @@
         (drop buffer eline)))))
 
 (define (editor-remove! editor range)
+  (text-editor-set-modified! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (text-editor-buffer-set! editor
