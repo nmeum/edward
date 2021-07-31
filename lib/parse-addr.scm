@@ -4,14 +4,14 @@
 ;; (possibly empty) list of offsets which should be applied to this
 ;; address specification. An address specification is a pair consisting
 ;; of a symbol and an optional argument.
+;;
+;; The text in this section is aligned with the `Addresses in ed`
+;; section in the POSIX-1.2008 specification of `ed(1)`.
 
 (define make-addr
   (case-lambda
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
-
-;; The text in this section is aligned with the `Addresses in ed`
-;; section in the POSIX-1.2008 specification of `ed(1)`.
 
 ;; The <period> character ('.') shall address the current line.
 

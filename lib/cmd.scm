@@ -6,6 +6,9 @@
 ;; lines in the buffer. Every command that requires addresses has
 ;; default addresses (shown in parentheses), so that the addresses very
 ;; often can be omitted. Implemented ed commands are listed below.
+;;
+;; The text in this section is aligned with the `Commands in ed`
+;; section in the POSIX-1.2008 specification of `ed(1)`.
 
 (define command-parsers (list (parse-fail "Unknown command")))
 (define (register-command proc)
