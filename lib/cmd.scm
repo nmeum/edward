@@ -83,6 +83,25 @@
                (quote HANDLER))
              (car orig-args))))))))
 
+;; If changes have been made in the buffer since the last w command that
+;; wrote the entire buffer, ed shall warn the user if an attempt is made
+;; to destroy the editor buffer via the e or q commands. The ed utility
+;; shall write the string: "?\n" (followed by an explanatory message if
+;; help mode has been enabled via the H command) to standard output and
+;; shall continue in command mode with the current line number
+;; unchanged. If the e or q command is repeated with no intervening
+;; command, it shall take effect.
+
+(define-syntax define-confirm
+  (syntax-rules ()
+    ((define-confirm (NAME PROC))
+     (define (NAME editor . args)
+       (if (or
+             (eqv? (text-editor-prevcmd editor) (quote NAME))
+             (not (text-editor-modified? editor)))
+         (apply PROC editor args)
+         (editor-help editor "Warning: buffer modified"))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Parse a command character within a parse-blanks-seq / parse-seq. This
@@ -236,15 +255,7 @@
 ;; since the last time the entire buffer was written, the user shall be
 ;; warned, as described previously.
 
-;; TODO: Code duplication with %exec-quit, refactor into macro?
-
-(define (%exec-edit editor filename)
-  (if (or
-        (eqv? (text-editor-prevcmd editor) '%exec-editor)
-        (not (text-editor-modified? editor)))
-    (exec-edit editor filename)
-    (editor-help editor "Warning: buffer modified")))
-
+(define-confirm (%exec-edit exec-edit))
 (define-command (file-cmd %exec-edit)
   (parse-cmd #\e)
   parse-filename)
@@ -556,13 +567,7 @@
 ;; the last time the entire buffer was written, the user shall be warned,
 ;; as described previously.
 
-(define (%exec-quit editor)
-  (if (or
-        (eqv? (text-editor-prevcmd editor) '%exec-quit)
-        (not (text-editor-modified? editor)))
-    (exec-quit editor)
-    (editor-help editor "Warning: buffer modified")))
-
+(define-confirm (%exec-quit exec-quit))
 (define-command (file-cmd %exec-quit)
   (parse-cmd #\q))
 
