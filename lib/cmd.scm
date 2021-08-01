@@ -308,7 +308,7 @@
 (define (exec-help editor)
   (let ((msg (text-editor-error editor)))
     (when msg
-      (editor-error editor msg))))
+      (println msg))))
 
 (define-command (edit-cmd exec-help)
   (parse-cmd #\h))
