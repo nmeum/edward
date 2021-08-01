@@ -9,6 +9,7 @@
           (srfi 1)
           (srfi 14)
 
+          ;; TODO: Replace with SRFI 204 when/if it reaches final status.
           (matchable))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
