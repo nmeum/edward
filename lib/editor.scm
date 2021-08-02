@@ -27,11 +27,53 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-record-type Input-Handler
+  (%make-input-handler prompt line)
+  input-handler?
+  ;; Prompt string used for input prompt.
+  (prompt input-handler-prompt)
+  ;; Current input line number.
+  (line input-handler-line input-handler-set-line!))
+
+(define (make-input-handler prompt)
+  (%make-input-handler prompt 0))
+
+(define (input-handler-repl handler proc)
+  (input-handler-set-line!
+    handler
+    (inc (input-handler-line handler)))
+
+  (let ((prompt (input-handler-prompt handler)))
+    (unless (empty-string? prompt)
+      (display prompt)
+      (flush-output-port)))
+
+  (let ((input (read-line)))
+    (unless (eof-object? input)
+      (proc input)
+      (input-handler-repl handler proc))))
+
+(define (input-handler-read handler)
+  (input-handler-set-line!
+    handler
+    (inc (input-handler-line handler)))
+
+  (let ((input (read-line)))
+    (if (eof-object? input)
+      (error "unexpected EOF")
+      (if (equal? input ".")
+        '()
+        (cons input (input-handler-read handler))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Text-Editor
-  (%make-text-editor filename buffer line error marks state modified? silent? help?)
+  (%make-text-editor filename input buffer line error marks state modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
+  ;; Input handler for this text editor.
+  (input text-editor-input-handler)
   ;; List of strings representing all lines in the file.
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
@@ -50,14 +92,15 @@
   ;; Whether help mode is activated (H command).
   (help? text-editor-help? text-editor-help-set!))
 
-(define (make-text-editor filename silent?)
-  (let ((e (%make-text-editor filename '() 0 #f '() #f #f silent? #f)))
+(define (make-text-editor filename prompt silent?)
+  (let* ((h (make-input-handler prompt))
+         (e (%make-text-editor filename h '() 0 #f '() #f #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-set-modified! e #f))
     e))
 
-(define (editor-start editor prompt)
+(define (editor-start editor)
   ;; If an invalid command is entered, ed shall write the string: "?\n"
   ;; (followed by an explanatory message if help mode has been enabled
   ;; via the H command) to standard output and shall continue in command
@@ -76,7 +119,7 @@
               (text-editor-set-prevcmd! editor
                 (apply (car r) editor (cdr r)))))))))
 
-  (repl prompt eval-input))
+  (input-handler-repl (text-editor-input-handler editor) eval-input))
 
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.
@@ -218,11 +261,3 @@
     ;; TODO: regex-backward
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
-
-(define (input-mode-read)
-  (let ((input (read-line)))
-    (if (eof-object? input)
-      (error "unexpected EOF")
-      (if (equal? input ".")
-        '()
-        (cons input (input-mode-read))))))

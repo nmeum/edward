@@ -30,8 +30,8 @@
       '())))
 
 (define (run-editor filename)
-  (let ((editor (make-text-editor filename silent?)))
-    (editor-start editor prompt)))
+  (let ((editor (make-text-editor filename prompt silent?)))
+    (editor-start editor)))
 
 (let* ((files (cdr (parse-args (list prompt-opt silent-opt)))))
   (match files
