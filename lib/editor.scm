@@ -121,6 +121,10 @@
 
   (input-handler-repl (text-editor-input-handler editor) eval-input))
 
+(define (editor-read-input editor)
+  (let ((h (text-editor-input-handler editor)))
+    (input-handler-read h)))
+
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.
 

@@ -141,8 +141,7 @@
 
 (define (exec-append editor addr)
   (editor-goto! editor addr)
-  (let* ((handler (text-editor-input-handler editor))
-         (data (input-handler-read handler))
+  (let* ((data (editor-read-input editor))
          (last-inserted (editor-append! editor data)))
     (editor-goto! editor last-inserted)))
 
@@ -176,8 +175,7 @@
     (editor-remove! editor range)
     (editor-goto! editor (max 0 (dec saddr)))
 
-    (let* ((h (text-editor-input-handler editor))
-           (in (input-handler-read h)))
+    (let ((in (editor-read-input editor)))
       (if (null? in)
         (editor-goto! editor (min (length (text-editor-buffer editor)) saddr))
         (editor-goto! editor (editor-append! editor in))))))
@@ -351,8 +349,7 @@
 (define (exec-insert editor addr)
   (let ((line (addr->line editor addr)))
     (editor-goto! editor (max (dec line) 0))
-    (let* ((handler (text-editor-input-handler editor))
-           (data (input-handler-read handler))
+    (let* ((data (editor-read-input editor))
            (last-inserted (editor-append! editor data)))
       (editor-goto! editor last-inserted))))
 
