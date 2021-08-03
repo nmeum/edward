@@ -562,6 +562,26 @@
                    (make-addr '(current-line))))
   (parse-cmd #\p))
 
+;; Prompt Command
+;;
+;;   P
+;;
+;; The P command shall cause ed to prompt with an <asterisk> ('*') (or
+;; string, if -p is specified) for all subsequent commands. The P
+;; command alternatively shall turn this mode on and off; it shall be
+;; initially on if the -p option is specified; otherwise, off. The
+;; current line number shall be unchanged.
+
+(define (exec-prompt editor)
+  (let* ((input-handler (text-editor-input-handler editor))
+         (prompt? (input-handler-prompt? input-handler)))
+    (input-handler-set-prompt!
+      input-handler
+      (not prompt?))))
+
+(define-command (edit-cmd exec-prompt)
+  (parse-cmd #\P))
+
 ;; Quit Command
 ;;
 ;;   q

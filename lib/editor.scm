@@ -28,25 +28,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Input-Handler
-  (%make-input-handler prompt line)
+  (%make-input-handler prompt-str prompt? line)
   input-handler?
   ;; Prompt string used for input prompt.
-  (prompt input-handler-prompt)
+  (prompt-str input-handler-prompt-str)
+  ;; Whether the prompt should be shown or hidden.
+  (prompt? input-handler-prompt? input-handler-set-prompt!)
   ;; Current input line number.
   (line input-handler-line input-handler-set-line!))
 
 (define (make-input-handler prompt)
-  (%make-input-handler prompt 0))
+  (let ((prompt? (not (empty-string? prompt))))
+    (%make-input-handler
+      (if prompt? prompt "*")
+      prompt?
+      0)))
 
 (define (input-handler-repl handler proc)
   (input-handler-set-line!
     handler
     (inc (input-handler-line handler)))
 
-  (let ((prompt (input-handler-prompt handler)))
-    (unless (empty-string? prompt)
-      (display prompt)
-      (flush-output-port)))
+  (when (input-handler-prompt? handler)
+    (display (input-handler-prompt-str handler))
+    (flush-output-port))
 
   (let ((input (read-line)))
     (unless (eof-object? input)
