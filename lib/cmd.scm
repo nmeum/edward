@@ -10,7 +10,7 @@
 ;; The text in this section is aligned with the `Commands in ed`
 ;; section in the POSIX-1.2008 specification of `ed(1)`.
 
-(define command-parsers (list (parse-fail "Unknown command")))
+(define command-parsers (list (parse-fail "unknown command")))
 (define (register-command proc)
   (set! command-parsers (cons proc command-parsers)))
 
