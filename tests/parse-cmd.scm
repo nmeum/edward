@@ -53,5 +53,5 @@
     (list (make-addr '(nth-line . 42)))
      "42an")
 
-  (test-parse-error "Unknown command" parse-cmds "Qn")
-  (test-parse-error "Unknown command" parse-cmds "a n"))
+  (test-parse-error "unknown command" parse-cmds "Qn")
+  (test-parse-error "unknown command" parse-cmds "a n"))
