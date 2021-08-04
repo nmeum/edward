@@ -30,3 +30,6 @@
 
 (include-relative "parse-addr.scm")
 (include-relative "parse-cmd.scm")
+
+;; Exit with non-zero exit status if some test failed.
+(test-exit)
