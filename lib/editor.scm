@@ -106,6 +106,16 @@
     e))
 
 (define (editor-start editor)
+  ;; parse-fully with custom error handler.
+  (define (parse-command source)
+    (call-with-parse
+      parse-cmds source 0
+      (lambda (r s i fk)
+        (if (parse-stream-end? s i)
+          r
+          (fk s i "incomplete parse")))
+      (lambda (s i reason) (error reason))))
+
   ;; If an invalid command is entered, ed shall write the string: "?\n"
   ;; (followed by an explanatory message if help mode has been enabled
   ;; via the H command) to standard output and shall continue in command
@@ -120,7 +130,7 @@
             (k '()))
           (lambda ()
             (let* ((s (string->parse-stream input))
-                   (r (parse-fully parse-cmds s)))
+                   (r (parse-command s)))
               (text-editor-set-prevcmd! editor
                 (apply (car r) editor (cdr r)))))))))
 
