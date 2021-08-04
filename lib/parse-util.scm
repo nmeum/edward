@@ -20,8 +20,12 @@
     (lambda (x)
       (if x x def))))
 
+(define parse-blank
+  (parse-char char-set:blank))
 (define parse-blanks
-  (parse-repeat (parse-char char-set:blank)))
+  (parse-repeat parse-blank))
+(define parse-blanks+
+  (parse-repeat+ parse-blank))
 
 (define (parse-between lhs parser rhs)
   (parse-map

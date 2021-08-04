@@ -114,9 +114,6 @@
 
 ;; Parses a filename which is then read/written by ed.
 ;;
-;; TODO: The file parameter, **must** be separated from the command
-;; letter by one or more <blank> characters.
-;;
 ;; TODO: If file is replaced by '!', the rest of the line shall be taken
 ;; to be a shell command line whose output is to be read. Such a shell
 ;; command line shall not be remembered as the current file.
@@ -124,6 +121,19 @@
 (define parse-filename
   (parse-string
     (parse-repeat (parse-not-char char-set:blank))))
+
+;; Parses a command character followed by an optional file parameter.
+;; The compontests **must** be separated by one or more <blank>
+;; characters.
+
+(define (parse-file-cmd ch)
+  (parse-map
+    (parse-seq
+      (parse-cmd ch)
+      (parse-default
+        (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
+        ""))
+    car))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -216,8 +226,7 @@
 
 (define-command (file-cmd exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
-  (parse-cmd #\r)
-  parse-filename)
+  (parse-file-cmd #\r))
 
 ;; Delete Command
 ;;
@@ -259,8 +268,7 @@
 
 (define-confirm (%exec-edit exec-edit))
 (define-command (file-cmd %exec-edit)
-  (parse-cmd #\e)
-  parse-filename)
+  (parse-file-cmd #\e))
 
 ;; Edit Without Checking Command
 ;;
@@ -277,8 +285,7 @@
              (editor-filename editor filename)))
 
 (define-command (file-cmd exec-edit)
-  (parse-cmd #\E)
-  parse-filename)
+  (parse-file-cmd #\E))
 
 ;; Filename Command
 ;;
@@ -295,8 +302,7 @@
   (editor-verbose editor (editor-filename editor)))
 
 (define-command (file-cmd exec-filename)
-  (parse-cmd #\f)
-  parse-filename)
+  (parse-file-cmd #\f))
 
 ;; Help Command
 ;;
@@ -490,8 +496,7 @@
                    (make-addr '(nth-line . 1))
                    #\,
                    (make-addr '(last-line))))
-  (parse-cmd #\w)
-  parse-filename)
+  (parse-file-cmd #\w))
 
 ;; Line Number Command
 ;;

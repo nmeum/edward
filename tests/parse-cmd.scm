@@ -25,7 +25,9 @@
   (test-parse-cmd "custom address and file"
     (list
       (make-addr '(regex-backward . "foo") '(23 -42))
-      "foobar") "?foo? +23 -42 r foobar"))
+      "foobar") "?foo? +23 -42 r foobar")
+
+  (test-parse-error "unknown command" parse-cmds "rfoo"))
 
 (test-group "write command"
   (test-parse-cmd "no arguments"
@@ -42,7 +44,9 @@
         (make-addr '(current-line))
         #\,
         (make-addr '(current-line) '(10)))
-      "foobar") ".,.+10wfoobar"))
+      "foobar") ".,.+10w foobar")
+
+  (test-parse-error "unknown command" parse-cmds "wfoo"))
 
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
