@@ -150,7 +150,7 @@
           parse-digits))
       car)))
 
-(define parse-addr
+(define parse-addr-with-off
   (parse-seq
     %parse-addr
     parse-addr-offsets))
@@ -174,16 +174,16 @@
 ;; Any <blank> characters included between addresses, address separators,
 ;; or address offsets shall be ignored.
 
-(define parse-addr-range
+(define %parse-addr-range
   (parse-map
     (parse-seq
-      (parse-optional parse-addr)
+      (parse-optional parse-addr-with-off)
       (parse-ignore parse-blanks)
       (parse-or
         (parse-char #\,)
         (parse-char #\;))
       (parse-ignore parse-blanks)
-      (parse-optional parse-addr))
+      (parse-optional parse-addr-with-off))
 
     (match-lambda
       ((#f #\, #f)
@@ -202,3 +202,22 @@
        (list addr #\; addr))
       ((addr1 sep addr2)
        (list addr1 sep addr2)))))
+
+;; From the OpenBSD ed(1) man page:
+;;
+;;   If only one address is given in a range, then the second address is
+;;   set to the given address. If only one address is expected, then the
+;;   last address is used.
+
+(define parse-addr-range
+  (parse-or
+    %parse-addr-range
+    (parse-map
+      parse-addr-with-off
+      (lambda (addr)
+        (list addr #\, addr)))))
+
+(define parse-addr
+  (parse-map
+    parse-addr-range
+    last))
