@@ -22,6 +22,58 @@
 (define (empty-string? str)
   (zero? (string-length str)))
 
+;; Fold for bytevector, starts at most significant byte.
+
+(define (bytevector-fold proc seed bv)
+  (define (%bytevector-fold n)
+    (if (zero? n)
+      seed
+      (let ((idx (dec n)))
+        (proc (bytevector-u8-ref bv idx)
+              (%bytevector-fold idx)))))
+
+  (let ((len (bytevector-length bv)))
+    (if (zero? len)
+      seed
+      (%bytevector-fold len))))
+
+;; Whether the given integer does not represent an ASCII control character.
+
+(define (ascii-printable? int)
+  (and (>= int #x20) (<= int #x7e)))
+
+;; Convert string to human readable representation as mandated by the
+;; POSIX.1-2008 ed(1) list command.
+
+(define (string->human-readable str)
+  (define (byte->human-readable byte)
+    (match byte
+      ;; Mapping according to Table 5-1 in POSIX-1.217.
+      (#x5C "\\")
+      (#x07 "\\a")
+      (#x08 "\\b")
+      (#x0C "\\f")
+      (#x0D "\\r")
+      (#x09 "\\t")
+      (#x0B "\\v")
+
+      ;; End of each line shall be marked with a `$` character.
+      (#x0A "$\n")
+      ;; `$` character within the line should be escaped.
+      (#x24 "\\$")
+
+      ;; Non-printable characters are represented in octal.
+      ;; TODO: Pad octal string with zeros to 3 digits.
+      (_
+        (if (ascii-printable? byte)
+          (string (integer->char byte))
+          (string-append "\\" (number->string byte 8))))))
+
+  (bytevector-fold
+    (lambda (byte out)
+      (string-append out (byte->human-readable byte)))
+    "" (string->utf8 str)))
+
 ;; Return sublist with start inclusive and end exclusive.
 
 (define (sublist lst start end)

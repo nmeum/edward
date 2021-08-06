@@ -31,7 +31,7 @@
                          #\,
                          (make-addr '(current-line)))))
           (case x
-            ((#\l) (error "l command not implemented"))
+            ((#\l) (list exec-list cur))
             ((#\n) (list exec-number cur))
             ((#\p) (list exec-print cur))))))))
 
@@ -405,6 +405,25 @@
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\k)
   (parse-char char-set:lower-case))
+
+;; List Command
+
+(define (exec-list editor range)
+  (let ((lst (editor-get-range editor range))
+        (end (addr->line editor (last range))))
+  (for-each (lambda (line)
+              (display
+                (string->human-readable (string-append line "\n"))))
+            lst)
+  (editor-goto! editor end)))
+
+(define-command (print-cmd exec-list)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\l))
 
 ;; Move Command
 ;;
