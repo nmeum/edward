@@ -30,10 +30,10 @@
         (let ((cur (list (make-addr '(current-line))
                          #\,
                          (make-addr '(current-line)))))
-          (case x
-            ((#\l) (list exec-list cur))
-            ((#\n) (list exec-number cur))
-            ((#\p) (list exec-print cur))))))))
+          (match x
+            (#\l (list exec-list cur))
+            (#\n (list exec-number cur))
+            (#\p (list exec-print cur))))))))
 
 ;; In order to allow adding a l, n, or p suffix to certain commands,
 ;; edward dinstinguishes three kinds of commands: (1) print commands,
