@@ -37,6 +37,13 @@
       seed
       (%bytevector-fold len))))
 
+;; Pad string with given string to given length.
+
+(define (pad-string str pad length)
+  (if (>= (string-length str) length)
+    str
+    (pad-string (string-append pad str) pad length)))
+
 ;; Whether the given integer does not represent an ASCII control character.
 
 (define (ascii-printable? int)
@@ -63,11 +70,10 @@
       (#x24 "\\$")
 
       ;; Non-printable characters are represented in octal.
-      ;; TODO: Pad octal string with zeros to 3 digits.
       (_
         (if (ascii-printable? byte)
           (string (integer->char byte))
-          (string-append "\\" (number->string byte 8))))))
+          (string-append "\\" (pad-string (number->string byte 8) "0" 3))))))
 
   (bytevector-fold
     (lambda (byte out)
