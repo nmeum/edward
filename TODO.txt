@@ -2,12 +2,15 @@
 * consider switching to a CHICKEN inline documentation tool
 	* https://wiki.call-cc.org/eggref/5/scm2wiki
 	* …
-* list command
 * undo command
-* improve error messages. For example, parser error should state the
-  input line where the error occurred (useful if input is a file)
-	* implement "consequences of errors" section correctly
 * add support for regular expression addresses
 	* requires implementing POSIX BRE in Scheme or rely on CHICKEN's
 	  foreign function interface to use the POSIX C implementation
+	* also add support for:
+		* global command
+		* interactive global command
+		* substitute command
+		* global non-matched command
+		* interactive global non-matched command
 * implement support of using write with shell command line (! file prefix)
+* implement asynchronous event section from POSIX.1-2008
