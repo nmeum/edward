@@ -125,12 +125,22 @@
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
+            (let* ((in (text-editor-input-handler editor))
+                   (line (input-handler-line in))
+
+                   (tty? (current-input-port-tty?))
+                   (prefix (if tty?
+                             ""
+                             (string-append "line " (number->string line) ": "))))
             (text-editor-set-prevcmd! editor #f)
-            (editor-error editor (error-object-message eobj))
+            (editor-error
+              editor
+              (string-append prefix (error-object-message eobj)))
+
             ;; See "Consequences of Errors" section in POSIX.1-2008.
-            (if (current-input-port-tty?)
+            (if tty?
               (k '())
-              (exit #f)))
+              (exit #f))))
           (lambda ()
             (let* ((s (string->parse-stream input))
                    (r (parse-command s)))
