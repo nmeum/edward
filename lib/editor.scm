@@ -128,10 +128,11 @@
             (let* ((in (text-editor-input-handler editor))
                    (line (input-handler-line in))
 
-                   (tty? (current-input-port-tty?))
+                   (tty? (stdin-tty?))
                    (prefix (if tty?
                              ""
-                             (string-append "line " (number->string line) ": "))))
+                             (string-append
+                               "line " (number->string line) ": "))))
             (text-editor-set-prevcmd! editor #f)
             (editor-error
               editor
