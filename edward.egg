@@ -10,6 +10,7 @@
               (source-dependencies
                 "edward.sld"
                 "./lib/util.scm"
+                "./lib/ffi.scm"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"
                 "./lib/parse-addr.scm"
