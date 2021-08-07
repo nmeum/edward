@@ -34,6 +34,9 @@
   (eqv? (%stdin-tty?) 1))
 
 ;; True if the given string matches the given Basic Regular Expression.
+;;
+;; TODO: Allow re-using underlying regex_t object instead of
+;; re-compiling regex everytime.
 
 (define (string-matches? str bre)
   (define %string-matches?
