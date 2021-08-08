@@ -1,4 +1,5 @@
 (foreign-declare "
+  #include <stdio.h>
   #include <regex.h>
   #include <stdlib.h>
   #include <unistd.h>
@@ -8,6 +9,23 @@
   {
     /* TODO: Error handling */
     return isatty(STDIN_FILENO);
+  }
+
+  int
+  pipe_to(char *cmd, char *input)
+  {
+    FILE *stream;
+
+    if (!(stream = popen(cmd, \"w\")))
+      return -1;
+
+    if (fputs(input, stream) == EOF) {
+      fclose(stream);
+      return -2;
+    }
+
+    fclose(stream);
+    return 0;
   }
 
   regex_t *
@@ -48,6 +66,17 @@
     (foreign-lambda int "stdin_isatty"))
 
   (eqv? (%stdin-tty?) 1))
+
+;; Spawn the given command and pipe the given string via stdin to it.
+
+(define (pipe-to command input)
+  (define %pipe-to
+    (foreign-lambda int "pipe_to" nonnull-c-string nonnull-c-string))
+
+  (match (%pipe-to command input)
+    (-1 (error "popen failed"))
+    (-2 (error "fputs failed"))
+    (0  #t)))
 
 ;; Allocate a new data structure for matching strings with the given
 ;; Basic Regular Expression (BRE).

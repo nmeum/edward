@@ -2,7 +2,7 @@
   (lambda (source index sk fk)
     (fk source index msg)))
 
-(define (parse-string parser)
+(define (parse-as-string parser)
   (parse-map
     parser
     (lambda (lst)
@@ -10,7 +10,7 @@
 
 (define parse-digits
   (parse-map
-    (parse-string
+    (parse-as-string
       (parse-repeat+ (parse-char char-set:digit)))
     string->number))
 

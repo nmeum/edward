@@ -56,7 +56,7 @@
 ;; Utility procedure for parsing BRE addresses.
 
 (define (parse-regex-lit ch)
-  (parse-string
+  (parse-as-string
     (parse-between
       (parse-char ch)
       (parse-repeat (parse-or parse-esc (parse-not-char ch)))

@@ -119,8 +119,14 @@
 ;; command line shall not be remembered as the current file.
 
 (define parse-filename
-  (parse-string
-    (parse-repeat (parse-not-char char-set:blank))))
+  (parse-or
+    (parse-map
+      (parse-seq
+        (parse-string "!")
+        (parse-as-string
+          (parse-repeat+ (parse-char (lambda (x) #t)))))
+      (lambda (lst) (apply string-append lst)))
+    (parse-as-string (parse-repeat (parse-not-char char-set:blank)))))
 
 ;; Parses a command character followed by an optional file parameter.
 ;; The compontests **must** be separated by one or more <blank>
@@ -134,6 +140,25 @@
         (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
         ""))
     car))
+
+(define (filename-cmd? fn)
+  (if (and
+        (not (empty-string? fn))
+        (eqv? (string-ref fn 0) #\!))
+    (values #t (string-copy fn 1))
+    (values #f fn)))
+
+;; Write given data to given filename. If filename starts with `!` (i.e.
+;; is a command according to filename-cmd?), write data to standard
+;; input of given command string.
+
+(define (write-to filename data)
+  (let-values (((fn-cmd? fn) (filename-cmd? filename)))
+    (if fn-cmd?
+      (pipe-to fn data)
+      (call-with-output-file fn
+        (lambda (port)
+          (write-string data port))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -499,15 +524,15 @@
 ;; standard output,
 
 (define (exec-write editor range filename)
-  (let ((fn (editor-filename editor filename)))
-    (call-with-output-file fn
-      (lambda (port)
-        (let ((s (buffer->string (editor-get-range editor range))))
-          (write-string s port)
-          ;; Assuming write-string *always* writes all bytes.
-          (editor-verbose editor (string-length s)))))
-    ;; TODO: Only do this if the entire buffer was written.
-    (text-editor-set-modified! editor #f)))
+  (let ((fn (editor-filename editor filename))
+        (data (buffer->string (editor-get-range editor range))))
+    ;; Assuming write-to *always* writes all bytes.
+    (editor-verbose editor (string-length data))
+    (write-to fn data)
+
+    (let-values (((fn-cmd? _) (filename-cmd? filename)))
+      (unless fn-cmd?
+        (text-editor-set-modified! editor #f)))))
 
 (define-command (file-cmd exec-write)
   (parse-default parse-addr-range
