@@ -280,16 +280,19 @@
       (error "invalid final address value")
       nline)))
 
-(define (match-forward editor bre)
-  (let ((buffer (text-editor-buffer editor)))
+(define (match-line direction editor bre)
+  (let ((buffer (text-editor-buffer editor))
+        (func   (match direction
+                       ('forward for-each-index)
+                       ('backward for-each-index-right))))
     (call-with-current-continuation
       (lambda (exit)
-        (for-each-index (lambda (idx elem)
-                          (when (string-matches? elem bre)
-                            (exit (inc idx))))
-                        buffer
-                        (max (dec (text-editor-line editor)) 0))
-        #f))))
+        (func (lambda (idx elem)
+                (when (string-matches? elem bre)
+                  (exit (inc idx))))
+              buffer
+              (max (dec (text-editor-line editor)) 0))
+        (error "no match")))))
 
 (define addr->line
   (match-lambda*
@@ -302,9 +305,8 @@
     ((e (('marked-line . mark) off))
      (%addr->line e off (editor-get-mark e mark)))
     ((e (('regex-forward . bre) off))
-     (%addr->line e off (or
-                          (match-forward e bre)
-                          (error "no match"))))
-    ;; TODO: regex-backward
+     (%addr->line e off (match-line 'forward e bre)))
+    ((e (('regex-backward . bre) off))
+     (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
