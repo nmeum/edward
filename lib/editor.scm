@@ -282,16 +282,20 @@
 
 (define (match-line direction editor bre)
   (let ((buffer (text-editor-buffer editor))
+        (regex  (make-bre bre)) ;; needs to be freed on each path
         (func   (match direction
                        ('forward for-each-index)
                        ('backward for-each-index-right))))
     (call-with-current-continuation
       (lambda (exit)
         (func (lambda (idx elem)
-                (when (string-matches? elem bre)
+                (when (bre-match? regex elem)
+                  (bre-free regex)
                   (exit (inc idx))))
               buffer
               (max (dec (text-editor-line editor)) 0))
+
+        (bre-free regex)
         (error "no match")))))
 
 (define addr->line

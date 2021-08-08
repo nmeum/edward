@@ -1,5 +1,6 @@
 (foreign-declare "
   #include <regex.h>
+  #include <stdlib.h>
   #include <unistd.h>
 
   int
@@ -9,18 +10,33 @@
     return isatty(STDIN_FILENO);
   }
 
-  int
-  string_matches(char *string, char *regex)
+  regex_t *
+  make_bre(char *regex)
   {
-    regex_t re;
+    regex_t *re;
+
+    if (!(re = malloc(sizeof(*re))))
+      return NULL;
+    if (regcomp(re, regex, REG_NOSUB))
+      return NULL;
+
+    return re;
+  }
+
+  int
+  bre_match(regex_t *re, char *string)
+  {
     int ret;
 
-    if (regcomp(&re, regex, REG_NOSUB))
-      return -1;
-
-    ret = regexec(&re, string, 0, NULL, 0);
-    regfree(&re);
+    ret = regexec(re, string, 0, NULL, 0);
     return ret != REG_NOMATCH;
+  }
+
+  void
+  bre_free(regex_t *re)
+  {
+    regfree(re);
+    free(re);
   }
   ")
 
@@ -33,17 +49,28 @@
 
   (eqv? (%stdin-tty?) 1))
 
-;; True if the given string matches the given Basic Regular Expression.
-;;
-;; TODO: Allow re-using underlying regex_t object instead of
-;; re-compiling regex everytime.
+;; Allocate a new data structure for matching strings with the given
+;; Basic Regular Expression (BRE).
 
-(define (string-matches? str bre)
-  (define %string-matches?
-    (foreign-lambda int "string_matches"
-                    nonnull-c-string nonnull-c-string))
+(define (make-bre bre)
+  (define %make-bre
+    (foreign-lambda c-pointer "make_bre" nonnull-c-string))
 
-  (match (%string-matches? str bre)
-    (-1 (error "invalid regular expression"))
-    (0  #f)
-    (1  #t)))
+  (let ((r (%make-bre bre)))
+    (if r r (error "make-bre failed"))))
+
+;; Check if a given string matches the given BRE.
+
+(define (bre-match? bre str)
+  (define %bre-match?
+    (foreign-lambda int "bre_match" nonnull-c-pointer  nonnull-c-string))
+
+  (eqv? (%bre-match? bre str) 1))
+
+;; Free resources allocated for a given BRE.
+
+(define (bre-free bre)
+  (define %bre-free
+    (foreign-lambda void "bre_free" nonnull-c-pointer))
+
+  (%bre-free bre))
