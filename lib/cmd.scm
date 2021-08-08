@@ -686,5 +686,6 @@
 ;; cdr are the arguments which are supposed to be passed to this
 ;; handler.
 
+;; TODO: Commit to individual command parsers and don't backtrack.
 (define parse-cmds
   (parse-strip-blanks (apply parse-or command-parsers)))
