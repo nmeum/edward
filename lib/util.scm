@@ -80,6 +80,25 @@
       (string-append out (byte->human-readable byte)))
     "" (string->utf8 str)))
 
+;; Call proc for each element in lst starting at the start index.
+
+(define (for-each-index proc lst start)
+  (define (%for-each-index vector index rem)
+    (unless (zero? rem)
+      (proc index (vector-ref vector index))
+      (%for-each-index
+        vector
+        (modulo (inc index) (vector-length vector))
+        (dec rem))))
+
+  (unless (null? lst)
+    (let* ((vec (list->vector lst))
+           (len (vector-length vec)))
+      (if (and (>= start 0)
+               (< start len))
+        (%for-each-index vec start len)
+        (error "invalid start index")))))
+
 ;; Return sublist with start inclusive and end exclusive.
 
 (define (sublist lst start end)
