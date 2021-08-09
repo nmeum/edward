@@ -15,17 +15,20 @@
   pipe_to(char *cmd, char *input)
   {
     FILE *stream;
+    int r;
 
     if (!(stream = popen(cmd, \"w\")))
       return -1;
 
     if (fputs(input, stream) == EOF) {
-      fclose(stream);
+      pclose(stream);
       return -2;
     }
 
-    fclose(stream);
-    return 0;
+    if ((r = pclose(stream)) == -1)
+      return -3;
+
+    return r;
   }
 
   regex_t *
@@ -76,7 +79,8 @@
   (match (%pipe-to command input)
     (-1 (error "popen failed"))
     (-2 (error "fputs failed"))
-    (0  #t)))
+    (-3 (error "pclose failed"))
+    (r  r)))
 
 ;; Allocate a new data structure for matching strings with the given
 ;; Basic Regular Expression (BRE).
