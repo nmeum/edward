@@ -530,9 +530,8 @@
     (editor-verbose editor (string-length data))
     (write-to fn data)
 
-    (let-values (((fn-cmd? _) (filename-cmd? filename)))
-      (unless fn-cmd?
-        (text-editor-set-modified! editor #f)))))
+    (unless (filename-cmd? filename))
+      (text-editor-modified-set! editor #f)))
 
 (define-command (file-cmd exec-write)
   (parse-default parse-addr-range
