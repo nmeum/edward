@@ -321,6 +321,7 @@
 ;; write the (possibly new) currently remembered pathname to the
 ;; standard output.
 
+;; TODO: For this command !filename is not valid.
 (define (exec-filename editor filename)
   (unless (empty-string? filename)
     (text-editor-filename-set! editor filename))
