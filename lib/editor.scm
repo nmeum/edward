@@ -89,9 +89,9 @@
   ;; XXX: Since data is never deleted from an assoc list this leaks memory.
   (marks text-editor-marks text-editor-marks-set!)
   ;; Symbol with previous handler name executed by the editor or #f if none.
-  (state text-editor-prevcmd text-editor-set-prevcmd!)
+  (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; Whether the editor has been modified since the last write.
-  (modified? text-editor-modified? text-editor-set-modified!)
+  (modified? text-editor-modified? text-editor-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
   (silent? text-editor-silent?)
   ;; Whether help mode is activated (H command).
@@ -102,7 +102,7 @@
          (e (%make-text-editor filename h '() 0 #f '() #f #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
-      (text-editor-set-modified! e #f))
+      (text-editor-modified-set! e #f))
     e))
 
 (define (editor-start editor)
@@ -133,7 +133,7 @@
                              ""
                              (string-append
                                "line " (number->string line) ": "))))
-            (text-editor-set-prevcmd! editor #f)
+            (text-editor-prevcmd-set! editor #f)
             (editor-error
               editor
               (string-append prefix (error-object-message eobj)))
@@ -145,7 +145,7 @@
           (lambda ()
             (let* ((s (string->parse-stream input))
                    (r (parse-command s)))
-              (text-editor-set-prevcmd! editor
+              (text-editor-prevcmd-set! editor
                 (apply (car r) editor (cdr r)))))))))
 
   (input-handler-repl (text-editor-input-handler editor) eval-input))
@@ -239,7 +239,7 @@
 ;; of last inserted line.
 
 (define (editor-append! editor text)
-  (text-editor-set-modified! editor #t)
+  (text-editor-modified-set! editor #t)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
     (text-editor-buffer-set! editor
@@ -250,7 +250,7 @@
     (+ line (length text))))
 
 (define (editor-join! editor range)
-  (text-editor-set-modified! editor #t)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (text-editor-buffer-set! editor
@@ -260,7 +260,7 @@
         (drop buffer eline)))))
 
 (define (editor-remove! editor range)
-  (text-editor-set-modified! editor #t)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (text-editor-buffer-set! editor
