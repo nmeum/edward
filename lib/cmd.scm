@@ -529,8 +529,8 @@
   (let ((fn (editor-filename editor filename))
         (data (buffer->string (editor-get-range editor range))))
     ;; Assuming write-to *always* writes all bytes.
-    (editor-verbose editor (string-length data))
     (write-to fn data)
+    (editor-verbose editor (string-length data))
 
     (unless (filename-cmd? filename)
       (if (empty-string? (text-editor-filename editor))
