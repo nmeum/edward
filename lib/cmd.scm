@@ -241,6 +241,7 @@
   (editor-goto! editor addr)
   (let* ((f (editor-filename editor filename))
          (r (file->buffer f)))
+    ;; TODO: Don't not update rembered file name if it is a shell command.
     (if (empty-string? (text-editor-filename editor))
       (text-editor-filename-set! editor f))
 
@@ -531,8 +532,10 @@
     (editor-verbose editor (string-length data))
     (write-to fn data)
 
-    (unless (filename-cmd? filename))
-      (text-editor-modified-set! editor #f)))
+    (unless (filename-cmd? filename)
+      (if (empty-string? (text-editor-filename editor))
+        (text-editor-filename-set! editor fn))
+      (text-editor-modified-set! editor #f))))
 
 (define-command (file-cmd exec-write)
   (parse-default parse-addr-range
