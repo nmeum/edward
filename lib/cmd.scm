@@ -160,6 +160,16 @@
         (lambda (port)
           (write-string data port))))))
 
+;; Read data from given filename as a list of lines. If filename start
+;; with `!` (i.e. is a command), read data from the standard output of
+;; the given command.
+
+(define (read-from filename)
+  (let-values (((fn-cmd? fn) (filename-cmd? filename)))
+    (if fn-cmd?
+      (pipe-from fn)
+      (file->buffer fn))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Append Comand
@@ -240,9 +250,10 @@
 (define (exec-read editor addr filename)
   (editor-goto! editor addr)
   (let* ((f (editor-filename editor filename))
-         (r (file->buffer f)))
-    ;; TODO: Don't not update rembered file name if it is a shell command.
-    (if (empty-string? (text-editor-filename editor))
+         (r (read-from f)))
+    (if (and
+          (empty-string? (text-editor-filename editor))
+          (not (filename-cmd? f)))
       (text-editor-filename-set! editor f))
 
     (editor-append! editor (car r))

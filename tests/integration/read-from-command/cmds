@@ -1,0 +1,2 @@
+read !printf "λ\nfoo\nbar\nbaz\nλ\n"
+1,$p
