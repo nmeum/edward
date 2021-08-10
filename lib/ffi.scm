@@ -48,6 +48,7 @@
     FILE *stream;
     ssize_t n;
     size_t nlines = 0;
+    char **newret;
     char *line = NULL;
     size_t llen = 0;
     static const size_t allocstep = 64;
@@ -61,8 +62,9 @@
     while ((n = getline(&line, &llen, stream)) != -1) {
       if (nlines && (nlines % allocstep == 0)) {
         size_t newsiz = (nlines + allocstep) * sizeof(char*);
-        if (!(ret = realloc(ret, newsiz)))
+        if (!(newret = realloc(ret, newsiz)))
           goto ret1;
+        ret = newret;
       }
 
       numbytes += n;
@@ -75,8 +77,7 @@
     }
 
     /* reshrink to actual size and leave space for terminator */
-    char **newret = realloc(ret, ++nlines * sizeof(char*));
-    if (!newret)
+    if (!(newret = realloc(ret, ++nlines * sizeof(char*))))
       goto ret1;
     ret = newret;
     ret[nlines-1] = NULL;
