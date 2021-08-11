@@ -322,11 +322,13 @@
 ;; write the (possibly new) currently remembered pathname to the
 ;; standard output.
 
-;; TODO: For this command !filename is not valid.
 (define (exec-filename editor filename)
-  (unless (empty-string? filename)
-    (text-editor-filename-set! editor filename))
-  (editor-verbose editor (editor-filename editor)))
+  (if (filename-cmd? filename) ;; XXX: Could be handled in parser
+    (error "current filename cannot be a shell command")
+    (begin
+      (unless (empty-string? filename)
+        (text-editor-filename-set! editor filename))
+      (editor-verbose editor (editor-filename editor)))))
 
 (define-command (file-cmd exec-filename)
   (parse-file-cmd #\f))
