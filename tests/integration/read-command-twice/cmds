@@ -1,0 +1,3 @@
+r !printf "foo\n12345\n"
+r !echo "test test test"
+Q

@@ -57,7 +57,7 @@
     if (!(ret = malloc(sizeof(char*) * allocstep)))
       goto ret0;
 
-    nlines = 0;
+    numbytes = nlines = 0;
     while ((n = getline(&line, &llen, stream)) != -1) {
       if (nlines && (nlines % allocstep == 0)) {
         size_t newsiz = (nlines + allocstep) * sizeof(char*);
