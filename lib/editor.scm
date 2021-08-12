@@ -73,7 +73,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename input buffer line error marks state modified? silent? help?)
+  (%make-text-editor filename input buffer line error marks state re modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -90,6 +90,8 @@
   (marks text-editor-marks text-editor-marks-set!)
   ;; Symbol with previous handler name executed by the editor or #f if none.
   (state text-editor-prevcmd text-editor-prevcmd-set!)
+  ;; String representing last encountered RE.
+  (re text-editor-re text-editor-re-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
@@ -99,7 +101,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f #f silent? #f)))
+         (e (%make-text-editor filename h '() 0 #f '() #f "" #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
@@ -153,6 +155,19 @@
 (define (editor-read-input editor)
   (let ((h (text-editor-input-handler editor)))
     (input-handler-read h)))
+
+;; Returns the last RE encountered or the given bre string if it is not
+;; empty. If it is empty and there is no last RE an error is raised.
+
+(define (editor-regex editor bre)
+  (if (empty-string? bre)
+    (let ((last-re (text-editor-re editor)))
+      (if (empty-string? last-re)
+        (error "no previous pattern")
+        last-re))
+    (begin
+      (text-editor-re-set! editor bre)
+      bre)))
 
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.
@@ -282,10 +297,11 @@
 
 (define (match-line direction editor bre)
   (let ((buffer (text-editor-buffer editor))
-        (regex  (make-bre bre)) ;; needs to be freed on each path
-        (func   (match direction
-                       ('forward for-each-index)
-                       ('backward for-each-index-right))))
+        ;; regex needs to be freed on each path
+        (regex (make-bre (editor-regex editor bre)))
+        (func  (match direction
+                      ('forward for-each-index)
+                      ('backward for-each-index-right))))
     (call-with-current-continuation
       (lambda (exit)
         (func (lambda (idx elem)
