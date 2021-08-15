@@ -259,6 +259,33 @@
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-file-cmd #\r))
 
+;; Substitute Command
+
+(define (exec-subst editor range regex replace)
+  ;; TODO: Support for special '%' character
+  ;; TODO: Like in sed any character can be used as a delimiter.
+  ;; TODO: Support flags
+  (let ((lst (editor-get-range editor range))
+        (bre (make-bre regex)))
+    (editor-replace!
+      editor
+      range
+      (map (lambda (x)
+             (regex-replace bre replace x))
+           lst))))
+
+(define-command (edit-cmd exec-subst)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\s)
+  (parse-regex-lit #\/)
+  (parse-as-string
+    (parse-repeat+ (parse-not-char #\/)))
+  (parse-ignore (parse-char #\/)))
+
 ;; Delete Command
 ;;
 ;;   (.,.)d
