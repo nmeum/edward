@@ -306,7 +306,6 @@
 
 (define (match-line direction editor bre)
   (let ((buffer (text-editor-buffer editor))
-        ;; regex needs to be freed on each path
         (regex (make-bre (editor-regex editor bre)))
         (func  (match direction
                       ('forward for-each-index)
@@ -315,12 +314,10 @@
       (lambda (exit)
         (func (lambda (idx elem)
                 (when (bre-match? regex elem)
-                  (bre-free regex)
                   (exit (inc idx))))
               buffer
               (max (dec (text-editor-line editor)) 0))
 
-        (bre-free regex)
         (error "no match")))))
 
 (define addr->line

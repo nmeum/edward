@@ -212,7 +212,11 @@
     (foreign-lambda c-pointer "make_bre" nonnull-c-string))
 
   (let ((r (%make-bre bre)))
-    (if r r (error "make-bre failed"))))
+    (if r
+      (begin
+        (set-finalizer! r bre-free)
+        r)
+      (error "make-bre failed"))))
 
 ;; Check if a given string matches the given BRE.
 
@@ -245,14 +249,16 @@
   (let* ((%n (inc n)) ;; reserve space for zero subexpression
          (p  (%%make-submatches %n)))
     (if p
-      (%make-submatches p %n)
+        (begin
+          (set-finalizer! p submatches-free)
+          (%make-submatches p %n))
       (error "make-submatches failed"))))
 
-(define (submatches-free subm)
+(define (submatches-free pointer)
   (define %submatches-free
     (foreign-lambda void "submatches_free" nonnull-c-pointer))
 
-  (%submatches-free (%submatches-ptr subm)))
+  (%submatches-free pointer))
 
 (define (submatches-get subm idx)
   (define %submatches-get
