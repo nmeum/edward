@@ -24,5 +24,6 @@
            "lib/parse.scm"
            "lib/parse-util.scm"
            "lib/parse-addr.scm"
+           "lib/regex.scm"
            "lib/editor.scm"
            "lib/cmd.scm"))
