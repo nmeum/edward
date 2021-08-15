@@ -216,14 +216,8 @@
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
 (define (exec-change editor range)
-  (let ((saddr (addr->line editor (first range))))
-    (editor-remove! editor range)
-    (editor-goto! editor (max 0 (dec saddr)))
-
-    (let ((in (editor-read-input editor)))
-      (if (null? in)
-        (editor-goto! editor (min (length (text-editor-buffer editor)) saddr))
-        (editor-goto! editor (editor-append! editor in))))))
+  (let ((in (editor-read-input editor)))
+    (editor-goto! editor (editor-replace! editor range in))))
 
 (define-command (edit-cmd exec-change)
   (parse-default parse-addr-range

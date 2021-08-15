@@ -264,6 +264,15 @@
                                (drop buf line)))
     (+ line (length text))))
 
+;; Replace text in given range with given data. Return line number of
+;; last inserted line.
+
+(define (editor-replace! editor range data)
+  (let ((saddr (addr->line editor (first range))))
+    (editor-remove! editor range)
+    (editor-goto! editor (max 0 (dec saddr)))
+    (editor-append! editor data)))
+
 (define (editor-join! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
