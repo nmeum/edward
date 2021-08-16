@@ -5,6 +5,7 @@
           (scheme case-lambda)
           (scheme process-context)
           (scheme write)
+          (scheme lazy)
 
           (srfi 1)
           (srfi 14)
@@ -18,6 +19,7 @@
   (export make-addr parse-addr parse-addr-range)
   (export parse-cmds)
   (export make-text-editor editor-start)
+  (export make-bre regex-replace)
 
   (include "lib/util.scm"
            "lib/ffi.scm"

@@ -261,18 +261,18 @@
 
 ;; Substitute Command
 
-(define (exec-subst editor range regex replace)
+(define (exec-subst editor range regex replace nth)
   ;; TODO: Support for special '%' character
-  ;; TODO: Like in sed any character can be used as a delimiter.
-  ;; TODO: Support flags
   (let ((lst (editor-get-range editor range))
         (bre (make-bre regex)))
-    (editor-replace!
+    (editor-goto!
       editor
-      range
-      (map (lambda (x)
-             (regex-replace bre replace x))
-           lst))))
+      (editor-replace!
+        editor
+        range
+        (map (lambda (x)
+               (regex-replace bre replace x nth))
+             lst)))))
 
 (define-command (edit-cmd exec-subst)
   (parse-default parse-addr-range
@@ -281,10 +281,18 @@
                    #\,
                    (make-addr '(current-line))))
   (parse-cmd #\s)
+
+  ;; TODO: Like in sed any character can be used as a delimiter.
   (parse-regex-lit #\/)
   (parse-as-string
     (parse-repeat+ (parse-not-char #\/)))
-  (parse-ignore (parse-char #\/)))
+  (parse-ignore (parse-char #\/))
+
+  (parse-default
+    (parse-or
+      (parse-map (parse-char #\g) (lambda (x) 0))
+      parse-digits)
+    1))
 
 ;; Delete Command
 ;;

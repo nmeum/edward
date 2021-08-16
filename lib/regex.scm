@@ -19,7 +19,7 @@
     (parse-as-string
       (parse-repeat+
         (parse-or
-          (parse-esc* regex-ctrl)
+          (parse-esc* (parse-char regex-ctrl))
           (parse-not-char regex-ctrl))))
     (lambda (str)
       (cons 'restr str))))
@@ -33,32 +33,60 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (subexpr-filter subst)
-  (filter (lambda (pair)
-            (eqv? (first pair) 'backref)) subst))
+(define (max-backref subst)
+  (fold (lambda (x y)
+          (if (eqv? 'backref (car x))
+            (max (cdr x) y)
+            y))
+        0 subst))
 
-(define (subexpr-count subst)
-  (length (subexpr-filter subst)))
+;; TODO Handle this in ffi.scm
+(define (bre-match-bv? bre bv subm)
+  (bre-match*? bre (utf8->string bv) subm))
 
-(define (subexpr->string subm n str)
-  ;; regex offsets are byte, not character offset.
-  ;; Thus, the string is converted to a bytevector first.
-  (let* ((u8 (string->utf8 str))
-         (match (submatches-get subm n))
+(define (submatch subm bv n)
+  (let* ((match (submatches-get subm n))
          (start (submatch-start match))
          (end (submatch-end match)))
-    (utf8->string (bytevector-copy u8 start end))))
+    (bytevector-copy bv start end)))
 
-(define (regex-replace bre subst str)
-  (let* ((re   (parse-fully parse-subst subst))
-         (nsub (subexpr-count re))
-         (subm (make-submatches nsub)))
-    (if (bre-match*? bre str subm)
-      (fold (lambda (x y)
-              (string-append y
-                (match x
-                  (('restr . s) s)
-                  (('matched . _) (subexpr->string subm 0 str))
-                  (('backref . n) (subexpr->string subm n str)))))
-            "" re)
-      str)))
+(define (regex-replace* bre subst bv nth)
+  (define (apply-replacement subm bv replacement)
+    (fold (lambda (x y)
+            (bytevector-append y
+              (match x
+                (('restr . s) (string->utf8 s))
+                (('matched . _) (submatch subm bv 0))
+                (('backref . n) (submatch subm bv n)))))
+          #u8() replacement))
+
+  (define (%regex-replace* subm re start n)
+    (let ((v (bytevector-copy bv start)))
+      (if (bre-match-bv? bre v subm)
+        (let* ((m (submatches-get subm 0))
+               (s (submatch-start m))
+               (e (submatch-end m))
+
+               (i (+ start e)) ;; next index in bv
+               (r (delay (bytevector-append
+                           (bytevector-copy v 0 s)
+                           (apply-replacement subm bv re)))))
+          (if (eqv? n nth)
+            (bytevector-append (force r) (bytevector-copy bv i))
+            (bytevector-append
+              (if (zero? nth) (force r) (bytevector-copy v 0 e))
+              (%regex-replace* subm re i (inc n)))))
+        v)))
+
+  (let* ((re (parse-fully parse-subst subst))
+         (subm (make-submatches (max-backref re))))
+    (%regex-replace* subm re 0 1)))
+
+;; Replace nth occurrence of bre in str with subst. If nth is zero all
+;; occurrences are replaced.
+
+(define (regex-replace bre subst str nth)
+  ;; regexec(3p) offsets are byte, not character offsets.
+  ;; Thus, the string needs to be converted to a bytevector.
+  (utf8->string
+    (regex-replace* bre subst (string->utf8 str) nth)))
