@@ -262,16 +262,16 @@
 ;; Substitute Command
 
 (define (exec-subst editor range regex replace nth)
-  ;; TODO: Support for special '%' character
   (let* ((lst (editor-get-range editor range))
          (bre (make-bre regex))
+         (rep (editor-replace editor replace))
 
          (sline (addr->line editor (first range)))
          (eline (addr->line editor (last range)))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold (lambda (line lnum y)
-                     (let* ((r (regex-replace bre replace line nth))
+                     (let* ((r (regex-replace bre rep line nth))
                             (l (cons r (car y))))
                        (if (equal? r line)
                          (cons l (cdr y)) ;; not modified

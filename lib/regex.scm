@@ -19,7 +19,10 @@
     (parse-as-string
       (parse-repeat+
         (parse-or
-          (parse-esc* (parse-char regex-ctrl))
+          ;; special handling for '%' as it does not neccessarily
+          ;; need to be escaped unless it's the only character.
+          (parse-esc*
+            (parse-char (char-set-adjoin regex-ctrl #\%)))
           (parse-not-char regex-ctrl))))
     (lambda (str)
       (cons 'restr str))))

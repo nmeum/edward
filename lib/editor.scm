@@ -73,7 +73,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename input buffer line error marks state re modified? silent? help?)
+  (%make-text-editor filename input buffer line error marks state re
+                     replace modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -92,6 +93,8 @@
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
+  ;; String representing last used regex for the substitute command.
+  (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
@@ -101,7 +104,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" #f silent? #f)))
+         (e (%make-text-editor filename h '() 0 #f '() #f "" "" #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
@@ -168,6 +171,16 @@
     (begin
       (text-editor-re-set! editor bre)
       bre)))
+
+(define (editor-replace editor subst)
+  (if (equal? subst "%")
+    (let ((last-subst (text-editor-last-replace editor)))
+      (if (empty-string? last-subst)
+        (error "no previous replacement")
+        last-subst))
+    (begin
+      (text-editor-last-replace-set! editor subst)
+      subst)))
 
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.
