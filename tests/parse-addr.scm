@@ -21,7 +21,8 @@
 (test-group "parse-backward-bre"
   (test-parse '((regex-backward . "foo") ()) parse-addr "?foo?")
   (test-parse '((regex-backward . "") ()) parse-addr "??")
-  (test-parse '((regex-backward . "foo?bar") ()) parse-addr "?foo\\?bar?"))
+  (test-parse '((regex-backward . "foo?bar") ()) parse-addr "?foo\\?bar?")
+  (test-parse '((regex-backward . "fo\\([a-z]\\)") ()) parse-addr "?fo\\([a-z]\\)?"))
 
 (test-group "parse-relative"
   (test-parse '((relative . 5) ())   parse-addr "+5")

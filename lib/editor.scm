@@ -73,7 +73,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename input buffer line error marks state re modified? silent? help?)
+  (%make-text-editor filename input buffer line error marks state re
+                     replace modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -92,6 +93,8 @@
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
+  ;; String representing last used regex for the substitute command.
+  (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
@@ -101,7 +104,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" #f silent? #f)))
+         (e (%make-text-editor filename h '() 0 #f '() #f "" "" #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
@@ -168,6 +171,16 @@
     (begin
       (text-editor-re-set! editor bre)
       bre)))
+
+(define (editor-replace editor subst)
+  (if (equal? subst "%")
+    (let ((last-subst (text-editor-last-replace editor)))
+      (if (empty-string? last-subst)
+        (error "no previous replacement")
+        last-subst))
+    (begin
+      (text-editor-last-replace-set! editor subst)
+      subst)))
 
 ;; Return the currently configured filename, if no default is given it
 ;; is an error if no filename is configured for the given editor.
@@ -264,6 +277,15 @@
                                (drop buf line)))
     (+ line (length text))))
 
+;; Replace text in given range with given data. Return line number of
+;; last inserted line.
+
+(define (editor-replace! editor range data)
+  (let ((saddr (addr->line editor (first range))))
+    (editor-remove! editor range)
+    (editor-goto! editor (max 0 (dec saddr)))
+    (editor-append! editor data)))
+
 (define (editor-join! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
@@ -297,7 +319,6 @@
 
 (define (match-line direction editor bre)
   (let ((buffer (text-editor-buffer editor))
-        ;; regex needs to be freed on each path
         (regex (make-bre (editor-regex editor bre)))
         (func  (match direction
                       ('forward for-each-index)
@@ -306,12 +327,10 @@
       (lambda (exit)
         (func (lambda (idx elem)
                 (when (bre-match? regex elem)
-                  (bre-free regex)
                   (exit (inc idx))))
               buffer
               (max (dec (text-editor-line editor)) 0))
 
-        (bre-free regex)
         (error "no match")))))
 
 (define addr->line
@@ -330,3 +349,10 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
+
+;; Return list of line numbers for the given range.
+
+(define (range->lines editor range)
+  (let ((sline (addr->line editor (first range)))
+        (eline (addr->line editor (last range))))
+    (iota (inc (- eline sline)) sline)))

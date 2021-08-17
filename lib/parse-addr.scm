@@ -13,6 +13,8 @@
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; The <period> character ('.') shall address the current line.
 
 (define parse-current
@@ -59,7 +61,9 @@
   (parse-as-string
     (parse-between
       (parse-char ch)
-      (parse-repeat (parse-or parse-esc (parse-not-char ch)))
+      (parse-repeat (parse-or
+                      (parse-esc (parse-char ch))
+                      (parse-not-char ch)))
       (parse-or
         (parse-char ch)
         parse-end))))

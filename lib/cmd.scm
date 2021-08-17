@@ -216,14 +216,8 @@
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
 (define (exec-change editor range)
-  (let ((saddr (addr->line editor (first range))))
-    (editor-remove! editor range)
-    (editor-goto! editor (max 0 (dec saddr)))
-
-    (let ((in (editor-read-input editor)))
-      (if (null? in)
-        (editor-goto! editor (min (length (text-editor-buffer editor)) saddr))
-        (editor-goto! editor (editor-append! editor in))))))
+  (let ((in (editor-read-input editor)))
+    (editor-goto! editor (editor-replace! editor range in))))
 
 (define-command (edit-cmd exec-change)
   (parse-default parse-addr-range
@@ -264,6 +258,47 @@
 (define-command (file-cmd exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-file-cmd #\r))
+
+;; Substitute Command
+
+(define (exec-subst editor range regex replace nth)
+  (let* ((lst (editor-get-range editor range))
+         (bre (make-bre (editor-regex editor regex)))
+         (rep (editor-replace editor replace))
+
+         ;; Pair (list of replaced lines, line number of last replaced line)
+         (re (fold (lambda (line lnum y)
+                     (let* ((r (regex-replace bre rep line nth))
+                            (l (cons r (car y))))
+                       (if (equal? r line)
+                         (cons l (cdr y)) ;; not modified
+                         (cons l lnum))))
+                   '((). 0) lst (range->lines editor range))))
+    (if (zero? (cdr re))
+      (error "no match")
+      (begin
+        (editor-replace! editor range (car re))
+        (editor-goto! editor (cdr re))))))
+
+(define-command (edit-cmd exec-subst)
+  (parse-default parse-addr-range
+                 (list
+                   (make-addr '(current-line))
+                   #\,
+                   (make-addr '(current-line))))
+  (parse-cmd #\s)
+
+  ;; TODO: Like in sed any character can be used as a delimiter.
+  (parse-regex-lit #\/)
+  (parse-as-string
+    (parse-repeat+ (parse-not-char #\/)))
+  (parse-ignore (parse-char #\/))
+
+  (parse-default
+    (parse-or
+      (parse-map (parse-char #\g) (lambda (x) 0))
+      parse-digits)
+    1))
 
 ;; Delete Command
 ;;
@@ -588,12 +623,11 @@
 
 (define (exec-number editor range)
   (let ((lst (editor-get-range editor range))
-        (sline (addr->line editor (first range)))
         (eline (addr->line editor (last range))))
     (for-each
-      (lambda (pair)
-        (println (car pair) "\t" (cadr pair)))
-      (zip (iota (inc (- eline sline)) sline) lst))
+      (lambda (line number)
+        (println number "\t" line))
+      lst (range->lines editor range))
     (editor-goto! editor eline)))
 
 (define-command (print-cmd exec-number)

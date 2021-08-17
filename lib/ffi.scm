@@ -104,18 +104,18 @@
 
     if (!(re = malloc(sizeof(*re))))
       return NULL;
-    if (regcomp(re, regex, REG_NOSUB))
+    if (regcomp(re, regex, 0))
       return NULL;
 
     return re;
   }
 
   int
-  bre_match(regex_t *re, char *string)
+  bre_match(regex_t *re, char *string, size_t nmatch, regmatch_t *pmatch)
   {
     int ret;
 
-    ret = regexec(re, string, 0, NULL, 0);
+    ret = regexec(re, string, nmatch, pmatch, 0);
     return ret != REG_NOMATCH;
   }
 
@@ -125,7 +125,47 @@
     regfree(re);
     free(re);
   }
+
+  regmatch_t *
+  make_submatches(size_t n)
+  {
+    regmatch_t *r;
+
+    if (!(r = malloc(sizeof(*r) * n)))
+      return NULL;
+
+    return r;
+  }
+
+  void
+  submatches_free(regmatch_t *pmatch)
+  {
+    free(pmatch);
+  }
+
+  regmatch_t *
+  submatches_get(size_t nmatch, regmatch_t *pmatch, size_t idx)
+  {
+    if (idx >= nmatch)
+      return NULL;
+
+    return &pmatch[idx];
+  }
+
+  ssize_t
+  submatch_start(regmatch_t *m)
+  {
+    return (ssize_t)m->rm_so;
+  }
+
+  ssize_t
+  submatch_end(regmatch_t *m)
+  {
+    return (ssize_t)m->rm_eo;
+  }
   ")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; XXX: This is basically the terminal? procedure from SRFI-170.
 ;; See: https://srfi.schemers.org/srfi-170/srfi-170.html#node_sec_3.12
@@ -135,6 +175,8 @@
     (foreign-lambda int "stdin_isatty"))
 
   (eqv? (%stdin-tty?) 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Spawn the given command and pipe the given string via stdin to it.
 
@@ -160,6 +202,8 @@
     (#f (error "pipe_from failed"))
     (lst (cons lst (%pipe-from-numbytes)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Allocate a new data structure for matching strings with the given
 ;; Basic Regular Expression (BRE).
 
@@ -168,15 +212,19 @@
     (foreign-lambda c-pointer "make_bre" nonnull-c-string))
 
   (let ((r (%make-bre bre)))
-    (if r r (error "make-bre failed"))))
+    (if r
+      (begin
+        (set-finalizer! r bre-free)
+        r)
+      (error "make-bre failed"))))
 
 ;; Check if a given string matches the given BRE.
 
-(define (bre-match? bre str)
-  (define %bre-match?
-    (foreign-lambda int "bre_match" nonnull-c-pointer  nonnull-c-string))
+(define %bre-match?
+  (foreign-lambda int "bre_match" nonnull-c-pointer nonnull-c-string size_t c-pointer))
 
-  (eqv? (%bre-match? bre str) 1))
+(define (bre-match? bre str)
+  (eqv? (%bre-match? bre str 0 #f) 1))
 
 ;; Free resources allocated for a given BRE.
 
@@ -185,3 +233,58 @@
     (foreign-lambda void "bre_free" nonnull-c-pointer))
 
   (%bre-free bre))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-record-type Submatches
+  (%make-submatches ptr count)
+  submatches?
+  (ptr %submatches-ptr)
+  (count submatches-count))
+
+(define (make-submatches n)
+  (define %%make-submatches
+    (foreign-lambda c-pointer "make_submatches" size_t))
+
+  (let* ((%n (inc n)) ;; reserve space for zero subexpression
+         (p  (%%make-submatches %n)))
+    (if p
+        (begin
+          (set-finalizer! p submatches-free)
+          (%make-submatches p %n))
+      (error "make-submatches failed"))))
+
+(define (submatches-free pointer)
+  (define %submatches-free
+    (foreign-lambda void "submatches_free" nonnull-c-pointer))
+
+  (%submatches-free pointer))
+
+(define (submatches-get subm idx)
+  (define %submatches-get
+    (foreign-lambda c-pointer "submatches_get" size_t nonnull-c-pointer size_t))
+
+  (let ((r (%submatches-get (submatches-count subm) (%submatches-ptr subm) idx)))
+    (if r
+      r
+      (error "out of bounds submatch"))))
+
+(define (submatch-start match)
+  (define %submatch-start
+    (foreign-lambda ssize_t "submatch_start" nonnull-c-pointer))
+
+  (%submatch-start match))
+
+(define (submatch-end match)
+  (define %submatch-end
+    (foreign-lambda ssize_t "submatch_end" nonnull-c-pointer))
+
+  (%submatch-end match))
+
+;; Variant of bre-match which also tracks submatches.
+
+(define (bre-match*? bre str subm)
+  (eqv? (%bre-match? bre str
+                     (submatches-count subm)
+                     (%submatches-ptr subm))
+        1))
