@@ -263,16 +263,25 @@
 
 (define (exec-subst editor range regex replace nth)
   ;; TODO: Support for special '%' character
-  (let ((lst (editor-get-range editor range))
-        (bre (make-bre regex)))
-    (editor-goto!
-      editor
-      (editor-replace!
-        editor
-        range
-        (map (lambda (x)
-               (regex-replace bre replace x nth))
-             lst)))))
+  (let* ((lst (editor-get-range editor range))
+         (bre (make-bre regex))
+
+         (sline (addr->line editor (first range)))
+         (eline (addr->line editor (last range)))
+
+         ;; Pair (list of replaced lines, line number of last replaced line)
+         (re (fold (lambda (line lnum y)
+                     (let* ((r (regex-replace bre replace line nth))
+                            (l (cons r (car y))))
+                       (if (equal? r line)
+                         (cons l (cdr y)) ;; not modified
+                         (cons l lnum))))
+                   '((). 0) lst (iota (inc (- eline sline)) sline))))
+    (if (zero? (cdr re))
+      (error "no match")
+      (begin
+        (editor-replace! editor range (car re))
+        (editor-goto! editor (cdr re))))))
 
 (define-command (edit-cmd exec-subst)
   (parse-default parse-addr-range
