@@ -13,6 +13,8 @@
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; The <period> character ('.') shall address the current line.
 
 (define parse-current

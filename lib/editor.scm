@@ -349,3 +349,10 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
+
+;; Return list of line numbers for the given range.
+
+(define (range->lines editor range)
+  (let ((sline (addr->line editor (first range)))
+        (eline (addr->line editor (last range))))
+    (iota (inc (- eline sline)) sline)))

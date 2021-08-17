@@ -266,9 +266,6 @@
          (bre (make-bre (editor-regex editor regex)))
          (rep (editor-replace editor replace))
 
-         (sline (addr->line editor (first range)))
-         (eline (addr->line editor (last range)))
-
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold (lambda (line lnum y)
                      (let* ((r (regex-replace bre rep line nth))
@@ -276,7 +273,7 @@
                        (if (equal? r line)
                          (cons l (cdr y)) ;; not modified
                          (cons l lnum))))
-                   '((). 0) lst (iota (inc (- eline sline)) sline))))
+                   '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
       (error "no match")
       (begin
@@ -626,12 +623,11 @@
 
 (define (exec-number editor range)
   (let ((lst (editor-get-range editor range))
-        (sline (addr->line editor (first range)))
         (eline (addr->line editor (last range))))
     (for-each
-      (lambda (pair)
-        (println (car pair) "\t" (cadr pair)))
-      (zip (iota (inc (- eline sline)) sline) lst))
+      (lambda (line number)
+        (println number "\t" line))
+      lst (range->lines editor range))
     (editor-goto! editor eline)))
 
 (define-command (print-cmd exec-number)
