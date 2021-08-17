@@ -62,7 +62,7 @@
     (parse-between
       (parse-char ch)
       (parse-repeat (parse-or
-                      (parse-esc* (parse-char ch))
+                      (parse-esc (parse-char ch))
                       (parse-not-char ch)))
       (parse-or
         (parse-char ch)

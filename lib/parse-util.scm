@@ -32,15 +32,12 @@
     (parse-seq lhs parser rhs)
     cadr))
 
-(define (parse-esc* f)
+(define (parse-esc f)
   (parse-map
     (parse-seq
       (parse-char #\\)
       f)
     cadr))
-
-(define parse-esc
-  (parse-esc* parse-anything))
 
 ;; Parses successfully at end of input, fails otherwise.
 
