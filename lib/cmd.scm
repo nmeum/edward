@@ -263,7 +263,7 @@
 
 (define (exec-subst editor range regex replace nth)
   (let* ((lst (editor-get-range editor range))
-         (bre (make-bre regex))
+         (bre (make-bre (editor-regex editor regex)))
          (rep (editor-replace editor replace))
 
          (sline (addr->line editor (first range)))
