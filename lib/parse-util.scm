@@ -39,14 +39,6 @@
       f)
     cadr))
 
-;; Parses successfully at end of input, fails otherwise.
-
-(define parse-eof-object
-  (lambda (source index sk fk)
-    (if (parse-stream-end? source index)
-      (sk #t source index fk)
-      (fk source index "expected at end of input"))))
-
 ;; Invoke given parser and strip trailing blanks (if any).
 
 (define (parse-strip-blanks parser)
@@ -68,3 +60,16 @@
                   lst))))
 
   (%parse-blanks-seq o))
+
+;; Feed f the result of ctx.
+
+(define (parse-with-context ctx f)
+  (define yield (lambda (r s i fk) r))
+
+  (lambda (source index sk fk)
+    ;; call-with-parse modifies source and needs to be called first.
+    (let* ((c (call-with-parse ctx source index yield fk))
+           (start (parse-stream-offset source)))
+      (if c
+        ((f c) source start sk fk)
+        (fk source index "context parser failed")))))

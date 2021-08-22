@@ -39,7 +39,8 @@
      (register-command
        (parse-map
          (parse-blanks-seq
-           BODY ...)
+           BODY ...
+           (parse-ignore (parse-char #\newline)))
          (lambda (args)
            (cons
              (with-ret HANDLER (quote HANDLER))
@@ -49,7 +50,9 @@
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
-           (parse-ignore (parse-optional parse-print-cmd)))
+           (parse-ignore (parse-optional parse-print-cmd))
+           (parse-ignore parse-blanks)
+           (parse-ignore (parse-char #\newline)))
          (lambda (args)
            (cons
              (with-ret HANDLER (quote HANDLER))
@@ -59,7 +62,9 @@
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
-           (parse-optional parse-print-cmd))
+           (parse-optional parse-print-cmd)
+           (parse-ignore parse-blanks)
+           (parse-ignore (parse-char #\newline)))
          (lambda (orig-args)
            (cons
              (lambda (editor . args)
@@ -111,9 +116,9 @@
       (parse-seq
         (parse-string "!")
         (parse-as-string
-          (parse-repeat+ (parse-char (lambda (x) #t)))))
+          (parse-repeat+ (parse-not-char #\newline))))
       (lambda (lst) (apply string-append lst)))
-    (parse-as-string (parse-repeat (parse-not-char char-set:blank)))))
+    (parse-as-string (parse-repeat (parse-not-char char-set:whitespace)))))
 
 ;; Parses a command character followed by an optional file parameter.
 ;; The compontests **must** be separated by one or more <blank>
@@ -570,9 +575,8 @@
         (println (list-ref (text-editor-buffer editor) (dec line)))
         (editor-goto! editor line)))))
 
-(define-command (edit-cmd exec-null)
-  (parse-default parse-addr (make-addr '(current-line) '(+1)))
-  (parse-ignore parse-eof-object))
+(define-command (file-cmd exec-null)
+  (parse-default parse-addr (make-addr '(current-line) '(+1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -586,4 +590,4 @@
 
 ;; TODO: Commit to individual command parsers and don't backtrack.
 (define parse-cmds
-  (parse-strip-blanks (apply parse-or command-parsers)))
+  (apply parse-or command-parsers))

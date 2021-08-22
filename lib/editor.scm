@@ -27,48 +27,100 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Parse a single line without the terminating newline.
+
+(define parse-input-line
+  (parse-map
+    (parse-seq
+      (parse-as-string (parse-repeat+ (parse-not-char #\newline)))
+      (parse-char #\newline))
+    car))
+
+;; Parse lines until end of input mode (<period> character on single line).
+
+(define parse-input
+  (parse-repeat
+    (parse-with-context
+      parse-input-line
+      (lambda (line)
+        (lambda (source index sk fk)
+          (if (equal? line ".")
+            (fk source index "end of input mode")
+            (sk line source index fk)))))))
+
+;; Return a list of input mode input lines (without the terminating
+;; newline). See POSIX.1-2008 for more information on input mode.
+
+(define parse-input-mode
+  (parse-map
+    (parse-seq
+      parse-input
+      (parse-string ".\n"))
+    car))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Input-Handler
-  (%make-input-handler prompt-str prompt? line)
+  (%make-input-handler prompt-str prompt? stream index)
   input-handler?
   ;; Prompt string used for input prompt.
   (prompt-str input-handler-prompt-str)
   ;; Whether the prompt should be shown or hidden.
   (prompt? input-handler-prompt? input-handler-set-prompt!)
-  ;; Current input line number.
-  (line input-handler-line input-handler-set-line!))
+  ;; Parse stream used for the parser combinator.
+  (stream input-handler-stream)
+  ;; Last index in parse stream.
+  (index input-handler-index input-handler-index-set!))
 
 (define (make-input-handler prompt)
   (let ((prompt? (not (empty-string? prompt))))
     (%make-input-handler
       (if prompt? prompt "*")
       prompt?
+      (make-parse-stream "stdin" (current-input-port))
       0)))
 
+(define (input-handler-next-line! handler)
+  (let ((idx (input-handler-index handler))
+        (stream (input-handler-stream handler)))
+    (input-handler-index-set! handler (inc idx))
+    (unless (eqv? (parse-stream-ref stream idx) #\newline)
+      (input-handler-next-line! handler))))
+
+(define (input-handler-parse handler f)
+  (call-with-parse
+    f
+    (input-handler-stream handler)
+    (input-handler-index handler)
+    (lambda (r s i fk)
+      (input-handler-index-set! handler i)
+      r)
+    (lambda (s i reason)
+      (input-handler-next-line! handler)
+      (error reason))))
+
+(define (input-handler-line handler)
+  (car
+    (parse-stream-debug-info
+      (input-handler-stream handler)
+      (input-handler-index handler))))
+
 (define (input-handler-repl handler proc)
-  (input-handler-set-line!
-    handler
-    (inc (input-handler-line handler)))
+  (if (parse-stream-end?
+            (input-handler-stream handler)
+            (input-handler-index handler))
+    (exit #t) ;; EOF
+    (begin
+      (when (input-handler-prompt? handler)
+        (display (input-handler-prompt-str handler))
+        (flush-output-port))
 
-  (when (input-handler-prompt? handler)
-    (display (input-handler-prompt-str handler))
-    (flush-output-port))
-
-  (let ((input (read-line)))
-    (unless (eof-object? input)
-      (proc input)
-      (input-handler-repl handler proc))))
+      (let ((c (input-handler-parse handler parse-cmds)))
+        (proc c)
+        (input-handler-repl handler proc)))))
 
 (define (input-handler-read handler)
-  (input-handler-set-line!
-    handler
-    (inc (input-handler-line handler)))
-
-  (let ((input (read-line)))
-    (if (eof-object? input)
-      (error "unexpected EOF")
-      (if (equal? input ".")
-        '()
-        (cons input (input-handler-read handler))))))
+  (input-handler-parse handler parse-input-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -111,49 +163,38 @@
     e))
 
 (define (editor-start editor)
-  ;; parse-fully with custom error handler.
-  (define (parse-command source)
-    (call-with-parse
-      parse-cmds source 0
-      (lambda (r s i fk)
-        (if (parse-stream-end? s i)
-          r
-          (fk s i "incomplete parse")))
-      (lambda (s i reason) (error reason))))
+  (define (handle-cmd cmd)
+    (text-editor-prevcmd-set!
+      editor
+      (apply (car cmd) editor (cdr cmd))))
 
-  ;; If an invalid command is entered, ed shall write the string: "?\n"
-  ;; (followed by an explanatory message if help mode has been enabled
-  ;; via the H command) to standard output and shall continue in command
-  ;; mode with the current line number unchanged.
-  (define (eval-input input)
-    (call-with-current-continuation
-      (lambda (k)
-        (with-exception-handler
-          (lambda (eobj)
-            (let* ((in (text-editor-input-handler editor))
-                   (line (input-handler-line in))
+  (call-with-current-continuation
+    (lambda (k)
+      (with-exception-handler
+        (lambda (eobj)
+          (let* ((in (text-editor-input-handler editor))
+                 (line (input-handler-line in))
 
-                   (tty? (stdin-tty?))
-                   (prefix (if tty?
-                             ""
-                             (string-append
-                               "line " (number->string line) ": "))))
-            (text-editor-prevcmd-set! editor #f)
-            (editor-error
-              editor
-              (string-append prefix (error-object-message eobj)))
+                 (tty? (stdin-tty?))
+                 (prefix (if tty?
+                           ""
+                           (string-append
+                             "line " (number->string line) ": "))))
+          (text-editor-prevcmd-set! editor #f)
+          (editor-error
+            editor
+            (string-append prefix (error-object-message eobj)))
 
-            ;; See "Consequences of Errors" section in POSIX.1-2008.
-            (if tty?
-              (k '())
-              (exit #f))))
-          (lambda ()
-            (let* ((s (string->parse-stream input))
-                   (r (parse-command s)))
-              (text-editor-prevcmd-set! editor
-                (apply (car r) editor (cdr r)))))))))
+          ;; See "Consequences of Errors" section in POSIX.1-2008.
+          (if tty?
+            (k '())
+            (exit #f))))
+        (lambda ()
+          (input-handler-repl
+            (text-editor-input-handler editor)
+            handle-cmd)))))
 
-  (input-handler-repl (text-editor-input-handler editor) eval-input))
+  (editor-start editor))
 
 (define (editor-read-input editor)
   (let ((h (text-editor-input-handler editor)))
