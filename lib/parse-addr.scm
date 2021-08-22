@@ -1,13 +1,3 @@
-;; Addresses in ed
-;;
-;; An address is a list consisting of an address specification and a
-;; (possibly empty) list of offsets which should be applied to this
-;; address specification. An address specification is a pair consisting
-;; of a symbol and an optional argument.
-;;
-;; The text in this section is aligned with the `Addresses in ed`
-;; section in the POSIX-1.2008 specification of `ed(1)`.
-
 (define make-addr
   (case-lambda
     ((addr) (list addr '()))
@@ -15,7 +5,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; The <period> character ('.') shall address the current line.
+;; From POSIX.1-2008:
+;;
+;;   The <period> character ('.') shall address the current line.
 
 (define parse-current
   (parse-map
@@ -23,8 +15,10 @@
     (lambda (ch)
       (cons 'current-line '()))))
 
-;; The <dollar-sign> character ('$') shall address the last line of
-;; the edit buffer.
+;; From POSIX.1-2008:
+;;
+;;   The <dollar-sign> character ('$') shall address the last line of
+;;   the edit buffer.
 
 (define parse-last
   (parse-map
@@ -32,8 +26,10 @@
     (lambda (ch)
       (cons 'last-line '()))))
 
-;; The positive decimal number n shall address the nth line of the edit
-;; buffer.
+;; From POSIX.1-2008:
+;;
+;;   The positive decimal number n shall address the nth line of the
+;;   edit buffer.
 
 (define parse-nth
   (parse-map
@@ -41,11 +37,11 @@
     (lambda (num)
       (cons 'nth-line num))))
 
-;; The <apostrophe>-x character pair ("'x") shall address the line
-;; marked with the mark name character x, which shall be a lowercase
-;; letter from the portable character set. It shall be an error if the
-;; character has not been set to mark a line or if the line that was
-;; marked is not currently present in the edit buffer.
+;; From POSIX.1-2008:
+;;
+;;   The <apostrophe>-x character pair ("'x") shall address the line
+;;   marked with the mark name character x, which shall be a lowercase
+;;   letter from the portable character set.
 
 (define parse-mark
   (parse-map
@@ -68,12 +64,14 @@
         (parse-char ch)
         parse-end))))
 
-;; A BRE enclosed by <slash> characters ('/') shall address the first
-;; line found by searching forwards from the line following the
-;; current line toward the end of the edit buffer. The second <slash>
-;; can be omitted at the end of a command line. Within the BRE, a
-;; <backslash>-<slash> pair ("\/") shall represent a literal <slash>
-;; instead of the BRE delimiter.
+;; From POSIX.1-2008:
+;;
+;;   A BRE enclosed by <slash> characters ('/') shall address the first
+;;   line found by searching forwards from the line following the
+;;   current line toward the end of the edit buffer. The second <slash>
+;;   can be omitted at the end of a command line. Within the BRE, a
+;;   <backslash>-<slash> pair ("\/") shall represent a literal <slash>
+;;   instead of the BRE delimiter.
 
 (define parse-forward-bre
   (parse-map
@@ -81,12 +79,14 @@
     (lambda (str)
       (cons 'regex-forward str))))
 
-;; A BRE enclosed by <question-mark> characters ('?') shall address
-;; the first line found by searching backwards from the line preceding
-;; the current line toward the beginning of the edit buffer. The second
-;; <question-mark> can be omitted at the end of a command line. Within
-;; the BRE, a <backslash>-<question-mark> pair ("\?") shall represent
-;; a literal <question-mark> instead of the BRE delimiter.
+;; From POSIX-1.2008:
+;;
+;;   A BRE enclosed by <question-mark> characters ('?') shall address
+;;   the first line found by searching backwards from the line preceding
+;;   the current line toward the beginning of the edit buffer. The
+;;   second <question-mark> can be omitted at the end of a command line.
+;;   Within the BRE, a <backslash>-<question-mark> pair ("\?") shall
+;;   represent a literal <question-mark> instead of the BRE delimiter.
 
 (define parse-backward-bre
   (parse-map
@@ -94,10 +94,12 @@
     (lambda (str)
       (cons 'regex-backward str))))
 
-;; A <plus-sign> ('+') or <hyphen-minus> character ('-') followed by a
-;; decimal number shall address the current line plus or minus the
-;; number. A <plus-sign> or <hyphen-minus> character not followed by a
-;; decimal number shall address the current line plus or minus 1.
+;; From POSIX.1-2008:
+;;
+;;   A <plus-sign> ('+') or <hyphen-minus> character ('-') followed by a
+;;   decimal number shall address the current line plus or minus the
+;;   number. A <plus-sign> or <hyphen-minus> character not followed by a
+;;   decimal number shall address the current line plus or minus 1.
 
 (define parse-offset
   (parse-map
@@ -132,17 +134,11 @@
     parse-relative
     (parse-fail "unknown address format")))
 
-;; Addresses can be followed by zero or more address offsets,
-;; optionally <blank>-separated. Address offsets are constructed
-;; as follows:
-;;
-;;  * A <plus-sign> or <hyphen-minus> character followed by a decimal
-;;    number shall add or subtract, respectively, the indicated number of
-;;    lines to or from the address. A <plus-sign> or <hyphen-minus
-;;    character not followed by a decimal number shall add or subtract 1
-;;    to or from the address.
-;;
-;;  * A decimal number shall add the indicated number of lines to the address.
+;; Addresses can be followed by zero or more address offsets, optionally
+;; <blank>-separated. Offsets are a decimal number optionally prefixed
+;; by <plus-sign> or <hyphen-minus> character. A <plus-sign> or
+;; <hyphen-minus> character not followed by a decimal number shall be
+;; interpreted as +1/-1.
 
 (define parse-addr-offsets
   (parse-repeat
@@ -159,24 +155,16 @@
     %parse-addr
     parse-addr-offsets))
 
-;; Addresses shall be separated from each other by a <comma> (',') or
-;; <semicolon> character (';'). In the case of a <semicolon> separator,
-;; the current line ('.') shall be set to the first address, and only then
-;; will the second address be calculated.
+;; From POSIX-1.2008:
 ;;
-;; Addresses can be omitted on either side of the <comma> or <semicolon>
-;; separator, in which case the resulting address pairs shall be as
-;; follows:
+;;   Addresses shall be separated from each other by a <comma> (',') or
+;;   <semicolon> character (';'). In the case of a <semicolon>
+;;   separator, the current line ('.') shall be set to the first
+;;   address, and only then will the second address be calculated.
 ;;
-;;  (1) ,      → 1 , $
-;;  (2) , addr → 1 , addr
-;;  (3) addr , → addr , addr
-;;  (4) ;      → . ; $
-;;  (5) ; addr → . ; addr
-;;  (6) addr ; → addr ; addr
-;;
-;; Any <blank> characters included between addresses, address separators,
-;; or address offsets shall be ignored.
+;; POSIX also mandates a table with rules in case addresses are omitted
+;; on either side of the separation character. Consult the standard for
+;; more information.
 
 (define %parse-addr-range
   (parse-map
