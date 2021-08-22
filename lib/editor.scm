@@ -106,16 +106,15 @@
       (input-handler-index handler))))
 
 (define (input-handler-repl handler proc)
-  (if (parse-stream-end?
+  (unless (parse-stream-end?
             (input-handler-stream handler)
             (input-handler-index handler))
-    (exit #t) ;; EOF
     (begin
       (when (input-handler-prompt? handler)
         (display (input-handler-prompt-str handler))
         (flush-output-port))
 
-      (let ((c (input-handler-parse handler parse-cmds)))
+      (let ((c (delay (input-handler-parse handler parse-cmds))))
         (proc c)
         (input-handler-repl handler proc)))))
 
@@ -164,37 +163,36 @@
 
 (define (editor-start editor)
   (define (handle-cmd cmd)
-    (text-editor-prevcmd-set!
-      editor
-      (apply (car cmd) editor (cdr cmd))))
+    (call-with-current-continuation
+      (lambda (k)
+        (with-exception-handler
+          (lambda (eobj)
+            (let* ((in (text-editor-input-handler editor))
+                   (line (input-handler-line in))
 
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          (let* ((in (text-editor-input-handler editor))
-                 (line (input-handler-line in))
+                   (tty? (stdin-tty?))
+                   (prefix (if tty?
+                             ""
+                             (string-append
+                               "line " (number->string line) ": "))))
+              (text-editor-prevcmd-set! editor #f)
+              (editor-error
+                editor
+                (string-append prefix (error-object-message eobj)))
 
-                 (tty? (stdin-tty?))
-                 (prefix (if tty?
-                           ""
-                           (string-append
-                             "line " (number->string line) ": "))))
-          (text-editor-prevcmd-set! editor #f)
-          (editor-error
-            editor
-            (string-append prefix (error-object-message eobj)))
+              ;; See "Consequences of Errors" section in POSIX.1-2008.
+              (if tty?
+                (k '())
+                (exit #f))))
+          (lambda ()
+            (let ((r (force cmd)))
+              (text-editor-prevcmd-set!
+                editor
+                (apply (car r) editor (cdr r)))))))))
 
-          ;; See "Consequences of Errors" section in POSIX.1-2008.
-          (if tty?
-            (k '())
-            (exit #f))))
-        (lambda ()
-          (input-handler-repl
-            (text-editor-input-handler editor)
-            handle-cmd)))))
-
-  (editor-start editor))
+  (input-handler-repl
+    (text-editor-input-handler editor)
+    handle-cmd))
 
 (define (editor-read-input editor)
   (let ((h (text-editor-input-handler editor)))
