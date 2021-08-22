@@ -1,25 +1,12 @@
-;; Commands in ed
-;;
-;; Commands to ed have a simple and regular structure: zero, one, or two
-;; addresses followed by a single-character command, possibly followed
-;; by parameters to that command. These addresses specify one or more
-;; lines in the buffer. Every command that requires addresses has
-;; default addresses (shown in parentheses), so that the addresses very
-;; often can be omitted. Implemented ed commands are listed below.
-;;
-;; The text in this section is aligned with the `Commands in ed`
-;; section in the POSIX-1.2008 specification of `ed(1)`.
-
 (define command-parsers (list (parse-fail "unknown command")))
 (define (register-command proc)
   (set! command-parsers (cons proc command-parsers)))
 
-;; It is generally invalid for more than one command to appear on a
-;; line. However, any command (except e, E, f, q, Q, r, w, and !) can be
-;; suffixed by the letter l, n, or p; in which case, except for the l,
-;; n, and p commands, the command shall be executed and then the new
-;; current line shall be written as described below under the l, n, and
-;; p commands.
+;; According to POSIX.1-2008 it is invalid for more than one command to
+;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
+;; can be suffixed by the commands l, n, or p. In this case the suffixed
+;; command is executed and then the new current line is written as
+;; defined by the l, n, or p command.
 
 (define parse-print-cmd
   (parse-strip-blanks
@@ -173,16 +160,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Append Comand
-;;
-;;   (.)a
-;;   <text>
-;;   .
-;;
-;; The a command shall read the given text and append it after the
-;; addressed line; the current line number shall become the address of
-;; the last inserted line or, if there were none, the addressed line.
-;; Address 0 shall be valid for this command; it shall cause the
-;; appended text to be placed at the beginning of the buffer.
 
 (define (exec-append editor addr)
   (editor-goto! editor addr)
@@ -194,21 +171,9 @@
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\a))
 
-;; Change Command
 ;;
-;;   (.,.)c
-;;   <text>
-;;   .
+; Change Command
 ;;
-;; The c command shall delete the addressed lines, then accept input
-;; text that replaces these lines; the current line shall be set to the
-;; address of the last line input; or, if there were none, at the line
-;; after the last line deleted; if the lines deleted were originally at
-;; the end of the buffer, the current line number shall be set to the
-;; address of the new last line; if no lines remain in the buffer, the
-;; current line number shall be set to zero. Address 0 shall be valid
-;; for this command; it shall be interpreted as if address 1 were
-;; specified.
 
 ;; XXX handling of address 0 is actually somewhat disputed:
 ;;
@@ -227,19 +192,9 @@
                    (make-addr '(current-line))))
   (parse-cmd #\c))
 
-;; Read Command
 ;;
-;;   ($)r [file]
+; Read Command
 ;;
-;; The r command shall read in the file named by the pathname file and
-;; append it after the addressed line. If no file argument is given, the
-;; currently remembered pathname, if any, shall be used (see the e and f
-;; commands). The currently remembered pathname shall not be changed
-;; unless there is no remembered pathname. Address 0 shall be valid for
-;; r and shall cause the file to be read at the beginning of the buffer.
-;;
-;; The current line number shall be set to the address of the last line
-;; read in.
 
 (define (exec-read editor addr filename)
   (editor-goto! editor addr)
@@ -259,7 +214,9 @@
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-file-cmd #\r))
 
-;; Substitute Command
+;;
+; Substitute Command
+;;
 
 (define (exec-subst editor range regex replace nth)
   (let* ((lst (editor-get-range editor range))
@@ -300,16 +257,9 @@
       parse-digits)
     1))
 
-;; Delete Command
 ;;
-;;   (.,.)d
+; Delete Command
 ;;
-;; The d command shall delete the addressed lines from the buffer. The
-;; address of the line after the last line deleted shall become the
-;; current line number; if the lines deleted were originally at the end
-;; of the buffer, the current line number shall be set to the address of
-;; the new last line; if no lines remain in the buffer, the current line
-;; number shall be set to zero.
 
 (define (exec-delete editor range)
   (let ((saddr (addr->line editor (first range))))
@@ -326,29 +276,17 @@
                    (make-addr '(current-line))))
   (parse-cmd #\d))
 
-;; Edit Command
 ;;
-;;  e [file]
+; Edit Command
 ;;
-;; The e command shall delete the entire contents of the buffer and then
-;; read in the file named by the pathname file. The current line number
-;; If no pathname is given, the currently remembered pathname, if any,
-;; shall be used (see the f command). All marks shall be discarded upon
-;; the completion of a successful e command. If the buffer has changed
-;; since the last time the entire buffer was written, the user shall be
-;; warned, as described previously.
 
 (define-confirm (%exec-edit exec-edit))
 (define-command (file-cmd %exec-edit)
   (parse-file-cmd #\e))
 
-;; Edit Without Checking Command
 ;;
-;;   E [file]
+; Edit Without Checking Command
 ;;
-;; The E command shall possess all properties and restrictions of the e
-;; command except that the editor shall not check to see whether any
-;; changes have been made to the buffer since the last w command.
 
 (define (exec-edit editor filename)
   (text-editor-buffer-set! editor '())
@@ -359,14 +297,9 @@
 (define-command (file-cmd exec-edit)
   (parse-file-cmd #\E))
 
-;; Filename Command
 ;;
-;;   f [file]
+; Filename Command
 ;;
-;; If file is given, the f command shall change the currently remembered
-;; pathname to file; whether the name is changed or not, it shall then
-;; write the (possibly new) currently remembered pathname to the
-;; standard output.
 
 (define (exec-filename editor filename)
   (if (filename-cmd? filename) ;; XXX: Could be handled in parser
@@ -379,13 +312,9 @@
 (define-command (file-cmd exec-filename)
   (parse-file-cmd #\f))
 
-;; Help Command
 ;;
-;;   h
+; Help Command
 ;;
-;; The h command shall write a short message to standard output that
-;; explains the reason for the most recent '?' notification. The current
-;; line number shall be unchanged.
 
 (define (exec-help editor)
   (let ((msg (text-editor-error editor)))
@@ -395,16 +324,9 @@
 (define-command (edit-cmd exec-help)
   (parse-cmd #\h))
 
-;; Help-Mode Command
 ;;
-;;   H
+; Help-Mode Command
 ;;
-;; The H command shall cause ed to enter a mode in which help messages
-;; (see the h command) shall be written to standard output for all
-;; subsequent '?' notifications. The H command alternately shall turn
-;; this mode on and off; it is initially off. If the help-mode is being
-;; turned on, the H command also explains the previous '?' notification,
-;; if there was one. The current line number shall be unchanged.
 
 (define (exec-help-mode editor)
   (let ((prev-help? (text-editor-help? editor)))
@@ -415,17 +337,9 @@
 (define-command (edit-cmd exec-help-mode)
   (parse-cmd #\H))
 
-;; Insert Command
 ;;
-;;   (.)i
-;;   <text>
-;;   .
+; Insert Command
 ;;
-;; The i command shall insert the given text before the addressed line;
-;; the current line is set to the last inserted line or, if there was
-;; none, to the addressed line. This command differs from the a command
-;; only in the placement of the input text. Address 0 shall be valid for
-;; this command; it shall be interpreted as if address 1 were specified.
 
 (define (exec-insert editor addr)
   (let ((line (addr->line editor addr)))
@@ -438,15 +352,9 @@
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 
-;; Join Command
 ;;
-;;   (.,.+1)j
+; Join Command
 ;;
-;; The j command shall join contiguous lines by removing the appropriate
-;; <newline> characters. If exactly one address is given, this command
-;; shall do nothing. If lines are joined, the current line number shall
-;; be set to the address of the joined line; otherwise, the current line
-;; number shall be unchanged.
 
 (define (exec-join editor range)
   (let ((start (addr->line editor (first range)))
@@ -463,14 +371,9 @@
                    (make-addr '(current-line) '(1))))
   (parse-cmd #\j))
 
-;; Mark Command
 ;;
-;;  (.)kx
+; Mark Command
 ;;
-;; The k command shall mark the addressed line with name x, which the
-;; application shall ensure is a lowercase letter from the portable
-;; character set. The address "'x" shall then refer to this line; the
-;; current line number shall be unchanged.
 
 (define (exec-mark editor addr mark)
   (editor-mark-line
@@ -481,7 +384,9 @@
   (parse-cmd #\k)
   (parse-char char-set:lower-case))
 
-;; List Command
+;;
+; List Command
+;;
 
 (define (exec-list editor range)
   (let ((lst (editor-get-range editor range))
@@ -500,16 +405,9 @@
                    (make-addr '(current-line))))
   (parse-cmd #\l))
 
-;; Move Command
 ;;
-;;   (,.,)maddress
+; Move Command
 ;;
-;; The m command shall reposition the addressed lines after the line
-;; addressed by address.  Address 0 shall be valid for address and cause
-;; the addressed lines to be moved to the beginning of the buffer. It
-;; shall be an error if address address falls within the range of moved
-;; lines. The current line number shall be set to the address of the
-;; last line moved.
 
 (define (exec-move editor range addr)
   (if (editor-in-range editor range addr)
@@ -532,14 +430,9 @@
   (parse-cmd #\m)
   parse-addr)
 
-;; Copy Command
 ;;
-;;  (.,.)taddress
+; Copy Command
 ;;
-;; The t command shall be equivalent to the m command, except that a
-;; copy of the addressed lines shall be placed after address address
-;; (which can be 0); the current line number shall be set to the address
-;; of the last line added.
 
 (define (exec-copy editor range addr)
   (if (editor-in-range editor range addr)
@@ -559,19 +452,9 @@
   (parse-cmd #\t)
   parse-addr)
 
-;; Write Command
 ;;
-;;   (1,$)w [file]
+; Write Command
 ;;
-;; The w command shall write the addressed lines into the file named by
-;; the pathname file.  The command shall create the file, if it does not
-;; exist, or shall replace the contents of the existing file. The
-;; currently remembered pathname shall not be changed unless there is no
-;; remembered pathname.  If no pathname is given, the currently
-;; remembered pathname, if any, shall be used (see the e and f
-;; commands); the current line number shall be unchanged. If the command
-;; is successful, the number of bytes written shall be written to
-;; standard output,
 
 (define (exec-write editor range filename)
   (let ((fn (editor-filename editor filename))
@@ -593,16 +476,9 @@
                    (make-addr '(last-line))))
   (parse-file-cmd #\w))
 
-;; Line Number Command
 ;;
-;;  ($)=
+; Line Number Command
 ;;
-;; The line number of the addressed line shall be written to standard
-;; output in the following format:
-;;
-;;   "%d\n", <line number>
-;;
-;; The current line number shall be unchanged by this command.
 
 (define (exec-line-number editor addr)
   (println (text-editor-line editor)))
@@ -611,15 +487,9 @@
   (parse-default parse-addr (make-addr '(last-line)))
   (parse-cmd #\=))
 
-;; Number Command
 ;;
-;;   (.,.)n
+; Number Command
 ;;
-;; The n command shall write to standard output the addressed lines,
-;; preceding each line by its line number and a <tab>; the current line
-;; number shall be set to the address of the last line written. The n
-;; command can be appended to any command other than e, E, f, q, Q, r,
-;; w, or !.
 
 (define (exec-number editor range)
   (let ((lst (editor-get-range editor range))
@@ -638,14 +508,9 @@
                    (make-addr '(current-line))))
   (parse-cmd #\n))
 
-;; Print Command
 ;;
-;;  (.,.)p
+; Print Command
 ;;
-;; The p command shall write to standard output the addressed lines; the
-;; current line number shall be set to the address of the last line
-;; written. The p command can be appended to any command other than e,
-;; E, f, q, Q, r, w, or !.
 
 (define (exec-print editor range)
   (let ((lst (editor-get-range editor range))
@@ -661,15 +526,9 @@
                    (make-addr '(current-line))))
   (parse-cmd #\p))
 
-;; Prompt Command
 ;;
-;;   P
+; Prompt Command
 ;;
-;; The P command shall cause ed to prompt with an <asterisk> ('*') (or
-;; string, if -p is specified) for all subsequent commands. The P
-;; command alternatively shall turn this mode on and off; it shall be
-;; initially on if the -p option is specified; otherwise, off. The
-;; current line number shall be unchanged.
 
 (define (exec-prompt editor)
   (let* ((input-handler (text-editor-input-handler editor))
@@ -681,24 +540,17 @@
 (define-command (edit-cmd exec-prompt)
   (parse-cmd #\P))
 
-;; Quit Command
 ;;
-;;   q
+; Quit Command
 ;;
-;; The q command shall cause ed to exit. If the buffer has changed since
-;; the last time the entire buffer was written, the user shall be warned,
-;; as described previously.
 
 (define-confirm (%exec-quit exec-quit))
 (define-command (file-cmd %exec-quit)
   (parse-cmd #\q))
 
-;; Quit Without Checking Command
 ;;
-;;   Q
+; Quit Without Checking Command
 ;;
-;; The Q command shall cause ed to exit without checking whether changes
-;; have been made in the buffer since the last w command.
 
 (define (exec-quit editor)
   (exit))
@@ -706,13 +558,9 @@
 (define-command (file-cmd exec-quit)
   (parse-cmd #\Q))
 
-;; Null Command
 ;;
-;;  (.+1)
+; Null Command
 ;;
-;; An address alone on a line shall cause the addressed line to be
-;; written. A <newline> alone shall be equivalent to "+1p".  The current
-;; line number shall be set to the address of the written line.
 
 (define (exec-null editor addr)
   (let ((line (addr->line editor addr)))
