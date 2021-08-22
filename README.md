@@ -45,6 +45,16 @@ Both unit and integration tests can be run using:
 
 	$ ./run-tests.sh
 
+## Portability
+
+The code is mostly written in standard [R7RS Scheme][r7rs small].
+However, it presently uses [CHICKEN Scheme][chicken] specific code for
+pattern matching. This code will be replaced by [SRFI 204][srfi 204] in
+the near future. Furthermore, the code base relies heavily on a FFI for
+`popen(3)`, `isatty(3)` and `regexec(3)`. Since there is no finalized
+SRFI standardising a Scheme FFI, this code is presently
+implementation-specific and currently only implemented for CHICKEN.
+
 ## License
 
 This program is free software: you can redistribute it and/or modify it
@@ -63,3 +73,5 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
 [gnu ed]: https://www.gnu.org/software/ed/
+[srfi 204]: https://srfi.schemers.org/srfi-204/
+[r7rs small]: https://srfi.schemers.org/srfi-204/
