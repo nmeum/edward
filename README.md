@@ -15,6 +15,7 @@ The following mandated behaviour has not been implemented yet:
 
 * Asynchronous Events (i.e. signal handling)
 * Use of substitute command with delimiters other than `/`
+* Substitutions with escaped newlines in the replacement
 * …
 
 ## Installation
