@@ -5,16 +5,16 @@ The goal of this project is creating an implementation of the
 [CHICKEN Scheme][chicken]. The majority of ed commands have been
 implemented. The following commands are still missing:
 
-* [ ] Undo Command
-* [ ] Global Command
-* [ ] Interactive Global Command
-* [ ] Global Non-Matched Command
-* [ ] Interactive Global Non-Matched Command
+* Undo Command
+* Global Command
+* Interactive Global Command
+* Global Non-Matched Command
+* Interactive Global Non-Matched Command
 
 The following mandated behaviour has not been implemented yet:
 
-* [ ] Asynchronous Events (i.e. signal handling)
-* [ ] Use of substitute command with delimiters other than `/`
+* Asynchronous Events (i.e. signal handling)
+* Use of substitute command with delimiters other than `/`
 * …
 
 ## Installation
