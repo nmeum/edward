@@ -2,10 +2,20 @@
 
 The goal of this project is creating an implementation of the
 [`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
-[CHICKEN Scheme][chicken]. The basic structure works more or less,
-however, only a few commands and features have been implemented so far.
-Take a look at `./tests/integration` to see what gets tested against a
-reference implementation currently and therefore presumably works.
+[CHICKEN Scheme][chicken]. The majority of ed commands have been
+implemented. The following commands are still missing:
+
+* [ ] Undo Command
+* [ ] Global Command
+* [ ] Interactive Global Command
+* [ ] Global Non-Matched Command
+* [ ] Interactive Global Non-Matched Command
+
+The following mandated behaviour has not been implemented yet:
+
+* [ ] Asynchronous Events (i.e. signal handling)
+* [ ] Use of substitute command with delimiters other than `/`
+* …
 
 ## Installation
 
