@@ -62,14 +62,14 @@
       (make-parse-stream "stdin" (current-input-port))
       0)))
 
-(define (input-handler-next-line! handler)
-  (let ((idx (input-handler-index handler))
-        (stream (input-handler-stream handler)))
-    (input-handler-index-set! handler (inc idx))
-    (unless (eqv? (parse-stream-ref stream idx) #\newline)
-      (input-handler-next-line! handler))))
-
 (define (input-handler-parse handler f sk fk)
+  (define (index-of-next-line handler idx)
+    (let ((stream   (input-handler-stream handler))
+          (next-idx (inc idx)))
+      (if (eqv? (parse-stream-ref stream idx) #\newline)
+        next-idx ;; first index after newline
+        (index-of-next-line handler next-idx))))
+
   (call-with-parse f
     (input-handler-stream handler)
     (input-handler-index handler)
@@ -78,7 +78,8 @@
       (sk (input-handler-line handler i) r))
     (lambda (s i reason)
       (let ((l (input-handler-line handler i)))
-        (input-handler-next-line! handler)
+        (input-handler-index-set!
+          handler (index-of-next-line handler i))
         (fk l reason)))))
 
 (define (input-handler-line handler index)
