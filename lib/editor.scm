@@ -258,7 +258,10 @@
     (alist-cons mark line (text-editor-marks editor))))
 
 (define (editor-get-mark editor mark)
-  (cdr (assv mark (text-editor-marks editor))))
+  (let ((pair (assv mark (text-editor-marks editor))))
+    (if pair
+      (cdr pair)
+      (error "unknown mark"))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
