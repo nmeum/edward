@@ -25,16 +25,20 @@
                 (string-append x "\n" ys))
               "" buffer))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-record-type Editor-Irritant
+  (make-editor-irritant)
+  editor-irritant?)
+
 (define (editor-error-object? eobj)
   (let ((irritants (error-object-irritants eobj)))
     (if irritants
-      (text-editor? (car irritants))
+      (editor-irritant? (car irritants))
       #f)))
 
-(define (editor-raise editor msg)
-  (error
-    msg
-    editor))
+(define (editor-raise msg)
+  (error msg (make-editor-irritant)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -205,7 +209,7 @@
   (if (empty-string? bre)
     (let ((last-re (text-editor-re editor)))
       (if (empty-string? last-re)
-        (editor-raise editor "no previous pattern")
+        (editor-raise "no previous pattern")
         last-re))
     (begin
       (text-editor-re-set! editor bre)
@@ -215,7 +219,7 @@
   (if (equal? subst "%")
     (let ((last-subst (text-editor-last-replace editor)))
       (if (empty-string? last-subst)
-        (editor-raise editor "no previous replacement")
+        (editor-raise "no previous replacement")
         last-subst))
     (begin
       (text-editor-last-replace-set! editor subst)
@@ -235,7 +239,7 @@
 (define (%editor-filename editor)
   (let ((fn (text-editor-filename editor)))
     (if (empty-string? fn)
-      (editor-raise editor "no file name specified")
+      (editor-raise "no file name specified")
       fn)))
 
 ;; Print objs, but only if the editor is not in silent mode.
@@ -261,7 +265,7 @@
   (let ((pair (assv mark (text-editor-marks editor))))
     (if pair
       (cdr pair)
-      (editor-raise editor "unknown mark"))))
+      (editor-raise "unknown mark"))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
@@ -279,7 +283,7 @@
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
       (if (zero? sline)
-        (editor-raise editor "ranges cannot start at address zero")
+        (editor-raise "ranges cannot start at address zero")
         (values sline eline))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
@@ -356,7 +360,7 @@
     (if (or
           (> 0 nline)
           (> nline (length buffer)))
-      (editor-raise editor "invalid final address value")
+      (editor-raise "invalid final address value")
       nline)))
 
 (define (match-line direction editor bre)
@@ -373,7 +377,7 @@
               buffer
               (max (dec (text-editor-line editor)) 0))
 
-        (editor-raise editor "no match")))))
+        (editor-raise "no match")))))
 
 (define addr->line
   (match-lambda*
