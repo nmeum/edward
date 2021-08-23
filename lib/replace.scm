@@ -1,4 +1,4 @@
-(define regex-ctrl (char-set #\\ #\&))
+(define replace-ctrl (char-set #\\ #\&))
 
 (define parse-backref
   (parse-map
@@ -22,8 +22,8 @@
           ;; special handling for '%' as it does not neccessarily
           ;; need to be escaped unless it's the only character.
           (parse-esc
-            (parse-char (char-set-adjoin regex-ctrl #\%)))
-          (parse-not-char regex-ctrl))))
+            (parse-char (char-set-adjoin replace-ctrl #\%)))
+          (parse-not-char replace-ctrl))))
     (lambda (str)
       (cons 'restr str))))
 
