@@ -81,6 +81,7 @@
               (%regex-replace* subm re i (inc n)))))
         v)))
 
+  ;; TODO: Parse-fully should raise a text-editor error
   (let* ((re (parse-fully parse-subst subst))
          (subm (make-submatches (max-backref re))))
     (%regex-replace* subm re 0 1)))
