@@ -227,6 +227,7 @@
   (let* ((lst (editor-get-range editor range))
          (bre (make-bre (editor-regex editor regex)))
          (rep (editor-replace editor replace))
+         (new (count-newlines replace))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold (lambda (line lnum y)
@@ -234,7 +235,7 @@
                             (l (cons r (car y))))
                        (if (equal? r line)
                          (cons l (cdr y)) ;; not modified
-                         (cons l (+ lnum (count-newlines r))))))
+                         (cons l (+ lnum new)))))
                    '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
       (editor-raise "no match")
