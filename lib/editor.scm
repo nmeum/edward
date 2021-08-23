@@ -265,7 +265,7 @@
   (let ((pair (assv mark (text-editor-marks editor))))
     (if pair
       (cdr pair)
-      (editor-raise "unknown mark"))))
+      (editor-raise (string-append "unknown mark: " (string mark))))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
