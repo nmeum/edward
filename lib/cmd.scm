@@ -234,7 +234,7 @@
                             (l (cons r (car y))))
                        (if (equal? r line)
                          (cons l (cdr y)) ;; not modified
-                         (cons l lnum))))
+                         (cons l (+ lnum (count-newlines r))))))
                    '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
       (editor-raise "no match")

@@ -1,4 +1,4 @@
-(define replace-ctrl (char-set #\\ #\&))
+(define replace-ctrl (char-set #\\ #\& #\newline))
 
 (define parse-backref
   (parse-map

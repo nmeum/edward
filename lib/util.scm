@@ -113,6 +113,13 @@
     (let ((l (drop lst start)))
       (drop-right l (- (length lst) end)))))
 
+;; Count amount of newlines in given string.
+
+(define (count-newlines str)
+  (count
+    (lambda (x) (eqv? x #\newline))
+    (string->list str)))
+
 ;; Like init from Haskell, returns everything except the last list element.
 
 (define (init lst)
