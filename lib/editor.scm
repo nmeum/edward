@@ -25,41 +25,6 @@
                 (string-append x "\n" ys))
               "" buffer))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Parse a single line without the terminating newline.
-
-(define parse-input-line
-  (parse-map
-    (parse-seq
-      (parse-as-string (parse-repeat+ (parse-not-char #\newline)))
-      (parse-char #\newline))
-    car))
-
-;; Parse lines until end of input mode (<period> character on single line).
-
-(define parse-input
-  (parse-repeat
-    (parse-with-context
-      parse-input-line
-      (lambda (line)
-        (lambda (source index sk fk)
-          (if (equal? line ".")
-            (fk source index "end of input mode")
-            (sk line source index fk)))))))
-
-;; Return a list of input mode input lines (without the terminating
-;; newline). See POSIX.1-2008 for more information on input mode.
-
-(define parse-input-mode
-  (parse-map
-    (parse-seq
-      parse-input
-      (parse-string ".\n"))
-    car))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (define (editor-error-object? eobj)
   (let ((irritants (error-object-irritants eobj)))
     (if irritants
@@ -133,6 +98,17 @@
       (input-handler-repl handler sk fk))))
 
 (define (input-handler-read handler)
+  (define parse-input-mode
+    (parse-map
+      (parse-seq
+        (parse-repeat
+          (parse-assert
+            parse-line
+            (lambda (line)
+              (not (equal? line ".")))))
+        (parse-string ".\n"))
+      car))
+
   (input-handler-parse
     handler
     parse-input-mode

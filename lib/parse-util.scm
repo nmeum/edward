@@ -61,15 +61,11 @@
 
   (%parse-blanks-seq o))
 
-;; Feed f the result of ctx.
+;; Parse a single line (excluding the terminating newline).
 
-(define (parse-with-context ctx f)
-  (define yield (lambda (r s i fk) r))
-
-  (lambda (source index sk fk)
-    ;; call-with-parse modifies source and needs to be called first.
-    (let* ((c (call-with-parse ctx source index yield fk))
-           (start (parse-stream-offset source)))
-      (if c
-        ((f c) source start sk fk)
-        (fk source index "context parser failed")))))
+(define parse-line
+  (parse-map
+    (parse-seq
+      (parse-as-string (parse-repeat+ (parse-not-char #\newline)))
+      (parse-char #\newline))
+    car))
