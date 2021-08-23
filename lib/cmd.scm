@@ -237,7 +237,7 @@
                          (cons l lnum))))
                    '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
-      (error "no match")
+      (editor-raise editor "no match")
       (begin
         (editor-replace! editor range (car re))
         (editor-goto! editor (cdr re))))))
@@ -308,7 +308,7 @@
 
 (define (exec-filename editor filename)
   (if (filename-cmd? filename) ;; XXX: Could be handled in parser
-    (error "current filename cannot be a shell command")
+    (editor-raise editor "current filename cannot be a shell command")
     (begin
       (unless (empty-string? filename)
         (text-editor-filename-set! editor filename))
@@ -416,7 +416,7 @@
 
 (define (exec-move editor range addr)
   (if (editor-in-range editor range addr)
-    (error "invalid move destination")
+    (editor-raise editor "invalid move destination")
     (let ((data (editor-get-range editor range))
           (target (addr->line editor addr)))
       (exec-delete editor range)
@@ -441,7 +441,7 @@
 
 (define (exec-copy editor range addr)
   (if (editor-in-range editor range addr)
-    (error "invalid copy destination")
+    (editor-raise editor "invalid copy destination")
     (let ((data (editor-get-range editor range))
           (target (addr->line editor addr)))
       (editor-goto! editor addr)
@@ -570,7 +570,7 @@
 (define (exec-null editor addr)
   (let ((line (addr->line editor addr)))
     (if (zero? line)
-      (error "invalid address")
+      (editor-raise editor "invalid address")
       (begin
         (println (list-ref (text-editor-buffer editor) (dec line)))
         (editor-goto! editor line)))))

@@ -60,6 +60,19 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (editor-error-object? eobj)
+  (let ((irritants (error-object-irritants eobj)))
+    (if irritants
+      (text-editor? (car irritants))
+      #f)))
+
+(define (editor-raise editor msg)
+  (error
+    msg
+    editor))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Input-Handler
   (%make-input-handler prompt-str prompt? stream index)
   input-handler?
@@ -87,25 +100,27 @@
     (unless (eqv? (parse-stream-ref stream idx) #\newline)
       (input-handler-next-line! handler))))
 
-(define (input-handler-parse handler f)
-  (call-with-parse
-    f
+(define (input-handler-parse handler f sk fk)
+  (call-with-parse f
     (input-handler-stream handler)
     (input-handler-index handler)
     (lambda (r s i fk)
       (input-handler-index-set! handler i)
-      r)
+      (sk (input-handler-line handler i) r))
     (lambda (s i reason)
-      (input-handler-next-line! handler)
-      (error reason))))
+      (let ((l (input-handler-line handler i)))
+        (input-handler-next-line! handler)
+        (fk l reason)))))
 
-(define (input-handler-line handler)
-  (car
-    (parse-stream-debug-info
-      (input-handler-stream handler)
-      (input-handler-index handler))))
+(define (input-handler-line handler index)
+  ;; Surprisingly, (chibi parse) line numbers start at zero.
+  (inc
+    (car
+      (parse-stream-debug-info
+        (input-handler-stream handler)
+        index))))
 
-(define (input-handler-repl handler proc)
+(define (input-handler-repl handler sk fk)
   (unless (parse-stream-end?
             (input-handler-stream handler)
             (input-handler-index handler))
@@ -114,12 +129,17 @@
         (display (input-handler-prompt-str handler))
         (flush-output-port))
 
-      (let ((c (delay (input-handler-parse handler parse-cmds))))
-        (proc c)
-        (input-handler-repl handler proc)))))
+      (input-handler-parse handler parse-cmds sk fk)
+      (input-handler-repl handler sk fk))))
 
 (define (input-handler-read handler)
-  (input-handler-parse handler parse-input-mode))
+  (input-handler-parse
+    handler
+    parse-input-mode
+    (lambda (line value) value)
+    (lambda (line reason)
+      ;; Should never happen, i.e. unreachable.
+      (error "input-mode read failed"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -161,38 +181,42 @@
       (text-editor-modified-set! e #f))
     e))
 
+(define (handle-error editor line msg)
+  (let* ((in (text-editor-input-handler editor))
+         (tty? (stdin-tty?))
+         (prefix (if tty?
+                   ""
+                   (string-append
+                     "line " (number->string line) ": "))))
+    (text-editor-prevcmd-set! editor #f)
+    (editor-error
+      editor
+      (string-append prefix msg))
+
+    ;; See "Consequences of Errors" section in POSIX.1-2008.
+    (if tty?
+      '()
+      (exit #f))))
+
 (define (editor-start editor)
-  (define (handle-cmd cmd)
+  (define (execute-command line val)
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
-            (let* ((in (text-editor-input-handler editor))
-                   (line (input-handler-line in))
-
-                   (tty? (stdin-tty?))
-                   (prefix (if tty?
-                             ""
-                             (string-append
-                               "line " (number->string line) ": "))))
-              (text-editor-prevcmd-set! editor #f)
-              (editor-error
-                editor
-                (string-append prefix (error-object-message eobj)))
-
-              ;; See "Consequences of Errors" section in POSIX.1-2008.
-              (if tty?
-                (k '())
-                (exit #f))))
+            (if (editor-error-object? eobj)
+              (handle-error editor line (error-object-message eobj))
+              (raise eobj)))
           (lambda ()
-            (let ((r (force cmd)))
-              (text-editor-prevcmd-set!
-                editor
-                (apply (car r) editor (cdr r)))))))))
+            (text-editor-prevcmd-set!
+              editor
+              (apply (car val) editor (cdr val))))))))
 
   (input-handler-repl
     (text-editor-input-handler editor)
-    handle-cmd))
+    execute-command
+    (lambda (line reason)
+      (handle-error editor line reason))))
 
 (define (editor-read-input editor)
   (let ((h (text-editor-input-handler editor)))
@@ -205,7 +229,7 @@
   (if (empty-string? bre)
     (let ((last-re (text-editor-re editor)))
       (if (empty-string? last-re)
-        (error "no previous pattern")
+        (editor-raise editor "no previous pattern")
         last-re))
     (begin
       (text-editor-re-set! editor bre)
@@ -215,7 +239,7 @@
   (if (equal? subst "%")
     (let ((last-subst (text-editor-last-replace editor)))
       (if (empty-string? last-subst)
-        (error "no previous replacement")
+        (editor-raise editor "no previous replacement")
         last-subst))
     (begin
       (text-editor-last-replace-set! editor subst)
@@ -235,7 +259,7 @@
 (define (%editor-filename editor)
   (let ((fn (text-editor-filename editor)))
     (if (empty-string? fn)
-      (error "no file name specified")
+      (editor-raise editor "no file name specified")
       fn)))
 
 ;; Print objs, but only if the editor is not in silent mode.
@@ -261,7 +285,7 @@
   (let ((pair (assv mark (text-editor-marks editor))))
     (if pair
       (cdr pair)
-      (error "unknown mark"))))
+      (editor-raise editor "unknown mark"))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first
 ;; line, specifying 0 as a line moves the cursor **before** the first
@@ -279,7 +303,7 @@
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
       (if (zero? sline)
-        (error "ranges cannot start at address zero")
+        (editor-raise editor "ranges cannot start at address zero")
         (values sline eline))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
@@ -356,7 +380,7 @@
     (if (or
           (> 0 nline)
           (> nline (length buffer)))
-      (error "invalid final address value")
+      (editor-raise editor "invalid final address value")
       nline)))
 
 (define (match-line direction editor bre)
@@ -373,7 +397,7 @@
               buffer
               (max (dec (text-editor-line editor)) 0))
 
-        (error "no match")))))
+        (editor-raise editor "no match")))))
 
 (define addr->line
   (match-lambda*
