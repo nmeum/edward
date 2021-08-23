@@ -91,16 +91,15 @@
         index))))
 
 (define (input-handler-repl handler sk fk)
+  (when (input-handler-prompt? handler)
+    (display (input-handler-prompt-str handler))
+    (flush-output-port))
+
   (unless (parse-stream-end?
             (input-handler-stream handler)
             (input-handler-index handler))
-    (begin
-      (when (input-handler-prompt? handler)
-        (display (input-handler-prompt-str handler))
-        (flush-output-port))
-
       (input-handler-parse handler parse-cmds sk fk)
-      (input-handler-repl handler sk fk))))
+      (input-handler-repl handler sk fk)))
 
 (define (input-handler-read handler)
   (define parse-input-mode
