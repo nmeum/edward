@@ -1,3 +1,5 @@
 a
 foobar
+.
 w !wc -l
+q

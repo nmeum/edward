@@ -1,5 +1,6 @@
 (define (test-parse-cmd desc expected input)
-  (test desc expected (cdr (%test-parse parse-cmds input))))
+  (test desc expected
+        (cdr (%test-parse parse-cmds (string-append input "\n")))))
 
 (test-group "append command"
   (test-parse-cmd "no arguments"
