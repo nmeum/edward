@@ -27,7 +27,7 @@
     (lambda (str)
       (cons 'restr str))))
 
-(define parse-subst
+(define parse-replace
   (parse-repeat
     (parse-or
       parse-backref
@@ -82,7 +82,7 @@
         v)))
 
   ;; TODO: Parse-fully should raise a text-editor error
-  (let* ((re (parse-fully parse-subst subst))
+  (let* ((re (parse-fully parse-replace subst))
          (subm (make-submatches (max-backref re))))
     (%regex-replace* subm re 0 1)))
 
