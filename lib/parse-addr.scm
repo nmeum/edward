@@ -3,6 +3,12 @@
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
 
+(define make-range
+  (case-lambda
+    (() (make-range (make-addr '(current-line))))
+    ((addr) (list addr #\, addr))
+    ((start end) (list start #\, end))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; From POSIX.1-2008:

@@ -14,9 +14,7 @@
       (parse-char (char-set #\l #\n #\p))
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
-        (let ((cur (list (make-addr '(current-line))
-                         #\,
-                         (make-addr '(current-line)))))
+        (let ((cur (make-range)))
           (match x
             (#\l (list exec-list cur))
             (#\n (list exec-number cur))
@@ -190,11 +188,7 @@
     (editor-goto! editor (editor-replace! editor range in))))
 
 (define-command (edit-cmd exec-change)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\c))
 
 ;;
@@ -244,11 +238,7 @@
         (editor-goto! editor (cdr re))))))
 
 (define-command (edit-cmd exec-subst)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\s)
 
   ;; Returns pair (regex, replacement)
@@ -283,11 +273,7 @@
       (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
 
 (define-command (edit-cmd exec-delete)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\d))
 
 ;;
@@ -379,9 +365,8 @@
 
 (define-command (edit-cmd exec-join)
   (parse-default parse-addr-range
-                 (list
+                 (make-range
                    (make-addr '(current-line))
-                   #\,
                    (make-addr '(current-line) '(1))))
   (parse-cmd #\j))
 
@@ -412,11 +397,7 @@
   (editor-goto! editor end)))
 
 (define-command (print-cmd exec-list)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\l))
 
 ;;
@@ -436,11 +417,7 @@
         (editor-goto! editor last-inserted)))))
 
 (define-command (edit-cmd exec-move)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\m)
   parse-addr)
 
@@ -458,11 +435,7 @@
         (editor-goto! editor last-inserted)))))
 
 (define-command (edit-cmd exec-copy)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\t)
   parse-addr)
 
@@ -515,11 +488,7 @@
     (editor-goto! editor eline)))
 
 (define-command (print-cmd exec-number)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\n))
 
 ;;
@@ -533,11 +502,7 @@
   (editor-goto! editor end)))
 
 (define-command (print-cmd exec-print)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(current-line))
-                   #\,
-                   (make-addr '(current-line))))
+  (parse-default parse-addr-range (make-range))
   (parse-cmd #\p))
 
 ;;
