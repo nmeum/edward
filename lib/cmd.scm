@@ -251,7 +251,7 @@
         (parse-seq
           (parse-regex-lit delim)
           (parse-as-string
-            (parse-repeat+ (parse-not-char delim)))
+            (parse-repeat (parse-not-char delim)))
           (parse-ignore (parse-char delim)))
         (lambda (lst) (cons (first lst) (second lst))))))
 
