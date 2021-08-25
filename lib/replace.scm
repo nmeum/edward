@@ -81,7 +81,9 @@
               (%regex-replace* subm re i (inc n)))))
         v)))
 
-  ;; TODO: Parse-fully should raise a text-editor error
+  ;; TODO: Parse-fully should raise a text-editor error.
+  ;; Just move this parser to the substitute command definition.
+  ;; the only problem is the position-dependent handling of '%'.
   (let* ((re (parse-fully parse-replace subst))
          (subm (make-submatches (max-backref re))))
     (%regex-replace* subm re 0 1)))
