@@ -11,11 +11,9 @@ implemented. The following commands are still missing:
 * Global Non-Matched Command
 * Interactive Global Non-Matched Command
 
-The following mandated behaviour has not been implemented yet:
-
-* Asynchronous Events (i.e. signal handling)
-* Use of substitute command with delimiters other than `/`
-* …
+Apart from commands, some behaviour mandated by the standard is
+currently not implemented. For example, handling of asynchronous events
+(i.e.  signals).
 
 ## Installation
 

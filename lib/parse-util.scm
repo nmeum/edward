@@ -69,3 +69,16 @@
       (parse-as-string (parse-repeat+ (parse-not-char #\newline)))
       (parse-char #\newline))
     car))
+
+;; Feed the result of the parser ctx to a single argument procedure f.
+;; The procedure must then return a new parser which is executed
+;; afterwards on the same index as ctx.
+
+(define (parse-with-context ctx f)
+  (lambda (source index sk fk)
+    ;; call-with-parse modifies source and needs to be called first.
+    (let* ((yield (lambda (r s i fk) r))
+           (value (call-with-parse ctx source index yield fk)))
+      (if value
+        ((f value) source index sk fk)
+        (fk source index "context parser failed")))))

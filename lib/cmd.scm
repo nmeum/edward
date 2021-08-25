@@ -223,11 +223,11 @@
 ; Substitute Command
 ;;
 
-(define (exec-subst editor range regex replace nth)
+(define (exec-subst editor range subst nth)
   (let* ((lst (editor-get-range editor range))
-         (bre (make-bre (editor-regex editor regex)))
-         (rep (editor-replace editor replace))
-         (new (count-newlines replace))
+         (bre (make-bre (editor-regex editor (car subst))))
+         (rep (editor-replace editor (cdr subst)))
+         (new (count-newlines (cdr subst)))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold (lambda (line lnum y)
@@ -251,11 +251,19 @@
                    (make-addr '(current-line))))
   (parse-cmd #\s)
 
-  ;; TODO: Like in sed any character can be used as a delimiter.
-  (parse-regex-lit #\/)
-  (parse-as-string
-    (parse-repeat+ (parse-not-char #\/)))
-  (parse-ignore (parse-char #\/))
+  ;; Returns pair (regex, replacement)
+  (parse-with-context
+    ;; Any character other then <space> and <newline> can be a delimiter.
+    (parse-char (char-set-complement (char-set #\space #\newline)))
+
+    (lambda (delim)
+      (parse-map
+        (parse-seq
+          (parse-regex-lit delim)
+          (parse-as-string
+            (parse-repeat+ (parse-not-char delim)))
+          (parse-ignore (parse-char delim)))
+        (lambda (lst) (cons (first lst) (second lst))))))
 
   (parse-default
     (parse-or
