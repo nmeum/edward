@@ -33,7 +33,7 @@
 
 (define (editor-error-object? eobj)
   (let ((irritants (error-object-irritants eobj)))
-    (if irritants
+    (if (and (list? irritants) (not (null? irritants)))
       (editor-irritant? (car irritants))
       #f)))
 
