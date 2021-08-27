@@ -185,7 +185,7 @@
         (with-exception-handler
           (lambda (eobj)
             (if (editor-error-object? eobj)
-              (handle-error editor line (error-object-message eobj))
+              (k (handle-error editor line (error-object-message eobj)))
               (raise eobj)))
           (lambda ()
             (text-editor-prevcmd-set!
