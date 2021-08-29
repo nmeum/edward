@@ -33,17 +33,15 @@
 (test-group "write command"
   (test-parse-cmd "no arguments"
     (list
-      (list
+      (make-range
         (make-addr '(nth-line . 1))
-        #\,
         (make-addr '(last-line)))
       "") "w")
 
   (test-parse-cmd "custom address and offset, no whitespaces"
     (list
-      (list
+      (make-range
         (make-addr '(current-line))
-        #\,
         (make-addr '(current-line) '(10)))
       "foobar") ".,.+10w foobar")
 

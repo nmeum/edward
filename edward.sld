@@ -16,7 +16,7 @@
           (chicken foreign) (chicken gc))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
-  (export make-addr parse-addr parse-addr-range)
+  (export make-addr make-range parse-addr parse-addr-range)
   (export parse-cmds)
   (export make-text-editor editor-start)
   (export make-bre regex-replace)
