@@ -66,7 +66,7 @@
 (define parse-line
   (parse-map
     (parse-seq
-      (parse-as-string (parse-repeat+ (parse-not-char #\newline)))
+      (parse-as-string (parse-repeat (parse-not-char #\newline)))
       (parse-char #\newline))
     car))
 
