@@ -73,14 +73,10 @@
                (quote HANDLER))
              (car orig-args))))))))
 
-;; If changes have been made in the buffer since the last w command that
-;; wrote the entire buffer, ed shall warn the user if an attempt is made
-;; to destroy the editor buffer via the e or q commands. The ed utility
-;; shall write the string: "?\n" (followed by an explanatory message if
-;; help mode has been enabled via the H command) to standard output and
-;; shall continue in command mode with the current line number
-;; unchanged. If the e or q command is repeated with no intervening
-;; command, it shall take effect.
+;; If changes have been made to the current buffer since the last write
+;; of the buffer to a file, then ed should warn the user before the
+;; buffer is destroyed. Warnings must be confirmed by repeating the
+;; command which destroys the buffer.
 
 (define-syntax define-confirm
   (syntax-rules ()
