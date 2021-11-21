@@ -5,6 +5,7 @@
  (test-dependencies test)
  (components
    (extension edward
+              (linkage dynamic)
               (csc-options "-d3")
               (source "edward.scm")
               (source-dependencies
