@@ -20,6 +20,9 @@
     (lambda (x)
       (if x x def))))
 
+(define parse-newline
+  (parse-char #\newline))
+
 (define parse-blank
   (parse-char char-set:blank))
 (define parse-blanks

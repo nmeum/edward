@@ -38,7 +38,7 @@
        (parse-map
          (parse-blanks-seq
            BODY ...
-           (parse-ignore (parse-char #\newline)))
+           (parse-ignore parse-newline))
          (lambda (args)
            (cons
              (with-ret HANDLER (quote HANDLER))
@@ -50,7 +50,7 @@
            (parse-blanks-seq BODY ...)
            (parse-ignore (parse-optional parse-print-cmd))
            (parse-ignore parse-blanks)
-           (parse-ignore (parse-char #\newline)))
+           (parse-ignore parse-newline))
          (lambda (args)
            (cons
              (with-ret HANDLER (quote HANDLER))
@@ -62,7 +62,7 @@
            (parse-blanks-seq BODY ...)
            (parse-optional parse-print-cmd)
            (parse-ignore parse-blanks)
-           (parse-ignore (parse-char #\newline)))
+           (parse-ignore parse-newline))
          (lambda (orig-args)
            (cons
              (lambda (editor . args)
