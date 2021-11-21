@@ -283,8 +283,13 @@
 
 ;; Variant of bre-match which also tracks submatches.
 
-(define (bre-match*? bre str subm)
-  (eqv? (%bre-match? bre str
-                     (submatches-count subm)
-                     (%submatches-ptr subm))
-        1))
+(define (bre-match*? bre obj subm)
+  (cond
+    ((bytevector? obj)
+     (bre-match*? bre (utf8->string obj) subm))
+    ((string? obj)
+     (eqv? (%bre-match? bre obj
+                        (submatches-count subm)
+                        (%submatches-ptr subm))
+           1))
+    (else (error "unsupported match type"))))

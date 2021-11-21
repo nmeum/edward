@@ -43,10 +43,6 @@
             y))
         0 subst))
 
-;; TODO Handle this in ffi.scm
-(define (bre-match-bv? bre bv subm)
-  (bre-match*? bre (utf8->string bv) subm))
-
 (define (submatch subm bv n)
   (let* ((match (submatches-get subm n))
          (start (submatch-start match))
@@ -65,7 +61,7 @@
 
   (define (%regex-replace* subm re start n)
     (let ((v (bytevector-copy bv start)))
-      (if (bre-match-bv? bre v subm)
+      (if (bre-match*? bre v subm)
         (let* ((m (submatches-get subm 0))
                (s (submatch-start m))
                (e (submatch-end m))
