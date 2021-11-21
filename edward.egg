@@ -5,8 +5,14 @@
  (test-dependencies test)
  (components
    (extension edward
-              (linkage dynamic)
-              (csc-options "-d3")
+              (cond-expand
+                (release
+                  (linkage static)
+                  (csc-options "-O2"))
+                (else
+                  (linkage dynamic)
+                  (csc-options "-d3")))
+
               (source "edward.scm")
               (source-dependencies
                 "edward.sld"
@@ -19,6 +25,14 @@
                 "./lib/editor.scm"
                 "./lib/cmd.scm"))
    (program bin/edward
-            (csc-options "-d3")
+            (cond-expand
+              (release
+                (linkage static)
+                (link-options "-L" "-static")
+                (csc-options "-O2"))
+              (else
+                (linkage dynamic)
+                (csc-options "-d3")))
+
             (install-name "edward")
             (component-dependencies edward))))
