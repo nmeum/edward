@@ -103,10 +103,6 @@
   (parse-ignore (parse-char ch)))
 
 ;; Parses a filename which is then read/written by ed.
-;;
-;; TODO: If file is replaced by '!', the rest of the line shall be taken
-;; to be a shell command line whose output is to be read. Such a shell
-;; command line shall not be remembered as the current file.
 
 (define parse-filename
   (parse-or
