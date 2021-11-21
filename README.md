@@ -21,7 +21,10 @@ If a correctly configured CHICKEN toolchain is available run:
 
 	$ chicken-install
 
-This will compile `edward` and add the binary to your `$PATH`.
+This will compile `edward` and add the binary to your `$PATH`. If
+creation of a statically linked and optimized binary is desired, pass
+`-feature release`. This can be combined with the flags described below
+to package this software for a distribution.
 
 ### Building without installing
 
