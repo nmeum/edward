@@ -1,3 +1,5 @@
+;; TODO: For some reason integration tests take longer to run
+;; with release mode binaries (due to static linkage?!).
 ((author "Sören Tempel")
  (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
  (license "GPLv3")
