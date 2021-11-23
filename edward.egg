@@ -30,11 +30,17 @@
             (cond-expand
               (release
                 (linkage static)
-                (link-options "-L" "-static")
                 (csc-options "-O2"))
               (else
                 (linkage dynamic)
                 (csc-options "-d3")))
+
+            ;; Link against libchicken and libc statically as
+            ;; well if `-feature fully-static` is passed.
+            (cond-expand
+              (fully-static
+                (link-options "-L" "-static"))
+              (else))
 
             (install-name "edward")
             (component-dependencies edward))))
