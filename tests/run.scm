@@ -1,36 +1,11 @@
-(import r7rs test (edward))
+(import (chicken base) (chicken process))
 
-(define (%test-parse parser input)
-  (define (parse-with-error parser stream)
-    (call-with-parse parser stream 0
-                     (lambda (r s i fk)
-                       (if (parse-stream-end? s i)
-                         r
-                         (fk s i "incomplete parse")))
-                     (lambda (s i reason) (error reason))))
+;; The `chicken-install -test` command would normally run
+;; all tests using csi(1). However, this would not allow
+;; us to use the FFI in tests. As such, we invoke csc(1)
+;; first from the tests and then run them.
 
-  (let* ((stream (string->parse-stream input))
-         (result (parse-with-error parser stream)))
-    result))
-
-(define (test-parse expected parser input)
-  (test expected (%test-parse parser input)))
-
-(define (test-parse-error expected parser input)
-  (let ((r (call-with-current-continuation
-             (lambda (k)
-               (with-exception-handler
-                 (lambda (e) (k e))
-                 (lambda ( ) (k (%test-parse parser input))))))))
-    (test expected
-      (if (error-object? r)
-        (error-object-message r))))) ;; (not (error-object? r)) → undefined
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(include-relative "parse-addr.scm")
-(include-relative "parse-cmd.scm")
-(include-relative "replace.scm")
-
-;; Exit with non-zero exit status if some test failed.
-(test-exit)
+(let ((r (system "csc -R r7rs -d3 tests.scm -o /tmp/edward-tests")))
+  (if r
+    (exit (system "/tmp/edward-tests"))
+    (error "compilation failed")))

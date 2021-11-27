@@ -6,36 +6,16 @@
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable)
  (test-dependencies test)
  (components
-   (extension edward
-              (cond-expand
-                (release
-                  (linkage static)
-                  (csc-options "-O2"))
-                (else
-                  (linkage dynamic)
-                  (csc-options "-d3")))
-
-              (source "edward.scm")
-              (source-dependencies
-                "edward.sld"
-                "./lib/util.scm"
-                "./lib/ffi.scm"
-                "./lib/parse.scm"
-                "./lib/parse-util.scm"
-                "./lib/parse-addr.scm"
-                "./lib/replace.scm"
-                "./lib/editor.scm"
-                "./lib/cmd.scm"))
-   (program bin/edward
+   (program edward
             (cond-expand
               (release
                 (linkage static)
-                (csc-options "-O2"))
+                (csc-options "-R" "r7rs" "-O2"))
               (else
                 (linkage dynamic)
-                (csc-options "-d3")))
+                (csc-options "-R" "r7rs" "-d3")))
 
-            ;; Link against libchicken and libc statically as
+            ;; Link against srcchicken and srcc statically as
             ;; well if `-feature fully-static` is passed.
             (cond-expand
               (fully-static
@@ -43,4 +23,14 @@
               (else))
 
             (install-name "edward")
-            (component-dependencies edward))))
+            (source "edward.scm")
+            (source-dependencies
+              "edward.prelude.scm"
+              "./src/util.scm"
+              "./src/ffi.scm"
+              "./src/parse.scm"
+              "./src/parse-util.scm"
+              "./src/parse-addr.scm"
+              "./src/replace.scm"
+              "./src/editor.scm"
+              "./src/cmd.scm"))))

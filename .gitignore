@@ -1,4 +1,4 @@
-bin/edward
+edward
 edward.build.sh
 edward.import.scm
 edward.import.so

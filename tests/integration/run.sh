@@ -29,7 +29,7 @@ run_editor() {
 	unset cmd cwd dat opt
 }
 
-EDWARD="${EDWARD:-$(pwd)/../../bin/edward}"
+EDWARD="${EDWARD:-$(pwd)/../../edward}"
 [ -x "${EDWARD}" ] || \
 	abort "Couldn't find edward executable '${EDWARD}'."
 
