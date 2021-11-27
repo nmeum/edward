@@ -1,7 +1,7 @@
 (define (test-re str regex replacement . o)
   (regex-replace
     (make-bre regex)
-    replacement
+    (parse parse-replace replacement)
     str
     (if (null? o) 0 (car o))))
 

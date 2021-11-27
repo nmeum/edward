@@ -77,12 +77,8 @@
               (%regex-replace* subm re i (inc n)))))
         v)))
 
-  ;; TODO: Parse-fully should raise a text-editor error.
-  ;; Just move this parser to the substitute command definition.
-  ;; the only problem is the position-dependent handling of '%'.
-  (let* ((re (parse-fully parse-replace subst))
-         (subm (make-submatches (max-backref re))))
-    (%regex-replace* subm re 0 1)))
+  (let ((subm (make-submatches (max-backref subst))))
+    (%regex-replace* subm subst 0 1)))
 
 ;; Replace nth occurrence of bre in str with subst. If nth is zero all
 ;; occurrences are replaced.

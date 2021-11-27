@@ -142,7 +142,7 @@
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
-  ;; String representing last used regex for the substitute command.
+  ;; Last used replacement for the substitute command.
   (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
@@ -153,7 +153,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" "" #f silent? #f)))
+         (e (%make-text-editor filename h '() 0 #f '() #f "" '() #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
@@ -214,9 +214,9 @@
       bre)))
 
 (define (editor-restr editor subst)
-  (if (equal? subst "%")
+  (if (equal? subst 'previous-replace)
     (let ((last-subst (text-editor-last-replace editor)))
-      (if (empty-string? last-subst)
+      (if (null? last-subst)
         (editor-raise "no previous replacement")
         last-subst))
     (begin

@@ -19,7 +19,7 @@
   (export make-addr make-range parse-addr parse-addr-range)
   (export parse-cmds)
   (export make-text-editor editor-start)
-  (export make-bre regex-replace)
+  (export make-bre parse-replace regex-replace)
 
   (include "lib/util.scm"
            "lib/ffi.scm"

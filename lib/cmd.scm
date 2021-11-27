@@ -238,12 +238,19 @@
     ;; Any character other then <space> and <newline> can be a delimiter.
     (parse-char (char-set-complement (char-set #\space #\newline)))
 
+    ;; TODO: Refactor this into one parser combinator.
     (lambda (delim)
       (parse-map
         (parse-seq
           (parse-regex-lit delim)
-          (parse-as-string
-            (parse-repeat (parse-not-char delim)))
+          (parse-or
+            (parse-map
+              (parse-assert
+                (parse-repeat+ (parse-not-char delim))
+                (lambda (lst)
+                  (equal? lst '(#\%))))
+              (lambda (x) 'previous-replace))
+            parse-replace)
           (parse-ignore (parse-char delim)))
         (lambda (lst) (cons (first lst) (second lst))))))
 
