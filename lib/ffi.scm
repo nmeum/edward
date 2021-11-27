@@ -200,7 +200,7 @@
 
   (match (%pipe-from command)
     (#f (error "pipe_from failed"))
-    (lst (cons lst (%pipe-from-numbytes)))))
+    (lst (values (%pipe-from-numbytes) lst))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

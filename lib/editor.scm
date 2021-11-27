@@ -3,22 +3,20 @@
 ;; line, newlines not included.
 
 (define (file->buffer filename)
-  (define (%file->buffer port numbytes)
+  (define (%file->buffer port lines numbytes)
     (let ((l (read-line port)))
       (if (eof-object? l)
-        (list numbytes)
-        (cons l
-              (%file->buffer port
-                ;; inc for newline stripped by read-line
-                ;; XXX: Buggy if last line is not not terminated with \n.
-                (inc (+ numbytes (string-length l))))))))
+        (values numbytes lines)
+        (%file->buffer
+          port
+          (append lines (list l))
+          ;; inc for newline stripped by read-line
+          ;; XXX: Buggy if last line is not not terminated with \n.
+          (inc (+ numbytes (string-length l)))))))
 
   (call-with-input-file filename
     (lambda (port)
-      (let ((r (%file->buffer port 0)))
-        (if (eqv? (length r) 1)
-          (cons '() (car r))
-          (cons (init r) (last r)))))))
+      (%file->buffer port '() 0))))
 
 (define (buffer->string buffer)
   (fold-right (lambda (x ys)
