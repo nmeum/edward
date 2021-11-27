@@ -142,7 +142,7 @@
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
-  ;; Last used replacement for the substitute command.
+  ;; Last used replacement for the substitute command or '() if none.
   (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
