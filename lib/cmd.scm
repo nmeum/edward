@@ -216,13 +216,14 @@
          (new (count-newlines (cdr subst)))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
-         (re (fold (lambda (line lnum y)
-                     (let* ((r (regex-replace bre rep line nth))
-                            (l (cons r (car y))))
-                       (if (equal? r line)
-                         (cons l (cdr y)) ;; not modified
-                         (cons l (+ lnum new)))))
-                   '((). 0) lst (range->lines editor range))))
+         (re (fold-right (lambda (line lnum y)
+                           (let* ((r (regex-replace bre rep line nth))
+                                  (l (cons r (car y))))
+                             (if (or (equal? r line)        ;; not modified
+                                     (not (zero? (cdr y)))) ;; not last
+                               (cons l (cdr y))
+                               (cons l (+ lnum new)))))
+                         '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
       (editor-raise "no match")
       (begin
