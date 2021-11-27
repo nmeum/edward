@@ -213,7 +213,7 @@
       (text-editor-re-set! editor bre)
       bre)))
 
-(define (editor-replace editor subst)
+(define (editor-restr editor subst)
   (if (equal? subst "%")
     (let ((last-subst (text-editor-last-replace editor)))
       (if (empty-string? last-subst)

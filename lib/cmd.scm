@@ -212,7 +212,7 @@
 (define (exec-subst editor range subst nth)
   (let* ((lst (editor-get-range editor range))
          (bre (make-bre (editor-regex editor (car subst))))
-         (rep (editor-replace editor (cdr subst)))
+         (rep (editor-restr editor (cdr subst)))
          (new (count-newlines (cdr subst)))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
