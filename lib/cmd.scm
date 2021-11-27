@@ -189,17 +189,17 @@
 
 (define (exec-read editor addr filename)
   (editor-goto! editor addr)
-  (let ((f (editor-filename editor filename)))
-    (let-values (((numbytes lines) (read-from f)))
-      (if (and
-            (empty-string? (text-editor-filename editor))
-            (not (filename-cmd? f)))
-        (text-editor-filename-set! editor f))
+  (let*-values (((f) (editor-filename editor filename))
+                ((numbytes lines) (read-from f)))
+    (if (and
+          (empty-string? (text-editor-filename editor))
+          (not (filename-cmd? f)))
+      (text-editor-filename-set! editor f))
 
-      (editor-append! editor lines)
-      (editor-goto! editor (length (text-editor-buffer editor)))
+    (editor-append! editor lines)
+    (editor-goto! editor (length (text-editor-buffer editor)))
 
-      (editor-verbose editor numbytes))))
+    (editor-verbose editor numbytes)))
 
 (define-command (file-cmd exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
