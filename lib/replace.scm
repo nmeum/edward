@@ -28,11 +28,17 @@
       (cons 'restr str))))
 
 (define parse-replace
-  (parse-repeat
-    (parse-or
-      parse-backref
-      parse-matched
-      parse-restr)))
+  (parse-map
+    (parse-repeat
+      (parse-or
+        parse-backref
+        parse-matched
+        parse-restr))
+    (lambda (lst)
+      ;; If the replacement is empty replace matched text with an empty string.
+      (if (null? lst)
+        (cons '(restr . "") lst)
+        lst))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
