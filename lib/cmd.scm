@@ -98,6 +98,26 @@
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
 
+;; Parse RE pair for the global and substitute command (e.g. `/RE/replacement/`).
+;; The given procedure is responsible for parsing the replacement, it is
+;; passed the utilized delimiter as a single character function
+;; argument.
+;;
+;; Returns pair (RE, replacement).
+
+(define (parse-re-pair delim-proc)
+  (parse-with-context
+    ;; Any character other then <space> and <newline> can be a delimiter.
+    (parse-char (char-set-complement (char-set #\space #\newline)))
+
+    (lambda (delim)
+      (parse-map
+        (parse-seq
+          (parse-regex-lit delim)
+          (delim-proc delim)
+          (parse-ignore (parse-char delim)))
+        (lambda (lst) (cons (first lst) (second lst)))))))
+
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
@@ -233,28 +253,19 @@
   (parse-default parse-addr-range (make-range))
   (parse-cmd #\s)
 
-  ;; Returns pair (regex, replacement)
-  (parse-with-context
-    ;; Any character other then <space> and <newline> can be a delimiter.
-    (parse-char (char-set-complement (char-set #\space #\newline)))
-
-    ;; TODO: Refactor this into one parser combinator.
+  ;; Pair: (RE, replacement)
+  (parse-re-pair
+    ;; POSIX only mentions escaping of the delimiter character within
+    ;; the RE but not within the replacement thus this is not implemented.
     (lambda (delim)
-      (parse-map
-        (parse-seq
-          (parse-regex-lit delim)
-          ;; POSIX only mentions escaping of the delimiter character within
-          ;; the RE but not within the replacement thus this is not implemented.
-          (parse-or
-            (parse-map
-              (parse-assert
-                (parse-repeat+ (parse-not-char delim))
-                (lambda (lst)
-                  (equal? lst '(#\%))))
-              (lambda (x) 'previous-replace))
-            parse-replace)
-          (parse-ignore (parse-char delim)))
-        (lambda (lst) (cons (first lst) (second lst))))))
+      (parse-or
+        (parse-map
+          (parse-assert
+            (parse-repeat+ (parse-not-char delim))
+            (lambda (lst)
+              (equal? lst '(#\%))))
+          (lambda (x) 'previous-replace))
+        parse-replace)))
 
   (parse-default
     (parse-or
