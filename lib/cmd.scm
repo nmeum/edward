@@ -243,6 +243,8 @@
       (parse-map
         (parse-seq
           (parse-regex-lit delim)
+          ;; POSIX only mentions escaping of the delimiter character within
+          ;; the RE but not within the replacement thus this is not implemented.
           (parse-or
             (parse-map
               (parse-assert
