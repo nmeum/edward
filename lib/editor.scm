@@ -122,8 +122,7 @@
     parse-input-mode
     (lambda (line value) value)
     (lambda (line reason)
-      ;; Should never happen, i.e. unreachable.
-      (error "input-mode read failed"))))
+      (editor-raise "input-mode read failed"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
