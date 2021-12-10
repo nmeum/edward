@@ -82,11 +82,11 @@
 
 ;; Call proc for each element in lst starting at the start index.
 
-(define (%for-each-index proc cont-proc lst start)
-  (define (%%for-each-index vector index rem)
+(define (for-each-index proc cont-proc lst start)
+  (define (%for-each-index vector index rem)
     (unless (zero? rem)
       (proc index (vector-ref vector index))
-      (%%for-each-index
+      (%for-each-index
         vector
         (modulo (cont-proc index) (vector-length vector))
         (dec rem))))
@@ -96,14 +96,8 @@
            (len (vector-length vec)))
       (if (and (>= start 0)
                (< start len))
-        (%%for-each-index vec start len)
+        (%for-each-index vec start len)
         (error "invalid start index")))))
-
-(define (for-each-index proc lst start)
-  (%for-each-index proc inc lst start))
-
-(define (for-each-index-right proc lst start)
-  (%for-each-index proc dec lst start))
 
 ;; Return sublist with start inclusive and end exclusive.
 

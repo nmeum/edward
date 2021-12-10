@@ -369,17 +369,22 @@
 (define (match-line direction editor bre)
   (let ((buffer (text-editor-buffer editor))
         (regex (make-bre (editor-regex editor bre)))
-        (func  (match direction
-                      ('forward for-each-index)
-                      ('backward for-each-index-right))))
+        (cont-proc (match direction
+                          ('forward inc)
+                          ('backward dec))))
     (call-with-current-continuation
       (lambda (exit)
-        (func (lambda (idx elem)
-                (when (bre-match? regex elem)
-                  (exit (inc idx))))
-              buffer
-              (max (dec (text-editor-line editor)) 0))
-
+        (for-each-index
+          (lambda (idx elem)
+            (when (bre-match? regex elem)
+              (exit (inc idx))))
+          cont-proc
+          buffer
+          ;; Forward/Backward search start at next/previous line.
+          (modulo (cont-proc
+                    ;; Convert line number to index.
+                    (max (dec (text-editor-line editor)) 0))
+                  (length (text-editor-buffer editor))))
         (editor-raise "no match")))))
 
 (define addr->line
