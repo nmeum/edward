@@ -1,3 +1,6 @@
+* align handling of end-of-file character with POSIX
+	* Scheme's read-char procedure does not allow
+	  reading past EOF but ed requires this
 * make sure zero address is handled correctly everywhere
 * distinguish between editor-error and internal error
 	* re-raise the later in the exception handler
