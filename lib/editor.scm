@@ -12,7 +12,7 @@
           (append lines (list l))
           ;; inc for newline stripped by read-line
           ;; XXX: Buggy if last line is not not terminated with \n.
-          (inc (+ numbytes (string-length l)))))))
+          (inc (+ numbytes (byte-count l)))))))
 
   (call-with-input-file filename
     (lambda (port)

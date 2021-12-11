@@ -113,3 +113,8 @@
   (count
     (lambda (x) (eqv? x #\newline))
     (string->list str)))
+
+;; Return amount of bytes in a string.
+
+(define (count-bytes str)
+  (bytevector-length (string->utf8 str)))
