@@ -42,8 +42,7 @@ This will create an executable binary in `./bin/edward`.
 
 This repository contains both unit tests and integration tests. The
 latter require a reference implementation of a POSIX.1-2008 compatible
-ed implementation. For instance, [GNU ed][gnu ed]. The reference
-implementation is determined using the `REF_IMPL` environment variable.
+ed implementation. For instance, [GNU ed][gnu ed].
 
 Both unit and integration tests can be run using:
 
