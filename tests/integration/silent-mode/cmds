@@ -1,1 +1,8 @@
+E testdata/first-file
+a
+foo
+.
+w
+e testdata/second-file
+r testdata/first-file
 w
