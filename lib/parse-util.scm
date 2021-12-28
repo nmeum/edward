@@ -2,6 +2,11 @@
   (lambda (source index sk fk)
     (fk source index msg)))
 
+(define (parse-bind value parser)
+  (parse-map
+    parser
+    (lambda (x) value)))
+
 (define (parse-as-string parser)
   (parse-map
     parser

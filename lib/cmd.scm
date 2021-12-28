@@ -259,12 +259,12 @@
     ;; the RE but not within the replacement thus this is not implemented.
     (lambda (delim)
       (parse-or
-        (parse-map
+        (parse-bind
+          'previous-replace
           (parse-assert
             (parse-repeat+ (parse-not-char delim))
             (lambda (lst)
-              (equal? lst '(#\%))))
-          (lambda (x) 'previous-replace))
+              (equal? lst '(#\%)))))
         parse-replace)))
 
   (parse-default
