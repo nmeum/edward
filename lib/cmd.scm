@@ -303,8 +303,16 @@
 (define (exec-edit editor filename)
   (text-editor-buffer-set! editor '())
   (text-editor-marks-set! editor '())
+
   (exec-read editor (make-addr '(last-line))
-             (editor-filename editor filename)))
+             (editor-filename editor filename))
+
+  ;; exec-read only updates filename if none is set.
+  ;; XXX: Might be beneficial to not re-use exec-read here.
+  (when (not (filename-cmd? filename))
+    (text-editor-filename-set!
+      editor
+      (editor-filename editor filename))))
 
 (define-command (file-cmd exec-edit)
   (parse-file-cmd #\E))

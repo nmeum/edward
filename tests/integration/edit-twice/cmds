@@ -1,0 +1,10 @@
+e testdata/first
+a
+first edit
+.
+w
+e testdata/second
+a
+second edit
+.
+w
