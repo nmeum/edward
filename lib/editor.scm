@@ -128,7 +128,7 @@
 
 (define-record-type Text-Editor
   (%make-text-editor filename input buffer line error marks state re
-                     replace modified? silent? help?)
+                     lcmd replace modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -147,6 +147,8 @@
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
+  ;; Last command executed by the shell escape editor command or '() if none.
+  (lcmd text-editor-last-cmd text-editor-last-cmd-set!)
   ;; Last used replacement for the substitute command or '() if none.
   (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
@@ -158,7 +160,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" '() #f silent? #f)))
+         (e (%make-text-editor filename h '() 0 #f '() #f "" '() '() #f silent? #f)))
     (unless (empty-string? filename)
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
@@ -204,6 +206,14 @@
 (define (editor-read-input editor)
   (let ((h (text-editor-input-handler editor)))
     (input-handler-read h)))
+
+;; Returns the last executed shell comand or raises an error if none.
+
+(define (editor-shell-cmd editor)
+  (let ((lcmd (text-editor-last-cmd editor)))
+    (if (null? lcmd)
+      (editor-raise "no previous command")
+      lcmd)))
 
 ;; Returns the last RE encountered or the given bre string if it is not
 ;; empty. If it is empty and there is no last RE an error is raised.

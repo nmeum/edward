@@ -47,6 +47,18 @@
 
   (test-parse-error "unknown command" parse-cmds "wfoo"))
 
+(test-group "shell command"
+  (test-parse-cmd "no replacements"
+    (list (list "echo foobar")) "!echo foobar")
+  (test-parse-cmd "command with replacement"
+    (list (list "echo " 'current-file)) "!echo %")
+  (test-parse-cmd "previous command"
+    (list 'previous-command) "!!")
+  (test-parse-cmd "escaped replacement"
+    (list (list "echo %")) "!echo \\%")
+  (test-parse-cmd "multiple replacements"
+    (list (list "echo " 'current-file " " 'current-file)) "!echo % %"))
+
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
     (list (make-addr '(nth-line . 2342)))

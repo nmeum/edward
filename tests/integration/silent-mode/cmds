@@ -6,3 +6,4 @@ w
 e testdata/second-file
 r testdata/first-file
 w
+!echo %

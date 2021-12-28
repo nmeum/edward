@@ -558,6 +558,40 @@
   (parse-cmd #\Q))
 
 ;;
+; Shell Escape Command
+;;
+
+(define (exec-command editor cmd)
+  (let ((cmdstr (if (equal? cmd 'previous-command)
+                  (editor-shell-cmd editor)
+                  (fold-right (lambda (x ys)
+                          (string-append
+                            (if (equal? x 'current-file)
+                              (editor-filename editor)
+                              x)
+                            ys)) "" cmd))))
+    (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
+      (println cmdstr))
+    ;; TODO: Execute command using system(3) instead of using popen(3).
+    (let-values (((numbytes lines) (pipe-from cmdstr)))
+      (for-each println lines))
+    (editor-verbose editor "!")
+    (text-editor-last-cmd-set! editor cmdstr)))
+
+(define-command (file-cmd exec-command)
+  (parse-cmd #\!)
+  (parse-or
+    (parse-bind 'previous-command (parse-char #\!))
+    (parse-repeat+
+      (parse-or
+        (parse-bind 'current-file (parse-char #\%))
+        (parse-as-string
+          (parse-repeat+
+            (parse-or
+              (parse-esc (parse-char #\%))
+              (parse-not-char (char-set #\% #\newline)))))))))
+
+;;
 ; Null Command
 ;;
 
