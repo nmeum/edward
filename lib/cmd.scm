@@ -319,7 +319,7 @@
     (begin
       (unless (empty-string? filename)
         (text-editor-filename-set! editor filename))
-      (editor-verbose editor (editor-filename editor)))))
+      (println (editor-filename editor)))))
 
 (define-command (file-cmd exec-filename)
   (parse-file-cmd #\f))
