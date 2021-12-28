@@ -5,6 +5,7 @@ The goal of this project is creating an implementation of the
 [CHICKEN Scheme][chicken]. The majority of ed commands have been
 implemented. The following commands are still missing:
 
+* Shell Escape Command
 * Undo Command
 * Global Command
 * Interactive Global Command
