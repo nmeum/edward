@@ -190,7 +190,8 @@
     (-3 (error "pclose failed"))
     (r r)))
 
-;; Spawn the given command and return a list of lines representing its output.
+;; Spawn the given command and return the amount of bytes read and the
+;; list of lines representing its output.
 
 (define (pipe-from command)
   (define %pipe-from-numbytes
