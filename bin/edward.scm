@@ -5,9 +5,15 @@
 (define prompt "")
 (define silent? #f)
 
+(define (err msg)
+  (let ((port (current-error-port)))
+    (display "edward: " port)
+    (display msg port)
+    (newline port)))
+
 (define prompt-opt
   (option
-    '(#\p "prompt") #t #t
+    '(#\p "prompt") #t #f
     (lambda (o n x vals)
       (set! prompt x)
       vals)))
@@ -34,10 +40,12 @@
     (editor-start editor)))
 
 (let* ((files (cdr (parse-args (list prompt-opt silent-opt)))))
-  (match files
-    ((file)
-     (run-editor file))
-    (()
-     (run-editor ""))
-    (_
-     (error "specify one file or no files"))))
+  (if prompt
+    (match files
+      ((file)
+       (run-editor file))
+      (()
+       (run-editor ""))
+      (_
+       (err "specify one file or no files")))
+    (err "missing prompt option argument")))

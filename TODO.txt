@@ -1,4 +1,3 @@
-* Command-line parsers throws exception when no command argument is given to -p
 * Don't cause exception when file doesn't exist (e command etc)
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
