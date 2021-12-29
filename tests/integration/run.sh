@@ -53,9 +53,17 @@ for test in *; do
 
 	cmds="$(pwd)/${test}/cmds"
 	opts="$(pwd)/${test}/opts"
+	outp="$(pwd)/${test}/out"
 
 	run_editor "${REF_IMPL}" "${TESTCWD}.expected" "${test}/testdata" "${opts}" \
 		> "${EXPECTED}" < "${cmds}"
+
+	# Temporary workaround for a conformance bug in GNU ed.
+	# See: https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00000.html
+	if [ -e "${outp}" ]; then
+		cp "${outp}" "${EXPECTED}"
+	fi
+
 	run_editor "${EDWARD}" "${TESTCWD}.actual" "${test}/testdata" "${opts}" \
 		> "${ACTUAL}" < "${cmds}"
 

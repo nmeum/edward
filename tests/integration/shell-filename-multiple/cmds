@@ -1,0 +1,3 @@
+!echo current filename is %
+e testdata/second-file
+!echo filename is % and % still
