@@ -54,6 +54,10 @@
     (list (list "echo " 'current-file)) "!echo %")
   (test-parse-cmd "previous command"
     (list '(previous-command)) "!!")
+  (test-parse-cmd "previous command appended"
+    (list '(previous-command "foobar")) "!!foobar")
+  (test-parse-cmd "previous command syntax not start"
+    (list '("foobar !! barfoo")) "!foobar !! barfoo")
   (test-parse-cmd "escaped replacement"
     (list (list "echo %")) "!echo \\%")
   (test-parse-cmd "multiple replacements"
