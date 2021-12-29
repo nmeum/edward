@@ -1,0 +1,6 @@
+7
+foo bar baz
+!
+echo foo bar baz and the filename is testdata/input-file
+foo bar baz and the filename is testdata/input-file
+!

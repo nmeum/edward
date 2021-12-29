@@ -25,6 +25,12 @@
     (lambda (x)
       (if x x def))))
 
+(define (parse-ignore-optional f)
+  (parse-map
+    (parse-optional f)
+    (lambda (x)
+      (if x x ignored-value))))
+
 (define parse-newline
   (parse-char #\newline))
 

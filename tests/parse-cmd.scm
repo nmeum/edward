@@ -53,7 +53,7 @@
   (test-parse-cmd "command with replacement"
     (list (list "echo " 'current-file)) "!echo %")
   (test-parse-cmd "previous command"
-    (list 'previous-command) "!!")
+    (list '(previous-command)) "!!")
   (test-parse-cmd "escaped replacement"
     (list (list "echo %")) "!echo \\%")
   (test-parse-cmd "multiple replacements"
