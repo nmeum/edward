@@ -333,6 +333,38 @@
   (parse-file-cmd #\f))
 
 ;;
+; Global Command
+;;
+
+(define parse-command-list
+  (parse-map
+    (parse-seq
+      (parse-repeat
+        (parse-map
+          (parse-seq
+            (parse-repeat+ (parse-not-char (char-set #\\ #\newline)))
+            (parse-esc (parse-char #\newline)))
+          (match-lambda
+            ((lst chr) (append lst (list chr))))))
+      (parse-repeat+ (parse-not-char #\newline))) ;; last line
+    (match-lambda
+      ((lines last-line)
+        (string-append
+          (apply string-append (map list->string lines))
+          (list->string last-line))))))
+
+(define (exec-global editor addr cmdstr)
+  (println "global command: " cmdstr))
+
+(define-command (edit-cmd exec-global)
+  (parse-default parse-addr-range
+                 (make-range
+                   (make-addr '(nth-line . 1))
+                   (make-addr '(last-line))))
+  (parse-cmd #\g)
+  parse-command-list)
+
+;;
 ; Help Command
 ;;
 
