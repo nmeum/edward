@@ -132,7 +132,9 @@
           parse-line
           (lambda (line)
             (not (equal? line ".")))))
-      (parse-string "."))
+      (parse-or
+        parse-end ;; required for global command
+        (parse-string ".")))
     car))
 
 (define parse-input-mode
@@ -407,7 +409,6 @@
 ; Global Command
 ;;
 
-;; TODO: Omitting terminating '.' in input mode.
 ;; TODO: Reduce code duplication with lib/editor.scm (execute-command, etc)
 (define (exec-global editor range regex cmdstr)
   (define (exec-cmdlist cmdlist)
