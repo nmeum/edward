@@ -291,7 +291,7 @@
 ;; is returned if the line does not exist in the editor buffer.
 ;;
 ;; XXX: This implementation assumes that eq? performs pointer comparision,
-;; technically this is undefinied behaviour in R7RS.
+;; which is the case with CHICKEN but technically this is undefinied behaviour.
 
 (define (editor-get-lnum editor line)
   (call-with-current-continuation
