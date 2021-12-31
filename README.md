@@ -6,7 +6,7 @@ The goal of this project is creating an implementation of the
 implemented. The following commands are still missing:
 
 * Undo Command
-* Global Command
+* ~~Global Command~~
 * Interactive Global Command
 * Global Non-Matched Command
 * Interactive Global Non-Matched Command
