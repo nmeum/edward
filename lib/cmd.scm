@@ -98,7 +98,7 @@
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
 
-;; Parse RE pair for the global and substitute command (e.g. `/RE/replacement/`).
+;; Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
 ;; The given procedure is responsible for parsing the replacement, it is
 ;; passed the utilized delimiter as a single character function
 ;; argument.
@@ -354,8 +354,14 @@
           (list->string last-line)
           "\n"))))) ;; terminate last command with newline
 
-(define (exec-global editor addr cmdstr)
-  (let ((cmds (call-with-parse (parse-repeat+ parse-cmds)
+(define (exec-global editor range regex cmdstr)
+  (define (exec-cmdlist cmdlist)
+    (for-each (lambda (cmd)
+                (apply (car cmd) editor (cdr cmd)))
+              cmdlist))
+
+  (let ((bre (make-bre regex))
+        (cmds (call-with-parse (parse-repeat+ parse-cmds)
                                (string->parse-stream cmdstr)
                                0
                                (lambda (r s i fk)
@@ -363,16 +369,20 @@
                                    r
                                    (fk s i "incomplete global command parse")))
                                (lambda (s i reason) (editor-raise reason)))))
-    (for-each (lambda (cmd)
-                (apply (car cmd) editor (cdr cmd)))
-              cmds)))
+    (for-each (lambda (lnum line)
+                (when (bre-match? bre line)
+                  (editor-goto! editor lnum)
+                  (exec-cmdlist cmds)))
+              (range->lines editor range)
+              (editor-get-range editor range))))
 
-(define-command (edit-cmd exec-global)
+(define-command (file-cmd exec-global)
   (parse-default parse-addr-range
                  (make-range
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
   (parse-cmd #\g)
+  (parse-regex-lit #\/) ;; TODO: proper delimiter handling
   parse-command-list)
 
 ;;
