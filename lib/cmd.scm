@@ -20,19 +20,34 @@
             (#\n (list exec-number cur))
             (#\p (list exec-print cur))))))))
 
-;; In order to allow adding a l, n, or p suffix to certain commands,
-;; edward dinstinguishes three kinds of commands: (1) print commands,
-;; i.e. the l, n, and p commands, which can be used as a suffix to (2)
-;; editor commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !
-;; commands which cannot be suffixed with a print command). Command
-;; parsers are defined using the macro below, as part of this definition
-;; each command is assigned to one of the aforedmentioned groups.
-;; Additionally, a handler is specified for each command, the parser
-;; created by the macro returns the handler and the arguments passed to
-;; the command on a succesfull parse.
+;; Edward distinguishes four command types: (1) print commands, i.e. the
+;; l, n, and p commands, which can be used as a suffix to (2) editor
+;; commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !commands
+;; which cannot be suffixed with a print command). Lastly, an input-cmd
+;; command type is available which is a variant of the edit-cmd type and
+;; allows defining commands which read additional inputs using the ed(1)
+;; input mode.
+;;
+;; Command parsers are defined using the macro below, as part of this
+;; definition each command is assigned to one of the aforedmentioned
+;; types Additionally, a handler is specified for each command, the
+;; parser created by the macro returns the handler and the arguments
+;; passed to the command on a succesfull parse.
+
+(define-syntax cmd-with-print
+  (syntax-rules ()
+    ((cmd-with-print HANDLER cmd-args print-args)
+     (cons
+       (lambda (editor . args)
+         (apply HANDLER editor args)
+         (let ((pcmd print-args))
+           (when pcmd
+             (apply (car pcmd) editor (cdr pcmd))))
+         (quote HANDLER))
+       cmd-args))))
 
 (define-syntax define-command
-  (syntax-rules (edit-cmd print-cmd file-cmd)
+  (syntax-rules (edit-cmd input-cmd print-cmd file-cmd)
     ((define-command (file-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -55,6 +70,20 @@
            (cons
              (with-ret HANDLER (quote HANDLER))
              (car args))))))
+    ((define-command (input-cmd HANDLER) BODY ...)
+     (register-command
+       (parse-map
+         (parse-seq
+           (parse-blanks-seq BODY ...)
+           (parse-optional parse-print-cmd)
+           (parse-ignore parse-blanks)
+           parse-input-mode
+           (parse-ignore parse-blanks)
+           (parse-ignore parse-newline))
+         (lambda (args)
+           (cmd-with-print HANDLER
+             (append (first args) (list (third args)))
+             (second args))))))
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -63,15 +92,10 @@
            (parse-optional parse-print-cmd)
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
-         (lambda (orig-args)
-           (cons
-             (lambda (editor . args)
-               (apply HANDLER editor args)
-               (let ((pcmd (last orig-args)))
-                 (when pcmd
-                   (apply (car pcmd) editor (cdr pcmd))))
-               (quote HANDLER))
-             (car orig-args))))))))
+         (lambda (args)
+           (cmd-with-print HANDLER
+             (first args)
+             (second args))))))))
 
 ;; If changes have been made to the current buffer since the last write
 ;; of the buffer to a file, then ed should warn the user before the
@@ -98,7 +122,30 @@
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
 
-;; Parse RE pair for the global and substitute command (e.g. `/RE/replacement/`).
+;; Read input data in the input mode format. Returns a list of parsed
+;; lines as strings which do not include the terminating newlines.
+
+(define %parse-input-mode
+  (parse-map
+    (parse-seq
+      (parse-repeat
+        (parse-assert
+          parse-line
+          (lambda (line)
+            (not (equal? line ".")))))
+      (parse-or
+        parse-end ;; required for global command
+        (parse-string ".")))
+    car))
+
+(define parse-input-mode
+  (parse-map
+    (parse-seq
+      parse-newline
+      %parse-input-mode)
+    second))
+
+;; Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
 ;; The given procedure is responsible for parsing the replacement, it is
 ;; passed the utilized delimiter as a single character function
 ;; argument.
@@ -117,6 +164,35 @@
           (delim-proc delim)
           (parse-ignore (parse-char delim)))
         (lambda (lst) (cons (first lst) (second lst)))))))
+
+;; TODO: Reduce code duplication with parse-re-pair
+(define parse-re
+  (parse-with-context
+    ;; Any character other then <space> and <newline> can be a delimiter.
+    (parse-char (char-set-complement (char-set #\space #\newline)))
+
+    (lambda (delim)
+      (parse-regex-lit delim))))
+
+;; Parse command list for g, G, v, and V command.
+
+(define parse-command-list
+  (parse-map
+    (parse-seq
+      (parse-repeat
+        (parse-map
+          (parse-seq
+            (parse-repeat+ (parse-not-char (char-set #\\ #\newline)))
+            (parse-esc (parse-char #\newline)))
+          (match-lambda
+            ((lst chr) (append lst (list chr))))))
+      (parse-repeat+ (parse-not-char #\newline))) ;; last line
+    (match-lambda
+      ((lines last-line)
+        (string-append
+          (apply string-append (map list->string lines))
+          (list->string last-line)
+          "\n"))))) ;; terminate last command with newline
 
 ;; Parses a filename which is then read/written by ed.
 
@@ -176,13 +252,12 @@
 
 ;; Append Comand
 
-(define (exec-append editor addr)
+(define (exec-append editor addr data)
   (editor-goto! editor addr)
-  (let* ((data (editor-read-input editor))
-         (last-inserted (editor-append! editor data)))
+  (let* ((last-inserted (editor-append! editor data)))
     (editor-goto! editor last-inserted)))
 
-(define-command (edit-cmd exec-append)
+(define-command (input-cmd exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\a))
 
@@ -195,11 +270,10 @@
 ;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
-(define (exec-change editor range)
-  (let ((in (editor-read-input editor)))
-    (editor-goto! editor (editor-replace! editor range in))))
+(define (exec-change editor range data)
+  (editor-goto! editor (editor-replace! editor range data)))
 
-(define-command (edit-cmd exec-change)
+(define-command (input-cmd exec-change)
   (parse-default parse-addr-range (make-range))
   (parse-cmd #\c))
 
@@ -333,6 +407,51 @@
   (parse-file-cmd #\f))
 
 ;;
+; Global Command
+;;
+
+;; TODO: Reduce code duplication with lib/editor.scm (execute-command, etc)
+(define (exec-global editor range regex cmdstr)
+  (define (exec-cmdlist cmdlist)
+    (for-each (lambda (cmd)
+                (apply (car cmd) editor (cdr cmd)))
+              cmdlist))
+
+  (let ((bre (make-bre (editor-regex editor regex)))
+        (cmds (call-with-parse (parse-repeat+ parse-cmds)
+                               (string->parse-stream cmdstr)
+                               0
+                               (lambda (r s i fk)
+                                 (if (parse-stream-end? s i)
+                                   r
+                                   (fk s i "incomplete global command parse")))
+                               (lambda (s i reason) (editor-raise reason)))))
+    (for-each (lambda (idx line)
+                (when (bre-match? bre line)
+                  ;; The executed command may perform modifications
+                  ;; which affect line numbers. As such, we find the
+                  ;; current number for the given line using pointer
+                  ;; comparision on the text editor buffer.
+                  (let ((lnum (editor-get-lnum editor line)))
+                    (when lnum ;; line has not been deleted by a preceeding command
+                      (editor-goto! editor lnum)
+                      (exec-cmdlist cmds)))))
+              (range->lines editor range)
+              (editor-get-range editor range))))
+
+(define-command (file-cmd exec-global)
+  (parse-default parse-addr-range
+                 (make-range
+                   (make-addr '(nth-line . 1))
+                   (make-addr '(last-line))))
+  (parse-cmd #\g)
+  parse-re
+  (parse-or
+    ;; empty command list is equivalent to the p command
+    (parse-bind "p\n" parse-end-of-line)
+    parse-command-list))
+
+;;
 ; Help Command
 ;;
 
@@ -361,14 +480,13 @@
 ; Insert Command
 ;;
 
-(define (exec-insert editor addr)
+(define (exec-insert editor addr data)
   (let ((line (addr->line editor addr)))
     (editor-goto! editor (max (dec line) 0))
-    (let* ((data (editor-read-input editor))
-           (last-inserted (editor-append! editor data)))
+    (let ((last-inserted (editor-append! editor data)))
       (editor-goto! editor last-inserted))))
 
-(define-command (edit-cmd exec-insert)
+(define-command (input-cmd exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 

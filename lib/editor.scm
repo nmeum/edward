@@ -105,25 +105,6 @@
       (input-handler-parse handler parse-cmds sk fk)
       (input-handler-repl handler sk fk)))
 
-(define (input-handler-read handler)
-  (define parse-input-mode
-    (parse-map
-      (parse-seq
-        (parse-repeat
-          (parse-assert
-            parse-line
-            (lambda (line)
-              (not (equal? line ".")))))
-        (parse-string ".\n"))
-      car))
-
-  (input-handler-parse
-    handler
-    parse-input-mode
-    (lambda (line value) value)
-    (lambda (line reason)
-      (editor-raise "input-mode read failed"))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
@@ -202,10 +183,6 @@
     execute-command
     (lambda (line reason)
       (handle-error editor line reason))))
-
-(define (editor-read-input editor)
-  (let ((h (text-editor-input-handler editor)))
-    (input-handler-read h)))
 
 ;; Returns the last executed shell comand or raises an error if none.
 
@@ -309,6 +286,23 @@
      (%editor-range editor fst snd))
     ((fst #\, snd)
      (%editor-range editor fst snd))))
+
+;; Find current line number for a given line in the editor buffer. False
+;; is returned if the line does not exist in the editor buffer.
+;;
+;; XXX: This implementation assumes that eq? performs pointer comparision,
+;; technically this is undefinied behaviour in R7RS.
+
+(define (editor-get-lnum editor line)
+  (call-with-current-continuation
+    (lambda (exit)
+      (for-each
+        (lambda (l num)
+          (if (eq? line l)
+            (exit num)))
+        (text-editor-buffer editor)
+        (iota (length (text-editor-buffer editor)) 1))
+      #f)))
 
 (define (editor-get-range editor range)
   (if (null? (text-editor-buffer editor))

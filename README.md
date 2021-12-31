@@ -6,7 +6,7 @@ The goal of this project is creating an implementation of the
 implemented. The following commands are still missing:
 
 * Undo Command
-* Global Command
+* ~~Global Command~~
 * Interactive Global Command
 * Global Non-Matched Command
 * Interactive Global Non-Matched Command
@@ -57,6 +57,9 @@ the near future. Furthermore, the code base relies heavily on a FFI for
 `popen(3)`, `isatty(3)` and `regexec(3)`. Since there is no finalized
 SRFI standardising a Scheme FFI, this code is presently
 implementation-specific and currently only implemented for CHICKEN.
+Furthermore, the implementation requires an `eq?` implementation which
+performs pointer comparison (undefined behaviour in R7RS but implemented
+in CHICKEN).
 
 ## License
 

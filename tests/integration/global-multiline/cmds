@@ -1,0 +1,5 @@
+H
+g|foo|d\
+1s/^/test/\
+p
+w
