@@ -369,7 +369,7 @@
                 (apply (car cmd) editor (cdr cmd)))
               cmdlist))
 
-  (let ((bre (make-bre regex))
+  (let ((bre (make-bre (editor-regex editor regex)))
         (cmds (call-with-parse (parse-repeat+ parse-cmds)
                                (string->parse-stream cmdstr)
                                0
