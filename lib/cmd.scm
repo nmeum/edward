@@ -355,7 +355,17 @@
           "\n"))))) ;; terminate last command with newline
 
 (define (exec-global editor addr cmdstr)
-  (println "global command: " cmdstr))
+  (let ((cmds (call-with-parse (parse-repeat+ parse-cmds)
+                               (string->parse-stream cmdstr)
+                               0
+                               (lambda (r s i fk)
+                                 (if (parse-stream-end? s i)
+                                   r
+                                   (fk s i "incomplete global command parse")))
+                               (lambda (s i reason) (editor-raise reason)))))
+    (for-each (lambda (cmd)
+                (apply (car cmd) editor (cdr cmd)))
+              cmds)))
 
 (define-command (edit-cmd exec-global)
   (parse-default parse-addr-range
