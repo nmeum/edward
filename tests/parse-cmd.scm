@@ -72,6 +72,14 @@
       "foo"
       "p\n") "1,$g/foo/p")
 
+  (test-parse-cmd "empty command-list"
+    (list
+      (make-range
+        (make-addr '(nth-line . 1))
+        (make-addr '(last-line)))
+      "bar"
+      "p\n") "g/bar/")
+
   (test-parse-cmd "single trailing whitespace"
     (list
       (make-range

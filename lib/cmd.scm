@@ -392,7 +392,10 @@
                    (make-addr '(last-line))))
   (parse-cmd #\g)
   parse-re
-  parse-command-list)
+  (parse-or
+    ;; empty command list is equivalent to the p command
+    (parse-bind "p\n" parse-end-of-line)
+    parse-command-list))
 
 ;;
 ; Help Command
