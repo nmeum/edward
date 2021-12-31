@@ -69,21 +69,21 @@
       (make-range
         (make-addr '(nth-line . 1))
         (make-addr '(last-line)))
-      "p") "1,$gp")
+      "p\n") "1,$gp")
 
   (test-parse-cmd "single trailing whitespace"
     (list
       (make-range
         (make-addr '(nth-line . 1))
         (make-addr '(last-line)))
-      "p ") "1,$gp ")
+      "p \n") "1,$gp ")
 
   (test-parse-cmd "single command no newline"
     (list
       (make-range
         (make-addr '(nth-line . 23))
         (make-addr '(nth-line . 42)))
-      "p \np") "23,42gp \\\np"))
+      "p \np\n") "23,42gp \\\np"))
 
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"

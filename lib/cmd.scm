@@ -351,7 +351,8 @@
       ((lines last-line)
         (string-append
           (apply string-append (map list->string lines))
-          (list->string last-line))))))
+          (list->string last-line)
+          "\n"))))) ;; terminate last command with newline
 
 (define (exec-global editor addr cmdstr)
   (println "global command: " cmdstr))
