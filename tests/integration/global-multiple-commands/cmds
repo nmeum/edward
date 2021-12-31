@@ -1,0 +1,9 @@
+g/foo/c\
+ change1\
+. \
+a\
+ append1\
+.\
+1d
+.=
+w
