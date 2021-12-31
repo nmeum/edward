@@ -426,14 +426,16 @@
                                    r
                                    (fk s i "incomplete global command parse")))
                                (lambda (s i reason) (editor-raise reason)))))
-    (for-each (lambda (lnum line)
+    (for-each (lambda (idx line)
                 (when (bre-match? bre line)
                   ;; The executed command may perform modifications
                   ;; which affect line numbers. As such, we find the
                   ;; current number for the given line using pointer
                   ;; comparision on the text editor buffer.
-                  (editor-goto! editor (editor-get-lnum editor line))
-                  (exec-cmdlist cmds)))
+                  (let ((lnum (editor-get-lnum editor line)))
+                    (when lnum ;; line has not been deleted by a preceeding command
+                      (editor-goto! editor lnum)
+                      (exec-cmdlist cmds)))))
               (range->lines editor range)
               (editor-get-range editor range))))
 
