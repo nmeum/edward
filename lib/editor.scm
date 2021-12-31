@@ -272,9 +272,10 @@
   (define (%editor-range editor start end)
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
-      (if (zero? sline)
-        (editor-raise "ranges cannot start at address zero")
-        (values sline eline))))
+      (cond
+        ((zero? sline)   (editor-raise "ranges cannot start at address zero"))
+        ((> sline eline) (editor-raise "invalid range specification"))
+        (else (values sline eline)))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
   ;; be set to the first address, and only then will the second address be
