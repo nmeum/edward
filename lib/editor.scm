@@ -310,6 +310,23 @@
     ((fst #\, snd)
      (%editor-range editor fst snd))))
 
+;; Find current line number for a given line in the editor buffer. An error
+;; is raised if the line does not exist in the editor buffer.
+;;
+;; XXX: This implementation assumes that eq? performs pointer comparision,
+;; technically this is undefinied behaviour in R7RS.
+
+(define (editor-get-lnum editor line)
+  (call-with-current-continuation
+    (lambda (exit)
+      (for-each
+        (lambda (l num)
+          (if (eq? line l)
+            (exit num)))
+        (text-editor-buffer editor)
+        (iota (length (text-editor-buffer editor)) 1))
+      (error "no matching line found in buffer"))))
+
 (define (editor-get-range editor range)
   (if (null? (text-editor-buffer editor))
     '()

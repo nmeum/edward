@@ -421,7 +421,11 @@
                                (lambda (s i reason) (editor-raise reason)))))
     (for-each (lambda (lnum line)
                 (when (bre-match? bre line)
-                  (editor-goto! editor lnum)
+                  ;; The executed command may perform modifications
+                  ;; which affect line numbers. As such, we find the
+                  ;; current number for the given line using pointer
+                  ;; comparision on the text editor buffer.
+                  (editor-goto! editor (editor-get-lnum editor line))
                   (exec-cmdlist cmds)))
               (range->lines editor range)
               (editor-get-range editor range))))
