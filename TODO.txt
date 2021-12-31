@@ -1,3 +1,5 @@
+* Improve compilation speed
+* Add more tests for addresses ranges with semicolon character
 * Don't cause exception when file doesn't exist (e command etc)
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
