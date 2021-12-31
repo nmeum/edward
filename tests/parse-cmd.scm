@@ -97,10 +97,11 @@
       "p \np\n") "23,42g/test/p \\\np"))
 
 (test-group "miscellaneous"
-  (test-parse-cmd "parse command with trailing blanks"
-    (list (make-addr '(nth-line . 2342))
-          '())
-    "2342a     \n.")
+  ; TODO: GNU ed doesn't parse this, what does the standard say?
+  ; (test-parse-cmd "parse command with trailing blanks"
+  ;   (list (make-addr '(nth-line . 2342))
+  ;         '())
+  ;   "2342a     \n.")
 
   (test-parse-cmd "append command with suffixed printing command"
     (list (make-addr '(nth-line . 42))
