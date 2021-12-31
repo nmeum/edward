@@ -365,6 +365,7 @@
 ; Global Command
 ;;
 
+;; TODO: Reduce code duplication with lib/editor.scm (execute-command, etc)
 (define (exec-global editor range regex cmdstr)
   (define (exec-cmdlist cmdlist)
     (for-each (lambda (cmd)
