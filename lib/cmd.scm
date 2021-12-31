@@ -76,6 +76,7 @@
          (parse-seq
            (parse-blanks-seq BODY ...)
            (parse-optional parse-print-cmd)
+           (parse-ignore parse-blanks)
            parse-input-mode
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
