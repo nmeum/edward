@@ -1,0 +1,5 @@
+g/foo/a\
+ append1 \
+ append2 \
+.
+w

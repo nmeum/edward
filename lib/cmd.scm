@@ -32,7 +32,7 @@
 ;; the command on a succesfull parse.
 
 (define-syntax define-command
-  (syntax-rules (edit-cmd print-cmd file-cmd)
+  (syntax-rules (edit-cmd input-cmd print-cmd file-cmd)
     ((define-command (file-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -55,6 +55,25 @@
            (cons
              (with-ret HANDLER (quote HANDLER))
              (car args))))))
+    ;; TODO: Reduce code duplication with edit-cmd and update comment above.
+    ((define-command (input-cmd HANDLER) BODY ...)
+     (register-command
+       (parse-map
+         (parse-seq
+           (parse-blanks-seq BODY ...)
+           (parse-optional parse-print-cmd)
+           parse-input-mode
+           (parse-ignore parse-blanks)
+           (parse-ignore parse-newline))
+         (lambda (orig-args)
+           (cons
+             (lambda (editor . args)
+               (apply HANDLER editor args)
+               (let ((pcmd (second orig-args)))
+                 (when pcmd
+                   (apply (car pcmd) editor (cdr pcmd))))
+               (quote HANDLER))
+             (append (first orig-args) (list (third orig-args))))))))
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -97,6 +116,26 @@
 
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
+
+;; TODO
+
+(define %parse-input-mode
+  (parse-map
+    (parse-seq
+      (parse-repeat
+        (parse-assert
+          parse-line
+          (lambda (line)
+            (not (equal? line ".")))))
+      (parse-string "."))
+    car))
+
+(define parse-input-mode
+  (parse-map
+    (parse-seq
+      parse-newline
+      %parse-input-mode)
+    second))
 
 ;; Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
 ;; The given procedure is responsible for parsing the replacement, it is
@@ -205,13 +244,12 @@
 
 ;; Append Comand
 
-(define (exec-append editor addr)
+(define (exec-append editor addr data)
   (editor-goto! editor addr)
-  (let* ((data (editor-read-input editor))
-         (last-inserted (editor-append! editor data)))
+  (let* ((last-inserted (editor-append! editor data)))
     (editor-goto! editor last-inserted)))
 
-(define-command (edit-cmd exec-append)
+(define-command (input-cmd exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\a))
 

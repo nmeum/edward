@@ -4,13 +4,13 @@
 
 (test-group "append command"
   (test-parse-cmd "no arguments"
-    (list (make-addr '(current-line))) "a")
+    (list (make-addr '(current-line)) '()) "a\n.")
   (test-parse-cmd "preceeding whitespaces"
-    (list (make-addr '(current-line))) "  a")
+    (list (make-addr '(current-line)) '()) "  a\n.")
   (test-parse-cmd "custom address without offset"
-    (list (make-addr '(nth-line . 2342))) "2342    a")
+    (list (make-addr '(nth-line . 2342)) '()) "2342    a\n.")
   (test-parse-cmd "custom address with offset"
-    (list (make-addr '(last-line . ()) '(42))) "$+42 a"))
+    (list (make-addr '(last-line . ()) '(42)) '()) "$+42 a\n."))
 
 (test-group "read command"
   (test-parse-cmd "no arguments"
@@ -98,12 +98,14 @@
 
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
-    (list (make-addr '(nth-line . 2342)))
-    "2342a     ")
+    (list (make-addr '(nth-line . 2342))
+          '())
+    "2342a     \n.")
 
   (test-parse-cmd "append command with suffixed printing command"
-    (list (make-addr '(nth-line . 42)))
-     "42an")
+    (list (make-addr '(nth-line . 42))
+          '())
+     "42an\n.")
 
   (test-parse-error "unknown command" parse-cmds "Qn")
   (test-parse-error "unknown command" parse-cmds "a n"))
