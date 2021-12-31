@@ -105,25 +105,6 @@
       (input-handler-parse handler parse-cmds sk fk)
       (input-handler-repl handler sk fk)))
 
-(define (input-handler-read handler)
-  (define parse-input-mode
-    (parse-map
-      (parse-seq
-        (parse-repeat
-          (parse-assert
-            parse-line
-            (lambda (line)
-              (not (equal? line ".")))))
-        (parse-string ".\n"))
-      car))
-
-  (input-handler-parse
-    handler
-    parse-input-mode
-    (lambda (line value) value)
-    (lambda (line reason)
-      (editor-raise "input-mode read failed"))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
@@ -202,10 +183,6 @@
     execute-command
     (lambda (line reason)
       (handle-error editor line reason))))
-
-(define (editor-read-input editor)
-  (let ((h (text-editor-input-handler editor)))
-    (input-handler-read h)))
 
 ;; Returns the last executed shell comand or raises an error if none.
 

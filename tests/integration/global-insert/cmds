@@ -1,0 +1,6 @@
+g/foo/i\
+ insert1 \
+ insert2 \
+.
+.=
+w

@@ -262,11 +262,10 @@
 ;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
-(define (exec-change editor range)
-  (let ((in (editor-read-input editor)))
-    (editor-goto! editor (editor-replace! editor range in))))
+(define (exec-change editor range data)
+  (editor-goto! editor (editor-replace! editor range data)))
 
-(define-command (edit-cmd exec-change)
+(define-command (input-cmd exec-change)
   (parse-default parse-addr-range (make-range))
   (parse-cmd #\c))
 
@@ -471,14 +470,13 @@
 ; Insert Command
 ;;
 
-(define (exec-insert editor addr)
+(define (exec-insert editor addr data)
   (let ((line (addr->line editor addr)))
     (editor-goto! editor (max (dec line) 0))
-    (let* ((data (editor-read-input editor))
-           (last-inserted (editor-append! editor data)))
+    (let ((last-inserted (editor-append! editor data)))
       (editor-goto! editor last-inserted))))
 
-(define-command (edit-cmd exec-insert)
+(define-command (input-cmd exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
   (parse-cmd #\i))
 
