@@ -121,7 +121,8 @@
 (define (parse-cmd ch)
   (parse-ignore (parse-char ch)))
 
-;; TODO
+;; Read input data in the input mode format. Returns a list of parsed
+;; lines as strings which do not include the terminating newlines.
 
 (define %parse-input-mode
   (parse-map
