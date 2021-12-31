@@ -118,6 +118,15 @@
           (parse-ignore (parse-char delim)))
         (lambda (lst) (cons (first lst) (second lst)))))))
 
+;; TODO: Reduce code duplication with parse-re-pair
+(define parse-re
+  (parse-with-context
+    ;; Any character other then <space> and <newline> can be a delimiter.
+    (parse-char (char-set-complement (char-set #\space #\newline)))
+
+    (lambda (delim)
+      (parse-regex-lit delim))))
+
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
@@ -382,7 +391,7 @@
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
   (parse-cmd #\g)
-  (parse-regex-lit #\/) ;; TODO: proper delimiter handling
+  parse-re
   parse-command-list)
 
 ;;
