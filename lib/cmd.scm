@@ -20,16 +20,31 @@
             (#\n (list exec-number cur))
             (#\p (list exec-print cur))))))))
 
-;; In order to allow adding a l, n, or p suffix to certain commands,
-;; edward dinstinguishes three kinds of commands: (1) print commands,
-;; i.e. the l, n, and p commands, which can be used as a suffix to (2)
-;; editor commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !
-;; commands which cannot be suffixed with a print command). Command
-;; parsers are defined using the macro below, as part of this definition
-;; each command is assigned to one of the aforedmentioned groups.
-;; Additionally, a handler is specified for each command, the parser
-;; created by the macro returns the handler and the arguments passed to
-;; the command on a succesfull parse.
+;; Edward distinguishes four command types: (1) print commands, i.e. the
+;; l, n, and p commands, which can be used as a suffix to (2) editor
+;; commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !commands
+;; which cannot be suffixed with a print command). Lastly, an input-cmd
+;; command type is available which is a variant of the edit-cmd type and
+;; allows defining commands which read additional inputs using the ed(1)
+;; input mode.
+;;
+;; Command parsers are defined using the macro below, as part of this
+;; definition each command is assigned to one of the aforedmentioned
+;; types Additionally, a handler is specified for each command, the
+;; parser created by the macro returns the handler and the arguments
+;; passed to the command on a succesfull parse.
+
+(define-syntax cmd-with-print
+  (syntax-rules ()
+    ((cmd-with-print HANDLER cmd-args print-args)
+     (cons
+       (lambda (editor . args)
+         (apply HANDLER editor args)
+         (let ((pcmd print-args))
+           (when pcmd
+             (apply (car pcmd) editor (cdr pcmd))))
+         (quote HANDLER))
+       cmd-args))))
 
 (define-syntax define-command
   (syntax-rules (edit-cmd input-cmd print-cmd file-cmd)
@@ -55,7 +70,6 @@
            (cons
              (with-ret HANDLER (quote HANDLER))
              (car args))))))
-    ;; TODO: Reduce code duplication with edit-cmd and update comment above.
     ((define-command (input-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -65,15 +79,10 @@
            parse-input-mode
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
-         (lambda (orig-args)
-           (cons
-             (lambda (editor . args)
-               (apply HANDLER editor args)
-               (let ((pcmd (second orig-args)))
-                 (when pcmd
-                   (apply (car pcmd) editor (cdr pcmd))))
-               (quote HANDLER))
-             (append (first orig-args) (list (third orig-args))))))))
+         (lambda (args)
+           (cmd-with-print HANDLER
+             (append (first args) (list (third args)))
+             (second args))))))
     ((define-command (edit-cmd HANDLER) BODY ...)
      (register-command
        (parse-map
@@ -82,15 +91,10 @@
            (parse-optional parse-print-cmd)
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
-         (lambda (orig-args)
-           (cons
-             (lambda (editor . args)
-               (apply HANDLER editor args)
-               (let ((pcmd (last orig-args)))
-                 (when pcmd
-                   (apply (car pcmd) editor (cdr pcmd))))
-               (quote HANDLER))
-             (car orig-args))))))))
+         (lambda (args)
+           (cmd-with-print HANDLER
+             (first args)
+             (second args))))))))
 
 ;; If changes have been made to the current buffer since the last write
 ;; of the buffer to a file, then ed should warn the user before the
