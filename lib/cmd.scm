@@ -127,6 +127,26 @@
     (lambda (delim)
       (parse-regex-lit delim))))
 
+;; Parse command list for g, G, v, and V command.
+
+(define parse-command-list
+  (parse-map
+    (parse-seq
+      (parse-repeat
+        (parse-map
+          (parse-seq
+            (parse-repeat+ (parse-not-char (char-set #\\ #\newline)))
+            (parse-esc (parse-char #\newline)))
+          (match-lambda
+            ((lst chr) (append lst (list chr))))))
+      (parse-repeat+ (parse-not-char #\newline))) ;; last line
+    (match-lambda
+      ((lines last-line)
+        (string-append
+          (apply string-append (map list->string lines))
+          (list->string last-line)
+          "\n"))))) ;; terminate last command with newline
+
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
@@ -344,24 +364,6 @@
 ;;
 ; Global Command
 ;;
-
-(define parse-command-list
-  (parse-map
-    (parse-seq
-      (parse-repeat
-        (parse-map
-          (parse-seq
-            (parse-repeat+ (parse-not-char (char-set #\\ #\newline)))
-            (parse-esc (parse-char #\newline)))
-          (match-lambda
-            ((lst chr) (append lst (list chr))))))
-      (parse-repeat+ (parse-not-char #\newline))) ;; last line
-    (match-lambda
-      ((lines last-line)
-        (string-append
-          (apply string-append (map list->string lines))
-          (list->string last-line)
-          "\n"))))) ;; terminate last command with newline
 
 (define (exec-global editor range regex cmdstr)
   (define (exec-cmdlist cmdlist)
