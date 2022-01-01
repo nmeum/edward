@@ -1,0 +1,14 @@
+#include <stdio.h>
+
+void
+main_loop(void)
+{
+	/* … */
+}
+
+int
+main(void)
+{
+	puts("Hello, World");
+	return 0;
+}

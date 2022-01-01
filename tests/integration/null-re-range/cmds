@@ -1,0 +1,4 @@
+/main/-1,/main/+1p
+g//p
+1,$s//program/g
+w
