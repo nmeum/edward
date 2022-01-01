@@ -165,7 +165,7 @@
       (exit #f))))
 
 (define (editor-start editor)
-  (define (execute-command line val)
+  (define (execute-command line cmd)
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
@@ -176,13 +176,31 @@
           (lambda ()
             (text-editor-prevcmd-set!
               editor
-              (apply (car val) editor (cdr val))))))))
+              (editor-exec editor cmd)))))))
 
   (input-handler-repl
     (text-editor-input-handler editor)
     execute-command
     (lambda (line reason)
       (handle-error editor line reason))))
+
+;; Execute a text editor command. A text editor command is a list
+;; where the first element is a procedure and the remaining elements are
+;; arguments to that procedure.
+;;
+;; The procedure takes an editor record as the first argument and is
+;; executed with the given editor and the given additional arguments.
+
+(define (editor-exec editor cmd)
+  (apply (car cmd) editor (cdr cmd)))
+
+;; Execute a list of commands (e.g. a command list as used by the
+;; ed global command).
+
+(define (editor-exec-cmdlist editor cmds)
+  (for-each (lambda (cmd)
+              (editor-exec editor cmd))
+            cmds))
 
 ;; Returns the last executed shell comand or raises an error if none.
 

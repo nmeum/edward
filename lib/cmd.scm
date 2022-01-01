@@ -39,10 +39,10 @@
     ((cmd-with-print HANDLER cmd-args print-args)
      (cons
        (lambda (editor . args)
-         (apply HANDLER editor args)
+         (editor-exec editor (cons HANDLER args))
          (let ((pcmd print-args))
            (when pcmd
-             (apply (car pcmd) editor (cdr pcmd))))
+             (editor-exec editor pcmd)))
          (quote HANDLER))
        cmd-args))))
 
@@ -202,8 +202,9 @@
     (parse-bind "p\n" parse-end-of-line)
     unwrap-command-list+))
 
-;; Returns list of command pairs from a command list string as created
-;; by the unwrap-command-list procedure.
+;; Returns list of editor command from a command list string as created
+;; by the unwrap-command-list procedure. The list can afterwards be
+;; passed to the editor-exec-cmdlist procedure.
 
 (define (parse-command-list cmdstr)
   (call-with-parse (parse-repeat+ parse-cmds)
@@ -431,13 +432,7 @@
 ; Global Command
 ;;
 
-;; TODO: Reduce code duplication with lib/editor.scm (execute-command, etc)
 (define (exec-global editor range regex cmdstr)
-  (define (exec-cmdlist cmdlist)
-    (for-each (lambda (cmd)
-                (apply (car cmd) editor (cdr cmd)))
-              cmdlist))
-
   (let ((bre (make-bre (editor-regex editor regex)))
         (cmds (parse-command-list cmdstr)))
     (for-each (lambda (line)
@@ -449,7 +444,7 @@
                   (let ((lnum (editor-get-lnum editor line)))
                     (when lnum ;; line has not been deleted by a preceeding command
                       (editor-goto! editor lnum)
-                      (exec-cmdlist cmds)))))
+                      (editor-exec-cmdlist editor cmds)))))
               (editor-get-range editor range))))
 
 (define-command (file-cmd exec-global)
