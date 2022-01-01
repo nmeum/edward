@@ -174,9 +174,11 @@
     (lambda (delim)
       (parse-regex-lit delim))))
 
-;; Parse command list for g, G, v, and V command.
+;; Read lines of a command list and perform unescaping of newlines.
+;; Returns a string which can then be further processed using
+;; parse-command-list. Basically, this is a two stage parsing process.
 
-(define parse-command-list
+(define unwrap-command-list+
   (parse-map
     (parse-seq
       (parse-repeat
@@ -193,6 +195,25 @@
           (apply string-append (map list->string lines))
           (list->string last-line)
           "\n"))))) ;; terminate last command with newline
+
+(define unwrap-command-list
+  (parse-or
+    ;; empty command list is equivalent to the p command
+    (parse-bind "p\n" parse-end-of-line)
+    unwrap-command-list+))
+
+;; Returns list of command pairs from a command list string as created
+;; by the unwrap-command-list procedure.
+
+(define (parse-command-list cmdstr)
+  (call-with-parse (parse-repeat+ parse-cmds)
+                   (string->parse-stream cmdstr)
+                   0
+                   (lambda (r s i fk)
+                     (if (parse-stream-end? s i)
+                       r
+                       (fk s i "incomplete global command parse")))
+                   (lambda (s i reason) (editor-raise reason))))
 
 ;; Parses a filename which is then read/written by ed.
 
@@ -418,14 +439,7 @@
               cmdlist))
 
   (let ((bre (make-bre (editor-regex editor regex)))
-        (cmds (call-with-parse (parse-repeat+ parse-cmds)
-                               (string->parse-stream cmdstr)
-                               0
-                               (lambda (r s i fk)
-                                 (if (parse-stream-end? s i)
-                                   r
-                                   (fk s i "incomplete global command parse")))
-                               (lambda (s i reason) (editor-raise reason)))))
+        (cmds (parse-command-list cmdstr)))
     (for-each (lambda (line)
                 (when (bre-match? bre line)
                   ;; The executed command may perform modifications
@@ -445,10 +459,7 @@
                    (make-addr '(last-line))))
   (parse-cmd #\g)
   parse-re
-  (parse-or
-    ;; empty command list is equivalent to the p command
-    (parse-bind "p\n" parse-end-of-line)
-    parse-command-list))
+  unwrap-command-list)
 
 ;;
 ; Help Command
