@@ -202,7 +202,7 @@
               (editor-exec editor cmd))
             cmds))
 
-;; Returns the last executed shell comand or raises an error if none.
+;; Returns the last executed shell command or raises an error if none.
 
 (define (editor-shell-cmd editor)
   (let ((lcmd (text-editor-last-cmd editor)))
