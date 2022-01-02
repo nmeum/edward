@@ -591,7 +591,7 @@
         (data (buffer->string (editor-get-range editor range))))
     ;; Assuming write-to *always* writes all bytes.
     (write-to fn data)
-    (editor-verbose editor (string-length data))
+    (editor-verbose editor (count-bytes data))
 
     (unless (filename-cmd? filename)
       (if (empty-string? (text-editor-filename editor))
