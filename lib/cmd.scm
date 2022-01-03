@@ -213,7 +213,7 @@
                    (lambda (r s i fk)
                      (if (parse-stream-end? s i)
                        r
-                       (fk s i "incomplete global command parse")))
+                       (fk s i "incomplete command list parse")))
                    (lambda (s i reason) (editor-raise reason))))
 
 ;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
