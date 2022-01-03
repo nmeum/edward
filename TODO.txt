@@ -1,3 +1,10 @@
+* Assign each command defined with define-command a
+  unique name by using an assoc list for command-parsers
+	* Allows filtering out specific commands
+	  for parse-cmds (useful for interactive global command)
+* Implement remaining global interactive commands:
+	* interactive global command
+	* interactive global non-matched command
 * Fix use of substitute command with global command
 	* Global command executes substitute command
 	  for each selected line
@@ -14,11 +21,6 @@
 * distinguish between editor-error and internal error
 	* re-raise the later in the exception handler
 * undo command
-* also support for various regex-based commands:
-	* global command
-	* interactive global command
-	* global non-matched command
-	* interactive global non-matched command
 * implement asynchronous event section from POSIX.1-2008
 * using a vector instead of a list for the text-editor buffer may be
   more efficient
