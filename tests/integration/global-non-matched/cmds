@@ -1,0 +1,10 @@
+v/foo/
+.=
+v/foo/p
+.=
+v/foo/s|^[a-z]*|foo|
+.=
+v/foo/p
+.=
+1,$p
+Q

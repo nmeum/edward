@@ -216,6 +216,23 @@
                        (fk s i "incomplete global command parse")))
                    (lambda (s i reason) (editor-raise reason))))
 
+;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
+
+(define (exec-command-list editor match-proc range regex cmdstr)
+  (let ((bre (make-bre (editor-regex editor regex)))
+        (cmds (parse-command-list cmdstr)))
+    (for-each (lambda (line)
+                (when (match-proc bre line)
+                  ;; The executed command may perform modifications
+                  ;; which affect line numbers. As such, we find the
+                  ;; current number for the given line using pointer
+                  ;; comparision on the text editor buffer.
+                  (let ((lnum (editor-get-lnum editor line)))
+                    (when lnum ;; line has not been deleted by a preceeding command
+                      (editor-goto! editor lnum)
+                      (editor-exec-cmdlist editor cmds)))))
+              (editor-get-range editor range))))
+
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
@@ -433,19 +450,7 @@
 ;;
 
 (define (exec-global editor range regex cmdstr)
-  (let ((bre (make-bre (editor-regex editor regex)))
-        (cmds (parse-command-list cmdstr)))
-    (for-each (lambda (line)
-                (when (bre-match? bre line)
-                  ;; The executed command may perform modifications
-                  ;; which affect line numbers. As such, we find the
-                  ;; current number for the given line using pointer
-                  ;; comparision on the text editor buffer.
-                  (let ((lnum (editor-get-lnum editor line)))
-                    (when lnum ;; line has not been deleted by a preceeding command
-                      (editor-goto! editor lnum)
-                      (editor-exec-cmdlist editor cmds)))))
-              (editor-get-range editor range))))
+  (exec-command-list editor bre-match? range regex cmdstr))
 
 (define-command (file-cmd exec-global)
   (parse-default parse-addr-range
@@ -581,6 +586,24 @@
   (parse-default parse-addr-range (make-range))
   (parse-cmd #\t)
   parse-addr)
+
+;;
+; Global Non-Matched Command
+;;
+
+(define (exec-global-unmatched editor range regex cmdstr)
+  (exec-command-list editor (lambda (bre line)
+                              (not (bre-match? bre line)))
+                     range regex cmdstr))
+
+(define-command (file-cmd exec-global-unmatched)
+  (parse-default parse-addr-range
+                 (make-range
+                   (make-addr '(nth-line . 1))
+                   (make-addr '(last-line))))
+  (parse-cmd #\v)
+  parse-re
+  unwrap-command-list)
 
 ;;
 ; Write Command
