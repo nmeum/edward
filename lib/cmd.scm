@@ -233,6 +233,34 @@
                       (editor-exec-cmdlist editor cmds)))))
               (editor-get-range editor range))))
 
+;; TODO: Reduce code duplication with exec-command-list.
+(define (exec-command-list-interactive editor match-proc range regex)
+  (define previous-command '())
+  (define (get-interactive editor)
+    (let* ((cmd (editor-interactive editor))
+           (ret (match cmd
+                  ('null-command #f)
+                  ('repeat-previous
+                   (if (null? previous-command)
+                     (editor-raise "no previous command")
+                     previous-command))
+                  (_ cmd))))
+      (when ret
+        (set! previous-command ret))
+      ret))
+
+  (let ((bre (make-bre (editor-regex editor regex))))
+    (for-each (lambda (line)
+                (when (match-proc bre line)
+                  (let ((lnum (editor-get-lnum editor line)))
+                    (when lnum ;; line has not been deleted by a preceeding command
+                      (println line)
+                      (let ((cmd (get-interactive editor)))
+                        (when cmd ;; not null command
+                          (editor-goto! editor lnum)
+                          (editor-exec editor cmd)))))))
+              (editor-get-range editor range))))
+
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
@@ -465,33 +493,8 @@
 ; Interactive Global Command
 ;;
 
-;; TODO: Reduce code duplication with exec-command-list.
 (define (exec-interactive editor range regex)
-  (define previous-command '())
-  (define (get-interactive editor)
-    (let* ((cmd (editor-interactive editor))
-           (ret (match cmd
-                  ('null-command #f)
-                  ('repeat-previous
-                   (if (null? previous-command)
-                     (editor-raise "no previous command")
-                     previous-command))
-                  (_ cmd))))
-      (when ret
-        (set! previous-command ret))
-      ret))
-
-  (let ((bre (make-bre (editor-regex editor regex))))
-    (for-each (lambda (line)
-                  (when (bre-match? bre line)
-                    (let ((lnum (editor-get-lnum editor line)))
-                      (when lnum ;; line has not been deleted by a preceeding command
-                        (println line)
-                        (let ((cmd (get-interactive editor)))
-                          (when cmd ;; not null command
-                            (editor-goto! editor lnum)
-                            (editor-exec editor cmd)))))))
-                (editor-get-range editor range))))
+  (exec-command-list-interactive editor bre-match? range regex))
 
 (define-command (file-cmd exec-interactive)
   (parse-default parse-addr-range
