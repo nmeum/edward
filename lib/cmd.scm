@@ -832,16 +832,16 @@
 ;; cdr are the arguments which are supposed to be passed to this
 ;; handler.
 
-(define (%parse-cmd parsers)
-  (apply
-    parse-or
-    (append parsers (list (parse-fail "unknown command")))))
-
 ;; TODO: Commit to individual command parsers and don't backtrack.
 ;; Implementing this would require separating address parsing from
 ;; command parsing since we can only commit to a command after we
 ;; have parsed the address successfully (the same address may be
 ;; applicable to different commands).
+(define (%parse-cmd parsers)
+  (apply
+    parse-or
+    (append parsers (list (parse-fail "unknown command")))))
+
 (define parse-cmd
   (%parse-cmd (alist-values command-parsers)))
 
