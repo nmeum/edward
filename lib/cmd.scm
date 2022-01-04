@@ -462,6 +462,46 @@
   unwrap-command-list)
 
 ;;
+; Interactive Global Command
+;;
+
+;; TODO: Reduce code duplication with exec-command-list.
+(define (exec-interactive editor range regex)
+  (define previous-command '())
+  (define (get-interactive editor)
+    (let* ((cmd (editor-interactive editor))
+           (ret (match cmd
+                  ('null-command #f)
+                  ('repeat-previous
+                   (if (null? previous-command)
+                     (editor-raise "no previous command")
+                     previous-command))
+                  (_ cmd))))
+      (when ret
+        (set! previous-command ret))
+      ret))
+
+  (let ((bre (make-bre (editor-regex editor regex))))
+    (for-each (lambda (line)
+                  (when (bre-match? bre line)
+                    (let ((lnum (editor-get-lnum editor line)))
+                      (when lnum ;; line has not been deleted by a preceeding command
+                        (println line)
+                        (let ((cmd (get-interactive editor)))
+                          (when cmd ;; not null command
+                            (editor-goto! editor lnum)
+                            (editor-exec editor cmd)))))))
+                (editor-get-range editor range))))
+
+(define-command (file-cmd exec-interactive)
+  (parse-default parse-addr-range
+                 (make-range
+                   (make-addr '(nth-line . 1))
+                   (make-addr '(last-line))))
+  (parse-cmd #\G)
+  parse-re)
+
+;;
 ; Help Command
 ;;
 
@@ -771,3 +811,10 @@
 ;; applicable to different commands).
 (define parse-cmds
   (apply parse-or command-parsers))
+
+;; TODO: Exclude a, c, i, g, G, v, and V commands.
+(define parse-interactive
+  (parse-or
+    (parse-bind 'null-command parse-newline)
+    (parse-bind 'repeat-previous (parse-string "&\n"))
+    parse-cmds))

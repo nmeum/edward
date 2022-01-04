@@ -105,6 +105,14 @@
       (input-handler-parse handler parse-cmds sk fk)
       (input-handler-repl handler sk fk)))
 
+(define (input-handler-interactive handler)
+  (input-handler-parse
+    handler
+    parse-interactive
+    (lambda (line value) value)
+    (lambda (line reason)
+      (editor-raise "parsing of interactive command failed"))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
@@ -183,6 +191,10 @@
     execute-command
     (lambda (line reason)
       (handle-error editor line reason))))
+
+(define (editor-interactive editor)
+  (let ((h (text-editor-input-handler editor)))
+    (input-handler-interactive h)))
 
 ;; Execute a text editor command. A text editor command is a list
 ;; where the first element is a procedure and the remaining elements are
