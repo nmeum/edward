@@ -649,6 +649,23 @@
   unwrap-command-list)
 
 ;;
+; Interactive Global Not-Matched Command
+;;
+
+(define (exec-interactive-unmatched editor range regex)
+  (exec-command-list-interactive editor (lambda (bre line)
+                                          (not (bre-match? bre line)))
+                                 range regex))
+
+(define-command (file-cmd exec-interactive-unmatched)
+  (parse-default parse-addr-range
+                 (make-range
+                   (make-addr '(nth-line . 1))
+                   (make-addr '(last-line))))
+  (parse-cmd #\V)
+  parse-re)
+
+;;
 ; Write Command
 ;;
 

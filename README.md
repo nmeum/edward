@@ -6,7 +6,6 @@ The goal of this project is creating an implementation of the
 implemented. The following commands are still missing:
 
 * Undo Command
-* Interactive Global Non-Matched Command
 
 Apart from commands, some behaviour mandated by the standard is
 currently not implemented. For example, handling of asynchronous events

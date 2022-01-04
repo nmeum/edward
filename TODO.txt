@@ -2,9 +2,6 @@
   unique name by using an assoc list for command-parsers
 	* Allows filtering out specific commands
 	  for parse-cmds (useful for interactive global command)
-* Implement remaining global interactive commands:
-	* interactive global command
-	* interactive global non-matched command
 * Fix use of substitute command with global command
 	* Global command executes substitute command
 	  for each selected line
