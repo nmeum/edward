@@ -1,7 +1,15 @@
 (define command-parsers '())
+
 (define (register-command name proc)
   (set! command-parsers
     (alist-cons name proc command-parsers)))
+
+(define (get-command-parsers exclude)
+  (fold (lambda (x y)
+          (if (member (car x) exclude)
+            y
+            (cons (cdr x) y)))
+        '() command-parsers))
 
 ;; According to POSIX.1-2008 it is invalid for more than one command to
 ;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
@@ -504,7 +512,7 @@
 (define (exec-interactive editor range regex)
   (exec-command-list-interactive editor bre-match? range regex))
 
-(define-file-cmd (interactive-global exec-interactive)
+(define-file-cmd (interactive exec-interactive)
   (parse-default parse-addr-range
                  (make-range
                    (make-addr '(nth-line . 1))
@@ -665,7 +673,7 @@
                                           (not (bre-match? bre line)))
                                  range regex))
 
-(define-file-cmd (global-interactive-unmatched exec-interactive-unmatched)
+(define-file-cmd (interactive-unmatched exec-interactive-unmatched)
   (parse-default parse-addr-range
                  (make-range
                    (make-addr '(nth-line . 1))
@@ -843,20 +851,13 @@
     (append parsers (list (parse-fail "unknown command")))))
 
 (define parse-cmd
-  (%parse-cmd (alist-values command-parsers)))
+  (%parse-cmd (get-command-parsers '())))
 
 (define parse-global-cmd
   (%parse-cmd
     ;; Filter out cmds producing undefined behaviour in global command.
-    (fold (lambda (x y)
-            (match (car x)
-              ('global y)
-              ('interactive-global y)
-              ('global-unmatched y)
-              ('global-unmatched y)
-              ('shell-escape y)
-              (_ (cons (cdr x) y))))
-          '() command-parsers)))
+    (get-command-parsers '(global interactive global-unmatched
+                           interactive-unmatched shell-escape))))
 
 (define parse-interactive-cmd
   (parse-or
@@ -864,14 +865,5 @@
     (parse-bind 'repeat-previous (parse-string "&\n"))
     (%parse-cmd
       ;; Filter out cmds not supported in interactive mode (as per POSIX).
-      (fold (lambda (x y)
-              (match (car x)
-                ('append y)
-                ('change y)
-                ('insert y)
-                ('global y)
-                ('interactive-global y)
-                ('global-unmatched y)
-                ('global-interactive-unmatched y)
-                (_ (cons (cdr x) y))))
-            '() command-parsers))))
+      (get-command-parsers '(append change insert global interactive
+                             global-unmatched interactive-unmatched)))))
