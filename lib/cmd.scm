@@ -34,17 +34,15 @@
 ;; parser created by the macro returns the handler and the arguments
 ;; passed to the command on a succesfull parse.
 
-(define-syntax cmd-with-print
-  (syntax-rules ()
-    ((cmd-with-print HANDLER cmd-args print-args)
-     (cons
-       (lambda (editor . args)
-         (editor-exec editor (cons HANDLER args))
-         (let ((pcmd print-args))
-           (when pcmd
-             (editor-exec editor pcmd)))
-         (quote HANDLER))
-       cmd-args))))
+(define (cmd-with-print handler return-value cmd-args print-args)
+  (cons
+    (lambda (editor . args)
+      (editor-exec editor (cons handler args))
+      (let ((pcmd print-args))
+        (when pcmd
+          (editor-exec editor pcmd)))
+      return-value)
+    cmd-args))
 
 (define-syntax define-file-cmd
   (syntax-rules ()
@@ -87,7 +85,7 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER
+           (cmd-with-print HANDLER (quote HANDLER)
              (append (first args) (list (third args)))
              (second args))))))))
 
@@ -102,7 +100,7 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER
+           (cmd-with-print HANDLER (quote HANDLER)
              (first args)
              (second args))))))))
 
