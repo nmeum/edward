@@ -3,16 +3,28 @@
 The goal of this project is creating an implementation of the
 [`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
 [CHICKEN Scheme][chicken]. The majority of ed commands have been
-implemented. The following commands are still missing:
-
-* Undo Command
+implemented, *only the undo command is missing at the moment* but will
+hopefully be implemented soonish.
 
 Apart from commands, some behaviour mandated by the standard is
 currently not implemented. For example, handling of asynchronous events
-(i.e.  signals). Nonetheless, the present implementation should already
-suffice for a lot of interactive and scripting use cases. For instance,
-it should already be possible to use this software to apply patches in
-`diff -e` format.
+(i.e. signals). Furthermore, the implementation hasn't been extensively
+tested so far and thus bugs should be expected. Nonetheless, the present
+implementation should already suffice for a lot of interactive and
+scripting use cases.
+
+Known bugs and future ideas are documented in the `TODO.txt` file.
+
+## Design
+
+This implementation relies on [parser combinators][parser combinators]
+as well as hygienic Scheme macros to ease the implementation of ed
+commands. Each ed command is defined using a macro (i.e. similar to how
+one would normally define procedure in Scheme) and parsed through
+provided parser combinators. Thereby making this ed implementation very
+hackable and easy to extend. Presently, the implementation is also split
+into a CHICKEN program and library component which may allow defining
+custom commands through user-defined configuration files in the future.
 
 ## Installation
 
@@ -38,11 +50,23 @@ This will create an executable binary in `./bin/edward`.
 
 This repository contains both unit tests and integration tests. The
 latter require a reference implementation of a POSIX.1-2008 compatible
-ed implementation. For instance, [GNU ed][gnu ed].
+ed implementation. Currently, [GNU ed][gnu ed] is used for this purpose.
 
 Both unit and integration tests can be run using:
 
 	$ ./run-tests.sh
+
+## Usage
+
+For interactive usage I can highly recommend using this software in
+conjunction with a [readline][GNU readline] frontend such as
+[rlwrap][rlwrap github]. This enables readline-like keybindings (e.g.
+Ctrl+A, Ctrl+W, …) as well as input history support.
+
+Detailed usage instructions for the `ed(1)` text editor can be found in
+the [POSIX documentation][ed posix]. Additionally, a nice introduction
+to the editor is provided in the book *The Unix Programming Environment*
+by Brian W. Kernighan and Rob Pike (Append 1: Editor Summary).
 
 ## Portability
 
@@ -77,3 +101,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [gnu ed]: https://www.gnu.org/software/ed/
 [srfi 204]: https://srfi.schemers.org/srfi-204/
 [r7rs small]: https://srfi.schemers.org/srfi-204/
+[parser combinators]: https://en.wikipedia.org/wiki/Parser_combinator
+[GNU readline]: https://tiswww.cwru.edu/php/chet/readline/rltop.html
+[rlwrap github]: https://github.com/hanslub42/rlwrap
