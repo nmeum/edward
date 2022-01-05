@@ -215,7 +215,7 @@
 ;; passed to the editor-exec-cmdlist procedure.
 
 (define (parse-command-list cmdstr)
-  (call-with-parse (parse-repeat+ parse-cmds)
+  (call-with-parse (parse-repeat+ parse-global)
                    (string->parse-stream cmdstr)
                    0
                    (lambda (r s i fk)
@@ -844,6 +844,19 @@
 ;; applicable to different commands).
 (define parse-cmds
   (%parse-cmds (alist-values command-parsers)))
+
+(define parse-global
+  (%parse-cmds
+    ;; Filter out cmds producing undefined behaviour in global command.
+    (fold (lambda (x y)
+            (match (car x)
+              ('global y)
+              ('interactive-global y)
+              ('global-unmatched y)
+              ('global-unmatched y)
+              ('shell-escape y)
+              (_ (cons (cdr x) y))))
+          '() command-parsers)))
 
 (define parse-interactive
   (parse-or
