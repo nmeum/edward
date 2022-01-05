@@ -324,12 +324,24 @@
 ;; Read data from given filename as a list of lines. If filename start
 ;; with `!` (i.e. is a command), read data from the standard output of
 ;; the given command.
+;;
+;; If an error occurs returns false and prints an error message to the
+;; current-error-port. Otherwise, returns a pair of retrieved lines and
+;; amount of total bytes received.
 
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-cmd? filename)))
-    (if fn-cmd?
-      (pipe-from fn)
-      (file->buffer fn))))
+    (call-with-current-continuation
+      (lambda (k)
+        (with-exception-handler
+          (lambda (eobj)
+            (fprintln (current-error-port) fn ": "
+                      (error-object-message eobj))
+            (k #f))
+          (lambda ()
+            (if fn-cmd?
+              (pipe-from fn)
+              (file->buffer fn))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -368,6 +380,9 @@
   (editor-goto! editor addr)
   (let* ((f  (editor-filename editor filename))
          (in (read-from f)))
+    (unless in
+      (editor-raise "cannot open input file"))
+
     (if (and
           (empty-string? (text-editor-filename editor))
           (not (filename-cmd? f)))
