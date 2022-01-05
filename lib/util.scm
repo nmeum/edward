@@ -1,6 +1,11 @@
 (define (inc n) (+ n 1))
 (define (dec n) (- n 1))
 
+;; Returns all values of an alist, discarding the keys.
+
+(define (alist-values alist)
+  (map cdr alist))
+
 ;; Return a procedure executing proc and then returing ret.
 
 (define (with-ret proc ret)

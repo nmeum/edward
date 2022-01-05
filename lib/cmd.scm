@@ -1,6 +1,7 @@
-(define command-parsers (list (parse-fail "unknown command")))
-(define (register-command proc)
-  (set! command-parsers (cons proc command-parsers)))
+(define command-parsers '())
+(define (register-command name proc)
+  (set! command-parsers
+    (alist-cons name proc command-parsers)))
 
 ;; According to POSIX.1-2008 it is invalid for more than one command to
 ;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
@@ -47,7 +48,7 @@
 (define-syntax define-file-cmd
   (syntax-rules ()
     ((define-file-cmd (NAME HANDLER) BODY ...)
-     (register-command
+     (register-command (quote NAME)
        (parse-map
          (parse-blanks-seq
            BODY ...
@@ -60,7 +61,7 @@
 (define-syntax define-print-cmd
   (syntax-rules ()
     ((define-print-cmd (NAME HANDLER) BODY ...)
-     (register-command
+     (register-command (quote NAME)
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
@@ -75,7 +76,7 @@
 (define-syntax define-input-cmd
   (syntax-rules ()
     ((define-input-cmd (NAME HANDLER) BODY ...)
-     (register-command
+     (register-command (quote NAME)
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
@@ -92,7 +93,7 @@
 (define-syntax define-edit-cmd
   (syntax-rules ()
     ((define-edit-cmd (NAME HANDLER) BODY ...)
-     (register-command
+     (register-command (quote NAME)
        (parse-map
          (parse-seq
            (parse-blanks-seq BODY ...)
@@ -831,13 +832,18 @@
 ;; cdr are the arguments which are supposed to be passed to this
 ;; handler.
 
+(define (%parse-cmds parsers)
+  (apply
+    parse-or
+    (append parsers (list (parse-fail "unknown command")))))
+
 ;; TODO: Commit to individual command parsers and don't backtrack.
 ;; Implementing this would require separating address parsing from
 ;; command parsing since we can only commit to a command after we
 ;; have parsed the address successfully (the same address may be
 ;; applicable to different commands).
 (define parse-cmds
-  (apply parse-or command-parsers))
+  (%parse-cmds (alist-values command-parsers)))
 
 ;; TODO: Exclude a, c, i, g, G, v, and V commands.
 (define parse-interactive
