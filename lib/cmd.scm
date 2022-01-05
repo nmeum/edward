@@ -127,7 +127,7 @@
 ;; character is ignored in the parse-blanks-seq and as such not
 ;; returned.
 
-(define (parse-cmd ch)
+(define (parse-cmd-char ch)
   (parse-ignore (parse-char ch)))
 
 ;; Read input data in the input mode format. Returns a list of parsed
@@ -215,7 +215,7 @@
 ;; passed to the editor-exec-cmdlist procedure.
 
 (define (parse-command-list cmdstr)
-  (call-with-parse (parse-repeat+ parse-global)
+  (call-with-parse (parse-repeat+ parse-global-cmd)
                    (string->parse-stream cmdstr)
                    0
                    (lambda (r s i fk)
@@ -288,7 +288,7 @@
 (define (parse-file-cmd ch)
   (parse-map
     (parse-seq
-      (parse-cmd ch)
+      (parse-cmd-char ch)
       (parse-default
         (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
         ""))
@@ -334,7 +334,7 @@
 
 (define-input-cmd (append exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
-  (parse-cmd #\a))
+  (parse-cmd-char #\a))
 
 ;;
 ; Change Command
@@ -350,7 +350,7 @@
 
 (define-input-cmd (change exec-change)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\c))
+  (parse-cmd-char #\c))
 
 ;;
 ; Read Command
@@ -400,7 +400,7 @@
 
 (define-edit-cmd (substitute exec-subst)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\s)
+  (parse-cmd-char #\s)
 
   ;; Pair: (RE, replacement)
   (parse-re-pair
@@ -435,7 +435,7 @@
 
 (define-edit-cmd (delete exec-delete)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\d))
+  (parse-cmd-char #\d))
 
 ;;
 ; Edit Command
@@ -493,7 +493,7 @@
                  (make-range
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
-  (parse-cmd #\g)
+  (parse-cmd-char #\g)
   parse-re
   unwrap-command-list)
 
@@ -509,7 +509,7 @@
                  (make-range
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
-  (parse-cmd #\G)
+  (parse-cmd-char #\G)
   parse-re)
 
 ;;
@@ -522,7 +522,7 @@
       (println msg))))
 
 (define-edit-cmd (help exec-help)
-  (parse-cmd #\h))
+  (parse-cmd-char #\h))
 
 ;;
 ; Help-Mode Command
@@ -535,7 +535,7 @@
       (exec-help editor))))
 
 (define-edit-cmd (help-mode exec-help-mode)
-  (parse-cmd #\H))
+  (parse-cmd-char #\H))
 
 ;;
 ; Insert Command
@@ -549,7 +549,7 @@
 
 (define-input-cmd (insert exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
-  (parse-cmd #\i))
+  (parse-cmd-char #\i))
 
 ;;
 ; Join Command
@@ -567,7 +567,7 @@
                  (make-range
                    (make-addr '(current-line))
                    (make-addr '(current-line) '(1))))
-  (parse-cmd #\j))
+  (parse-cmd-char #\j))
 
 ;;
 ; Mark Command
@@ -579,7 +579,7 @@
 
 (define-edit-cmd (mark exec-mark)
   (parse-default parse-addr (make-addr '(current-line)))
-  (parse-cmd #\k)
+  (parse-cmd-char #\k)
   (parse-char char-set:lower-case))
 
 ;;
@@ -597,7 +597,7 @@
 
 (define-print-cmd (list exec-list)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\l))
+  (parse-cmd-char #\l))
 
 ;;
 ; Move Command
@@ -617,7 +617,7 @@
 
 (define-edit-cmd (move exec-move)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\m)
+  (parse-cmd-char #\m)
   parse-addr)
 
 ;;
@@ -635,7 +635,7 @@
 
 (define-edit-cmd (copy exec-copy)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\t)
+  (parse-cmd-char #\t)
   parse-addr)
 
 ;;
@@ -652,7 +652,7 @@
                  (make-range
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
-  (parse-cmd #\v)
+  (parse-cmd-char #\v)
   parse-re
   unwrap-command-list)
 
@@ -670,7 +670,7 @@
                  (make-range
                    (make-addr '(nth-line . 1))
                    (make-addr '(last-line))))
-  (parse-cmd #\V)
+  (parse-cmd-char #\V)
   parse-re)
 
 ;;
@@ -706,7 +706,7 @@
 
 (define-edit-cmd (line-number exec-line-number)
   (parse-default parse-addr (make-addr '(last-line)))
-  (parse-cmd #\=))
+  (parse-cmd-char #\=))
 
 ;;
 ; Number Command
@@ -723,7 +723,7 @@
 
 (define-print-cmd (number exec-number)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\n))
+  (parse-cmd-char #\n))
 
 ;;
 ; Print Command
@@ -737,7 +737,7 @@
 
 (define-print-cmd (print exec-print)
   (parse-default parse-addr-range (make-range))
-  (parse-cmd #\p))
+  (parse-cmd-char #\p))
 
 ;;
 ; Prompt Command
@@ -751,7 +751,7 @@
       (not prompt?))))
 
 (define-edit-cmd (prompt exec-prompt)
-  (parse-cmd #\P))
+  (parse-cmd-char #\P))
 
 ;;
 ; Quit Command
@@ -759,7 +759,7 @@
 
 (define-confirm (%exec-quit exec-quit))
 (define-file-cmd (%quit %exec-quit)
-  (parse-cmd #\q))
+  (parse-cmd-char #\q))
 
 ;;
 ; Quit Without Checking Command
@@ -769,7 +769,7 @@
   (exit))
 
 (define-file-cmd (quit exec-quit)
-  (parse-cmd #\Q))
+  (parse-cmd-char #\Q))
 
 ;;
 ; Shell Escape Command
@@ -792,7 +792,7 @@
   (text-editor-last-cmd-set! editor cmdstr)))
 
 (define-file-cmd (shell-escape exec-command)
-  (parse-cmd #\!)
+  (parse-cmd-char #\!)
   (parse-map
     (parse-seq
       (parse-ignore-optional
@@ -832,7 +832,7 @@
 ;; cdr are the arguments which are supposed to be passed to this
 ;; handler.
 
-(define (%parse-cmds parsers)
+(define (%parse-cmd parsers)
   (apply
     parse-or
     (append parsers (list (parse-fail "unknown command")))))
@@ -842,11 +842,11 @@
 ;; command parsing since we can only commit to a command after we
 ;; have parsed the address successfully (the same address may be
 ;; applicable to different commands).
-(define parse-cmds
-  (%parse-cmds (alist-values command-parsers)))
+(define parse-cmd
+  (%parse-cmd (alist-values command-parsers)))
 
-(define parse-global
-  (%parse-cmds
+(define parse-global-cmd
+  (%parse-cmd
     ;; Filter out cmds producing undefined behaviour in global command.
     (fold (lambda (x y)
             (match (car x)
@@ -858,11 +858,11 @@
               (_ (cons (cdr x) y))))
           '() command-parsers)))
 
-(define parse-interactive
+(define parse-interactive-cmd
   (parse-or
     (parse-bind 'null-command parse-newline)
     (parse-bind 'repeat-previous (parse-string "&\n"))
-    (%parse-cmds
+    (%parse-cmd
       ;; Filter out cmds not supported in interactive mode (as per POSIX).
       (fold (lambda (x y)
               (match (car x)

@@ -1,6 +1,6 @@
 (define (test-parse-cmd desc expected input)
   (test desc expected
-        (cdr (%test-parse parse-cmds (string-append input "\n")))))
+        (cdr (%test-parse parse-cmd (string-append input "\n")))))
 
 (test-group "append command"
   (test-parse-cmd "no arguments"
@@ -28,7 +28,7 @@
       (make-addr '(regex-backward . "foo") '(23 -42))
       "foobar") "?foo? +23 -42 r foobar")
 
-  (test-parse-error "unknown command" parse-cmds "rfoo"))
+  (test-parse-error "unknown command" parse-cmd "rfoo"))
 
 (test-group "write command"
   (test-parse-cmd "no arguments"
@@ -45,7 +45,7 @@
         (make-addr '(current-line) '(10)))
       "foobar") ".,.+10w foobar")
 
-  (test-parse-error "unknown command" parse-cmds "wfoo"))
+  (test-parse-error "unknown command" parse-cmd "wfoo"))
 
 (test-group "shell command"
   (test-parse-cmd "no replacements"
@@ -107,5 +107,5 @@
           '())
      "42an\n.")
 
-  (test-parse-error "unknown command" parse-cmds "Qn")
-  (test-parse-error "unknown command" parse-cmds "a n"))
+  (test-parse-error "unknown command" parse-cmd "Qn")
+  (test-parse-error "unknown command" parse-cmd "a n"))

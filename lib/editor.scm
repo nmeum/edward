@@ -102,13 +102,13 @@
   (unless (parse-stream-end?
             (input-handler-stream handler)
             (input-handler-index handler))
-      (input-handler-parse handler parse-cmds sk fk)
+      (input-handler-parse handler parse-cmd sk fk)
       (input-handler-repl handler sk fk)))
 
 (define (input-handler-interactive handler)
   (input-handler-parse
     handler
-    parse-interactive
+    parse-interactive-cmd
     (lambda (line value) value)
     (lambda (line reason)
       (editor-raise "parsing of interactive command failed"))))

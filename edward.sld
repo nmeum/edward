@@ -17,7 +17,7 @@
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr make-range parse-addr parse-addr-range)
-  (export parse-cmds)
+  (export parse-cmd)
   (export make-text-editor editor-start)
   (export make-bre parse-replace regex-replace)
 
