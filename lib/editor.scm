@@ -6,7 +6,7 @@
   (define (%file->buffer port lines numbytes)
     (let ((l (read-line port)))
       (if (eof-object? l)
-        (values numbytes lines)
+        (cons lines numbytes)
         (%file->buffer
           port
           (append lines (list l))

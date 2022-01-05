@@ -366,17 +366,17 @@
 
 (define (exec-read editor addr filename)
   (editor-goto! editor addr)
-  (let*-values (((f) (editor-filename editor filename))
-                ((numbytes lines) (read-from f)))
+  (let* ((f  (editor-filename editor filename))
+         (in (read-from f)))
     (if (and
           (empty-string? (text-editor-filename editor))
           (not (filename-cmd? f)))
       (text-editor-filename-set! editor f))
 
-    (editor-append! editor lines)
+    (editor-append! editor (car in))
     (editor-goto! editor (length (text-editor-buffer editor)))
 
-    (editor-verbose editor numbytes)))
+    (editor-verbose editor (cdr in))))
 
 (define-file-cmd (read exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
@@ -794,7 +794,7 @@
   (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
     (println cmdstr))
   ;; TODO: Execute command using system(3) instead of using popen(3).
-  (let-values (((numbytes lines) (pipe-from cmdstr)))
+  (let ((lines (car (pipe-from cmdstr))))
     (for-each println lines))
   (editor-verbose editor "!")
   (text-editor-last-cmd-set! editor cmdstr)))
