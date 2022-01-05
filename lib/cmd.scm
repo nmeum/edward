@@ -845,9 +845,20 @@
 (define parse-cmds
   (%parse-cmds (alist-values command-parsers)))
 
-;; TODO: Exclude a, c, i, g, G, v, and V commands.
 (define parse-interactive
   (parse-or
     (parse-bind 'null-command parse-newline)
     (parse-bind 'repeat-previous (parse-string "&\n"))
-    parse-cmds))
+    (%parse-cmds
+      ;; Filter out cmds not supported in interactive mode (as per POSIX).
+      (fold (lambda (x y)
+              (match (car x)
+                ('append y)
+                ('change y)
+                ('insert y)
+                ('global y)
+                ('interactive-global y)
+                ('global-unmatched y)
+                ('global-interactive-unmatched y)
+                (_ (cons (cdr x) y))))
+            '() command-parsers))))
