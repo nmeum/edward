@@ -21,6 +21,10 @@
   (export make-text-editor editor-start)
   (export make-bre parse-replace regex-replace)
 
+  ;; Export these macros to avoid a "indirect export" compiler warning
+  (export define-file-cmd define-print-cmd define-input-cmd
+          define-edit-cmd define-confirm)
+
   (include "lib/util.scm"
            "lib/ffi.scm"
            "lib/parse.scm"
