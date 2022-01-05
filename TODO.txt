@@ -1,7 +1,3 @@
-* Assign each command defined with define-command a
-  unique name by using an assoc list for command-parsers
-	* Allows filtering out specific commands
-	  for parse-cmds (useful for interactive global command)
 * Fix use of substitute command with global command
 	* Global command executes substitute command
 	  for each selected line
@@ -14,9 +10,10 @@
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
 	  reading past EOF but ed requires this
+* Figure out if the library/program distinction is actually useful
+	* Maybe possible to extend edward with custom commands etc.
+	  through the library but currently not supported
 * make sure zero address is handled correctly everywhere
-* distinguish between editor-error and internal error
-	* re-raise the later in the exception handler
 * undo command
 * implement asynchronous event section from POSIX.1-2008
 * using a vector instead of a list for the text-editor buffer may be
