@@ -20,7 +20,7 @@ Known bugs and future ideas are documented in the `TODO.txt` file.
 This implementation relies on [parser combinators][parser combinators]
 as well as hygienic Scheme macros to ease the implementation of ed
 commands. Each ed command is defined using a macro (i.e. similar to how
-one would normally define procedure in Scheme) and parsed through
+one would normally define procedures in Scheme) and parsed through
 provided parser combinators. Thereby making this ed implementation very
 hackable and easy to extend. Presently, the implementation is also split
 into a CHICKEN program and library component which may allow defining
