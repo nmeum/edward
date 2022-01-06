@@ -12,6 +12,9 @@
 * Figure out if the library/program distinction is actually useful
 	* Maybe possible to extend edward with custom commands etc.
 	  through the library but currently not supported
+* integration tests:
+	* compare exit status
+	* consider running GNU ed in traditional mode (-G)
 * make sure zero address is handled correctly everywhere
 * undo command
 * implement asynchronous event section from POSIX.1-2008
