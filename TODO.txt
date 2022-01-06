@@ -4,6 +4,9 @@
 	* If the selected line doesn't match the substitute
 	  command an error is raised (as per POSIX)
 	* How is this supposed to be handled?
+* "Any number of addresses can be provided to commands taking addresses;"
+	* Example: 1,2,3,4,5p
+	* Example: 3;/foo/;+2p
 * Improve compilation speed
 * Add more tests for addresses ranges with semicolon character
 * align handling of end-of-file character with POSIX
