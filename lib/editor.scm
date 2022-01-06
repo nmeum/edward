@@ -151,6 +151,8 @@
   (let* ((h (make-input-handler prompt))
          (e (%make-text-editor filename h '() 0 #f '() #f "" '() '() #f silent? #f)))
     (unless (empty-string? filename)
+      ;; TODO: exec-read can raise text editor errors
+      ;; but is invoked without an exception handler.
       (exec-read e (make-addr '(last-line)) filename)
       (text-editor-modified-set! e #f))
     e))
