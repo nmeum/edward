@@ -20,9 +20,9 @@ run_editor() {
 
 	if [ -s "${opt}" ]; then
 		set -- $(cat "${opt}")
-		"${cmd}" $@
+		"${cmd}" $@ 2>/dev/null
 	else
-		"${cmd}"
+		"${cmd}" 2>/dev/null
 	fi
 
 	cd - >/dev/null
