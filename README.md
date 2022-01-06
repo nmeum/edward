@@ -66,7 +66,7 @@ Ctrl+A, Ctrl+W, …) as well as input history support.
 Detailed usage instructions for the `ed(1)` text editor can be found in
 the [POSIX documentation][ed posix]. Additionally, a nice introduction
 to the editor is provided in the book *The Unix Programming Environment*
-by Brian W. Kernighan and Rob Pike (Append 1: Editor Summary).
+by Brian W. Kernighan and Rob Pike (Appendix 1: Editor Summary).
 
 ## Portability
 
