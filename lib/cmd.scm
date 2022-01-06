@@ -315,11 +315,19 @@
 
 (define (write-to filename data)
   (let-values (((fn-cmd? fn) (filename-cmd? filename)))
-    (if fn-cmd?
-      (pipe-to fn data)
-      (call-with-output-file fn
-        (lambda (port)
-          (write-string data port))))))
+    (call-with-current-continuation
+      (lambda (k)
+        (with-exception-handler
+          (lambda (eobj)
+            (fprintln (current-error-port) fn ": "
+                      (error-object-message eobj))
+            (k #f))
+          (lambda ()
+            (if fn-cmd?
+              (pipe-to fn data)
+              (call-with-output-file fn
+                (lambda (port)
+                (write-string data port))))))))))
 
 ;; Read data from given filename as a list of lines. If filename start
 ;; with `!` (i.e. is a command), read data from the standard output of
@@ -703,8 +711,9 @@
 (define (exec-write editor range filename)
   (let ((fn (editor-filename editor filename))
         (data (buffer->string (editor-get-range editor range))))
+    (unless (write-to fn data)
+      (editor-raise "cannot open output file"))
     ;; Assuming write-to *always* writes all bytes.
-    (write-to fn data)
     (editor-verbose editor (count-bytes data))
 
     (unless (filename-cmd? filename)

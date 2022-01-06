@@ -1,0 +1,6 @@
+a
+write should error and therefore quit should require confirmation
+.
+w /tmp/does/not/exist
+q
+Q
