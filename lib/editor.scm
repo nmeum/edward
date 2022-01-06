@@ -315,7 +315,7 @@
   ;; for forwards and backwards searches.
   (match range
     ((fst #\; snd)
-     (editor-goto! fst)
+     (editor-goto! editor fst)
      (%editor-range editor fst snd))
     ((fst #\, snd)
      (%editor-range editor fst snd))))
