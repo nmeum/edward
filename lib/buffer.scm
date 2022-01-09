@@ -58,20 +58,20 @@
         (buffer-remove! buffer line (length text))))))
 
 (define (buffer-remove! buffer line amount)
-  (let ((lines (buffer-lines buffer)))
+  (let* ((lines (buffer-lines buffer))
+         (sline (max (dec line) 0)))
     (buffer-lines-set!
       buffer
       (append
-        (sublist lines 0 (max (dec line) 0))
-        (sublist lines (+ line amount) (length lines))))
+        (sublist lines 0 sline)
+        (sublist lines (+ sline amount) (length lines))))
     (buffer-undo buffer
       (lambda (buffer)
-        (let ((sline (max (dec line) 0)))
-          (buffer-append! buffer sline
-                          (sublist
-                            lines
-                            sline
-                            (+ line amount))))))))
+        (buffer-append! buffer sline
+                        (sublist
+                          lines
+                          sline
+                          (+ sline amount)))))))
 
 (define (buffer-undo! buffer)
   (let* ((stk (buffer-undo-stack buffer))
@@ -122,13 +122,19 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "baz" "bar"))
-                 (buffer-remove! b 2 0)))
+                 (buffer-remove! b 2 1)))
 
   (test-buffer "remove last"
                '("foo" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "baz" "bar"))
-                 (buffer-remove! b 3 0))))
+                 (buffer-remove! b 3 1)))
+
+  (test-buffer "remove nothing"
+               '("foo" "bar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-remove! b 2 0))))
 
 (test-group "undo command"
   (test-buffer "undo append"
@@ -138,6 +144,13 @@
                  (buffer-undo! b)))
 
   (test-buffer "undo remove"
+               '("foo" "bar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-remove! b 2 1)
+                 (buffer-undo! b)))
+
+  (test-buffer "undo remove nothing"
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
