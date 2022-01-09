@@ -20,6 +20,9 @@
 (define (make-stack)
   (%make-stack '()))
 
+(define (stack-size stack)
+  (length (stack-store stack)))
+
 (define (stack-push stack elem)
   (stack-store-set!
     stack
@@ -102,27 +105,39 @@
                            sline
                            (+ sline amount)))))))
 
-;; Undo the most recent operation on the buffer (not reversible).
+;; Undo the amount of given operations on the buffer (not reversible).
 
-(define (buffer-undo! buffer)
-  (let* ((stk (buffer-undo-stack buffer))
-         (undo-proc (stack-pop stk)))
-    (undo-proc buffer)))
+(define buffer-undo!
+  (case-lambda
+    ((buffer) (buffer-undo! buffer 1))
+    ((buffer amount)
+     (let ((stk (buffer-undo-stack buffer)))
+       (do ((x 1 (inc x)))
+           ((> x amount) stk)
+         ((stack-pop stk) buffer))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Perform given body of commands as an atomic unit in respect to the
+;; undo stack. That is, the following invocation of buffer-undo! will
+;; undo all commands executed in the body at once.
+
+(define-syntax with-undo
+  (syntax-rules ()
+    ((with-undo BUF BODY ...)
+     (let ((oldsiz (stack-size (buffer-undo-stack BUF))))
+       BODY ...
+       (let ((newsiz (stack-size (buffer-undo-stack BUF))))
+         (buffer-undo BUF
+           (lambda (buffer)
+             (buffer-undo! buffer (- newsiz oldsiz)))))))))
+
 (define (buffer-replace! buffer line text)
-  ;; TODO: Refactor this into function which receives
-  ;; amount of buffer operations to execute and adds
-  ;; the appropriate amount of undo invocations automatically.
   (let* ((sline (max (dec line) 0))
          (cap (- (buffer-length buffer) sline)))
-    (buffer-remove! buffer line (min cap (length text)))
-    (buffer-append! buffer sline text)
-    (buffer-undo buffer
-      (lambda (buffer)
-        (buffer-undo! buffer)     ;; undo append
-        (buffer-undo! buffer))))) ;; undo remove
+    (with-undo buffer
+      (buffer-remove! buffer line (min cap (length text)))
+      (buffer-append! buffer sline text))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
