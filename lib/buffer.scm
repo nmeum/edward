@@ -33,6 +33,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Line-Buffer implements a text buffer for line-based data with undo
+;; support. Operations on the buffer address lines, the first line
+;; starts at index 1. The special index 0 can be used with the append
+;; command to insert text before the first line. For other commands,
+;; index 0 is equivalent to index 1. Targeting a line outside the
+;; current buffer bounds causes an error to be raised.
+;;
+;; All provided procedures for modifying the data stored in the buffer
+;; are implemented on top of the primitive append and remove procedure.
+
 (define-record-type Line-Buffer
   (%make-buffer lines undo-stack)
   line-buffer?
@@ -48,6 +58,8 @@
 (define (buffer-undo buffer proc)
   (stack-push (buffer-undo-stack buffer) proc))
 
+;; Append given data to buffer (not reversible).
+
 (define (%buffer-append! buffer line text)
   (let ((lines (buffer-lines buffer)))
     (buffer-lines-set!
@@ -57,11 +69,15 @@
         text
         (drop lines line)))))
 
+;; Append given data to buffer (reversible).
+
 (define (buffer-append! buffer line text)
   (%buffer-append! buffer line text)
   (buffer-undo buffer
     (lambda (buffer)
       (%buffer-remove! buffer line (length text)))))
+
+;; Remove fixed amount of lines (not reversible).
 
 (define (%buffer-remove! buffer line amount)
   (let* ((lines (buffer-lines buffer))
@@ -71,6 +87,8 @@
       (append
         (sublist lines 0 sline)
         (sublist lines (+ sline amount) (length lines))))))
+
+;; Remove fixed amount of lines (reversible).
 
 (define (buffer-remove! buffer line amount)
   (let ((sline (max (dec line) 0))
@@ -83,6 +101,8 @@
                            lines
                            sline
                            (+ sline amount)))))))
+
+;; Undo the most recent operation on the buffer (not reversible).
 
 (define (buffer-undo! buffer)
   (let* ((stk (buffer-undo-stack buffer))
