@@ -42,6 +42,9 @@
 (define (make-buffer)
   (%make-buffer '() (make-stack)))
 
+(define (buffer-length buffer)
+  (length (buffer-lines buffer)))
+
 (define (buffer-undo buffer proc)
   (stack-push (buffer-undo-stack buffer) proc))
 
@@ -85,6 +88,21 @@
   (let* ((stk (buffer-undo-stack buffer))
          (undo-proc (stack-pop stk)))
     (undo-proc buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (buffer-replace! buffer line text)
+  ;; TODO: Refactor this into function which receives
+  ;; amount of buffer operations to execute and adds
+  ;; the appropriate amount of undo invocations automatically.
+  (let* ((sline (max (dec line) 0))
+         (cap (- (buffer-length buffer) sline)))
+    (buffer-remove! buffer line (min cap (length text)))
+    (buffer-append! buffer sline text)
+    (buffer-undo buffer
+      (lambda (buffer)
+        (buffer-undo! buffer)     ;; undo append
+        (buffer-undo! buffer))))) ;; undo remove
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -144,6 +162,25 @@
                  (buffer-append! b 0 '("foo" "bar" "baz"))
                  (buffer-remove! b 2 0))))
 
+(test-group "replace command"
+  (test-buffer "replace single line"
+               '("foo" "345" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "123" "bar"))
+                 (buffer-replace! b 2 '("345"))))
+
+  (test-buffer "replace multiple lines"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("1" "2"))
+                 (buffer-replace! b 0 '("foo" "bar"))))
+
+  (test-buffer "replace add lines"
+               '("foo" "bar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "test test"))
+                 (buffer-replace! b 2 '("bar" "baz")))))
+
 (test-group "undo command"
   (test-buffer "undo append"
                '()
@@ -171,6 +208,20 @@
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
                  (buffer-remove! b 2 0)
+                 (buffer-undo! b)))
+
+  (test-buffer "undo replace"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-replace! b 1 '("first" "second"))
+                 (buffer-undo! b)))
+
+  (test-buffer "undo replace nothing"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-replace! b 0 '())
                  (buffer-undo! b))))
 
 ;; TODO: Add tests
