@@ -77,7 +77,7 @@
 (define (buffer-length buffer)
   (length (buffer-lines buffer)))
 
-(define (buffer-undo buffer proc)
+(define (buffer-register-undo buffer proc)
   (stack-push (buffer-undo-stack buffer) proc))
 
 (define (buffer-append! buffer line text)
@@ -88,7 +88,7 @@
         (take lines line)
         text
         (drop lines line)))
-    (buffer-undo buffer
+    (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the append operation itself reversible.
@@ -104,7 +104,7 @@
       (append
         (sublist lines 0 sline)
         (sublist lines (+ sline amount) (length lines))))
-    (buffer-undo buffer
+    (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the remove operation itself reversible.
@@ -127,9 +127,9 @@
 ;; undo stack. That is, the following invocation of buffer-undo! will
 ;; undo all commands executed in the body at once.
 
-(define-syntax with-undo
+(define-syntax with-atomic-undo
   (syntax-rules ()
-    ((with-undo BUF BODY ...)
+    ((with-atomic-undo BUF BODY ...)
      (let* ((stack (buffer-undo-stack BUF))
             (oldsiz (stack-size stack)))
 
@@ -140,7 +140,7 @@
        (let* ((newsiz (stack-size stack))
               (diff (- newsiz oldsiz))
               (procs (stack-pops stack diff)))
-         (buffer-undo BUF
+         (buffer-register-undo BUF
            (lambda (buffer)
              (for-each (lambda (proc)
                          (proc buffer))
@@ -150,7 +150,7 @@
              ;; stack to undo them, these need to be combined into a
              ;; single procedure again.
              (let ((procs (stack-pops stack diff)))
-               (buffer-undo BUF
+               (buffer-register-undo BUF
                 (lambda (buffer)
                   (for-each (lambda (proc)
                               (proc buffer))
@@ -159,7 +159,7 @@
 (define (buffer-replace! buffer line text)
   (let* ((sline (max (dec line) 0))
          (cap (- (buffer-length buffer) sline)))
-    (with-undo buffer
+    (with-atomic-undo buffer
       (buffer-remove! buffer line (min cap (length text)))
       (buffer-append! buffer sline text))))
 
