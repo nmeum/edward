@@ -78,7 +78,7 @@
   (%buffer-append! buffer line text)
   (buffer-undo buffer
     (lambda (buffer)
-      (%buffer-remove! buffer line (length text)))))
+      (%buffer-remove! buffer (inc line) (length text)))))
 
 ;; Remove fixed amount of lines (not reversible).
 
@@ -250,6 +250,13 @@
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
                  (buffer-replace! b 1 '("first" "second"))
+                 (buffer-undo! b)))
+
+  (test-buffer "undo append last"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-append! b 2 '("second line"))
                  (buffer-undo! b)))
 
   (test-buffer "undo replace nothing"
