@@ -90,6 +90,8 @@
         (drop lines line)))
     (buffer-undo buffer
       (lambda (buffer)
+        ;; Will add an undo procedure to the stack, thus making
+        ;; the undo of the append operation itself reversible.
         (buffer-remove! buffer (inc line) (length text))))))
 
 ;; Remove fixed amount of lines (reversible).
@@ -104,6 +106,8 @@
         (sublist lines (+ sline amount) (length lines))))
     (buffer-undo buffer
       (lambda (buffer)
+        ;; Will add an undo procedure to the stack, thus making
+        ;; the undo of the remove operation itself reversible.
         (buffer-append! buffer sline
                         (sublist
                           lines
