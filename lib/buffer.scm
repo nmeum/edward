@@ -110,16 +110,12 @@
                           sline
                           (+ sline amount)))))))
 
-;; Undo the amount of given operations on the buffer (not reversible).
+;; Undo last operation on the buffer (itself reversible).
 
-(define buffer-undo!
-  (case-lambda
-    ((buffer) (buffer-undo! buffer 1))
-    ((buffer amount)
-     (let ((stk (buffer-undo-stack buffer)))
-       (do ((x 1 (inc x)))
-           ((> x amount) stk)
-         ((stack-pop stk) buffer))))))
+(define (buffer-undo! buffer)
+   (let* ((stk (buffer-undo-stack buffer))
+          (undo-proc (stack-pop stk)))
+     (undo-proc buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
