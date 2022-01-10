@@ -1,5 +1,12 @@
 (import (r7rs) (test) (srfi 1) (scheme base))
 
+(define (fprintln port . objs)
+  (for-each (lambda (obj) (display obj port)) objs)
+  (newline port))
+
+(define (println . objs)
+  (apply fprintln (current-output-port) objs))
+
 (define (dec n) (- n 1))
 (define (inc n) (+ n 1))
 
@@ -20,6 +27,11 @@
 (define (make-stack)
   (%make-stack '()))
 
+(define (stack-reverse! stack)
+  (stack-store-set!
+    stack
+    (reverse (stack-store stack))))
+
 (define (stack-size stack)
   (length (stack-store stack)))
 
@@ -33,6 +45,13 @@
          (top (car lst)))
     (stack-store-set! stack (cdr lst))
     top))
+
+(define (stack-pops stack amount)
+  (if (<= amount 1)
+    (list (stack-pop stack))
+    (cons
+      (stack-pop stack)
+      (stack-pops stack (dec amount)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -61,49 +80,35 @@
 (define (buffer-undo buffer proc)
   (stack-push (buffer-undo-stack buffer) proc))
 
-;; Append given data to buffer (not reversible).
-
-(define (%buffer-append! buffer line text)
+(define (buffer-append! buffer line text)
   (let ((lines (buffer-lines buffer)))
     (buffer-lines-set!
       buffer
       (append
         (take lines line)
         text
-        (drop lines line)))))
+        (drop lines line)))
+    (buffer-undo buffer
+      (lambda (buffer)
+        (buffer-remove! buffer (inc line) (length text))))))
 
-;; Append given data to buffer (reversible).
+;; Remove fixed amount of lines (reversible).
 
-(define (buffer-append! buffer line text)
-  (%buffer-append! buffer line text)
-  (buffer-undo buffer
-    (lambda (buffer)
-      (%buffer-remove! buffer (inc line) (length text)))))
-
-;; Remove fixed amount of lines (not reversible).
-
-(define (%buffer-remove! buffer line amount)
+(define (buffer-remove! buffer line amount)
   (let* ((lines (buffer-lines buffer))
          (sline (max (dec line) 0)))
     (buffer-lines-set!
       buffer
       (append
         (sublist lines 0 sline)
-        (sublist lines (+ sline amount) (length lines))))))
-
-;; Remove fixed amount of lines (reversible).
-
-(define (buffer-remove! buffer line amount)
-  (let ((sline (max (dec line) 0))
-        (lines (buffer-lines buffer)))
-    (%buffer-remove! buffer line amount)
+        (sublist lines (+ sline amount) (length lines))))
     (buffer-undo buffer
       (lambda (buffer)
-        (%buffer-append! buffer sline
-                         (sublist
-                           lines
-                           sline
-                           (+ sline amount)))))))
+        (buffer-append! buffer sline
+                        (sublist
+                          lines
+                          sline
+                          (+ sline amount)))))))
 
 ;; Undo the amount of given operations on the buffer (not reversible).
 
@@ -125,12 +130,31 @@
 (define-syntax with-undo
   (syntax-rules ()
     ((with-undo BUF BODY ...)
-     (let ((oldsiz (stack-size (buffer-undo-stack BUF))))
+     (let* ((stack (buffer-undo-stack BUF))
+            (oldsiz (stack-size stack)))
+
        BODY ...
-       (let ((newsiz (stack-size (buffer-undo-stack BUF))))
+
+       ;; Combine undo procedures of operations executed in BODY
+       ;; to a single undo procedure and pop them from the stack.
+       (let* ((newsiz (stack-size stack))
+              (diff (- newsiz oldsiz))
+              (procs (stack-pops stack diff)))
          (buffer-undo BUF
            (lambda (buffer)
-             (buffer-undo! buffer (- newsiz oldsiz)))))))))
+             (for-each (lambda (proc)
+                         (proc buffer))
+                       procs)
+
+             ;; Executed undo procedures add new procedures to the undo
+             ;; stack to undo them, these need to be combined into a
+             ;; single procedure again.
+             (let ((procs (stack-pops stack diff)))
+               (buffer-undo BUF
+                (lambda (buffer)
+                  (for-each (lambda (proc)
+                              (proc buffer))
+                            procs)))))))))))
 
 (define (buffer-replace! buffer line text)
   (let* ((sline (max (dec line) 0))
@@ -230,13 +254,12 @@
                  (buffer-remove! b 2 1)
                  (buffer-undo! b)))
 
-  (test-buffer "undo multiple"
-               '()
+  (test-buffer "undo undo"
+               '("foo" "bar")
                (lambda (b)
-                 (buffer-append! b 0 '("foo"))
-                 (buffer-append! b 1 '("bar"))
-                 (buffer-undo! b)
-                 (buffer-undo! b)))
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-undo! b)   ;; undo append
+                 (buffer-undo! b))) ;; undo undo
 
   (test-buffer "undo remove nothing"
                '("foo" "bar" "baz")
@@ -258,6 +281,21 @@
                  (buffer-append! b 0 '("foo" "bar"))
                  (buffer-append! b 2 '("second line"))
                  (buffer-undo! b)))
+
+  (test-buffer "undo replace last"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-replace! b 2 '("second line"))
+                 (buffer-undo! b)))
+
+  (test-buffer "undo replace undo"
+               '("test" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-replace! b 1 '("test"))
+                 (buffer-undo! b)   ;; undo replace
+                 (buffer-undo! b))) ;; undo undo
 
   (test-buffer "undo replace nothing"
                '("foo" "bar")
