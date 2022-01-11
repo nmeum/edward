@@ -74,6 +74,9 @@
 (define (make-buffer)
   (%make-buffer '() (make-stack)))
 
+(define (buffer->list buffer)
+  (buffer-lines buffer))
+
 (define (buffer-length buffer)
   (length (buffer-lines buffer)))
 
