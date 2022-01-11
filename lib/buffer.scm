@@ -163,6 +163,18 @@
       (buffer-remove! buffer line (min cap (length text)))
       (buffer-append! buffer sline text))))
 
+(define (buffer-join! buffer start amount)
+  (let* ((lines  (buffer-lines buffer))
+         (sindex (max (dec start) 0))
+         (eindex (+ sindex amount))
+         (joined (apply string-append (sublist lines sindex eindex))))
+  (with-atomic-undo buffer
+    (buffer-remove! buffer start amount)
+    (buffer-append!
+      buffer
+      sindex
+      (list joined)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (test-buffer name expected proc)
@@ -240,6 +252,31 @@
                  (buffer-append! b 0 '("foo" "test test"))
                  (buffer-replace! b 2 '("bar" "baz")))))
 
+(test-group "join command"
+  (test-buffer "join entire buffer"
+               '("foobar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-join! b 0 2)))
+
+  (test-buffer "join keep last"
+               '("foobar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-join! b 1 2)))
+
+  (test-buffer "join keep first"
+               '("foo" "barbaz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-join! b 2 2)))
+
+  (test-buffer "join betwen"
+               '("foo" "123" "bar")
+               (lambda (b)
+                  (buffer-append! b 0 '("foo" "1" "2" "3" "bar"))
+                  (buffer-join! b 2 3))))
+
 (test-group "undo command"
   (test-buffer "undo append"
                '()
@@ -275,6 +312,13 @@
                  (buffer-replace! b 1 '("first" "second"))
                  (buffer-undo! b)))
 
+  (test-buffer "undo join"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-join! b 0 2)
+                 (buffer-undo! b)))
+
   (test-buffer "undo append last"
                '("foo" "bar")
                (lambda (b)
@@ -304,7 +348,7 @@
                  (buffer-replace! b 0 '())
                  (buffer-undo! b))))
 
-;; TODO: Add tests
-;; TODO: Attempt to migrate from list to vector
+;; TODO: Clear stack
+;; TODO: Move buffer-remove! and buffer-join! to start/end interface
 ;; TODO: Add more operations
 ;; TODO: Track current line number in undo stack for ed undo command
