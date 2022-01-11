@@ -92,18 +92,18 @@
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the append operation itself reversible.
-        (buffer-remove! buffer (inc line) (length text))))))
+        (buffer-remove! buffer (inc line) (+ line (length text)))))))
 
-;; Remove fixed amount of lines (reversible).
+;; Removes all lines within the given inclusive range (reversible).
 
-(define (buffer-remove! buffer line amount)
+(define (buffer-remove! buffer start end)
   (let* ((lines (buffer-lines buffer))
-         (sline (max (dec line) 0)))
+         (sline (max (dec start) 0)))
     (buffer-lines-set!
       buffer
       (append
         (sublist lines 0 sline)
-        (sublist lines (+ sline amount) (length lines))))
+        (sublist lines end (length lines))))
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
@@ -112,7 +112,7 @@
                         (sublist
                           lines
                           sline
-                          (+ sline amount)))))))
+                          end))))))
 
 ;; Undo last operation on the buffer (itself reversible).
 
@@ -160,16 +160,15 @@
   (let* ((sline (max (dec line) 0))
          (cap (- (buffer-length buffer) sline)))
     (with-atomic-undo buffer
-      (buffer-remove! buffer line (min cap (length text)))
+      (buffer-remove! buffer line (+ sline (min cap (length text))))
       (buffer-append! buffer sline text))))
 
-(define (buffer-join! buffer start amount)
+(define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (eindex (+ sindex amount))
-         (joined (apply string-append (sublist lines sindex eindex))))
+         (joined (apply string-append (sublist lines sindex end))))
   (with-atomic-undo buffer
-    (buffer-remove! buffer start amount)
+    (buffer-remove! buffer start end)
     (buffer-append!
       buffer
       sindex
@@ -219,19 +218,13 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "baz" "bar"))
-                 (buffer-remove! b 2 1)))
+                 (buffer-remove! b 2 2)))
 
   (test-buffer "remove last"
                '("foo" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "baz" "bar"))
-                 (buffer-remove! b 3 1)))
-
-  (test-buffer "remove nothing"
-               '("foo" "bar" "baz")
-               (lambda (b)
-                 (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-remove! b 2 0))))
+                 (buffer-remove! b 3 3))))
 
 (test-group "replace command"
   (test-buffer "replace single line"
@@ -269,13 +262,13 @@
                '("foo" "barbaz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-join! b 2 2)))
+                 (buffer-join! b 2 3)))
 
   (test-buffer "join betwen"
                '("foo" "123" "bar")
                (lambda (b)
                   (buffer-append! b 0 '("foo" "1" "2" "3" "bar"))
-                  (buffer-join! b 2 3))))
+                  (buffer-join! b 2 4))))
 
 (test-group "undo command"
   (test-buffer "undo append"
@@ -288,7 +281,7 @@
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-remove! b 2 1)
+                 (buffer-remove! b 2 3)
                  (buffer-undo! b)))
 
   (test-buffer "undo undo"
@@ -297,13 +290,6 @@
                  (buffer-append! b 0 '("foo" "bar"))
                  (buffer-undo! b)   ;; undo append
                  (buffer-undo! b))) ;; undo undo
-
-  (test-buffer "undo remove nothing"
-               '("foo" "bar" "baz")
-               (lambda (b)
-                 (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-remove! b 2 0)
-                 (buffer-undo! b)))
 
   (test-buffer "undo replace"
                '("foo" "bar")
@@ -349,6 +335,5 @@
                  (buffer-undo! b))))
 
 ;; TODO: Clear stack
-;; TODO: Move buffer-remove! and buffer-join! to start/end interface
 ;; TODO: Add more operations
 ;; TODO: Track current line number in undo stack for ed undo command
