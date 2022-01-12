@@ -27,11 +27,6 @@
 (define (make-stack)
   (%make-stack '()))
 
-(define (stack-reverse! stack)
-  (stack-store-set!
-    stack
-    (reverse (stack-store stack))))
-
 (define (stack-size stack)
   (length (stack-store stack)))
 
