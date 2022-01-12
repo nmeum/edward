@@ -174,6 +174,17 @@
       sindex
       (list joined)))))
 
+(define (buffer-move! buffer start end dest)
+  (let* ((lines (buffer-lines buffer))
+         (sindex (max (dec start) 0))
+         (move  (sublist lines sindex end)))
+    (with-atomic-undo buffer
+      (buffer-remove! buffer start end)
+      (buffer-append!
+        buffer
+        (min dest (length (buffer-lines buffer)))
+        move))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (test-buffer name expected proc)
@@ -270,6 +281,25 @@
                   (buffer-append! b 0 '("foo" "1" "2" "3" "bar"))
                   (buffer-join! b 2 4))))
 
+(test-group "move command"
+  (test-buffer "move to end"
+               '("bar" "baz" "foo")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-move! b 2 3 0)))
+
+  (test-buffer "move to start"
+               '("baz" "foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-move! b 1 2 3)))
+
+  (test-buffer "move single to middle"
+               '("foo" "123" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "123"))
+                 (buffer-move! b 3 3 1))))
+
 (test-group "undo command"
   (test-buffer "undo append"
                '()
@@ -296,13 +326,6 @@
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
                  (buffer-replace! b 1 '("first" "second"))
-                 (buffer-undo! b)))
-
-  (test-buffer "undo join"
-               '("foo" "bar")
-               (lambda (b)
-                 (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-join! b 0 2)
                  (buffer-undo! b)))
 
   (test-buffer "undo append last"
@@ -332,6 +355,20 @@
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
                  (buffer-replace! b 0 '())
+                 (buffer-undo! b)))
+
+  (test-buffer "undo join"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-join! b 0 2)
+                 (buffer-undo! b)))
+
+ (test-buffer "undo move"
+               '("foo" "bar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-move! b 2 3 0)
                  (buffer-undo! b))))
 
 ;; TODO: Clear stack
