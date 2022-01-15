@@ -116,8 +116,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Text-Editor
-  (%make-text-editor filename input buffer line error marks state re
-                     lcmd replace modified? silent? help?)
+  (%make-text-editor filename input buffer line last-line error marks state re
+                     lcmd replace modified? last-modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -127,6 +127,8 @@
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
   (line text-editor-line text-editor-line-set!)
+  ;; Previous line in the buffer.
+  (last-line text-editor-last-line text-editor-last-line-set!)
   ;; Last error message encountered (for h and H command).
   (error text-editor-error text-editor-error-set!)
   ;; Assoc lists of marks for this editor.
@@ -142,6 +144,8 @@
   (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
+  ;; Whether the editor has been modified before the last command was executed.
+  (last-modified? text-editor-last-modified?  text-editor-last-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
   (silent? text-editor-silent?)
   ;; Whether help mode is activated (H command).
@@ -149,7 +153,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h (make-buffer) 0 #f '() #f "" '() '() #f silent? #f)))
+         (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
       ;; TODO: exec-read can raise text editor errors
       ;; but is invoked without an exception handler.
@@ -357,6 +361,29 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Prepare execution of a new text operation.
+
+(define (editor-prepare-change editor)
+  (text-editor-last-modified-set!
+    editor
+    (text-editor-modified? editor))
+  (text-editor-modified-set! editor #t)
+
+  (text-editor-last-line-set!
+    editor
+    (text-editor-line editor)))
+
+;; Undo the last operation on the buffer.
+
+(define (editor-undo! editor)
+  (text-editor-modified-set!
+    editor
+    (text-editor-last-modified? editor))
+  (text-editor-line-set!
+    editor
+    (text-editor-last-line editor))
+  (buffer-undo! (text-editor-buffer editor)))
+
 ;; Returns amount of lines in the buffer.
 
 (define (editor-lines editor)
@@ -366,7 +393,7 @@
 ;; of last inserted line.
 
 (define (editor-append! editor text)
-  (text-editor-modified-set! editor #t)
+  (editor-prepare-change editor)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
     (buffer-append! buf line text)
@@ -376,7 +403,7 @@
 ;; last inserted line.
 
 (define (editor-replace! editor range data)
-  (text-editor-modified-set! editor #t)
+  (editor-prepare-change editor)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-replace! buffer sline eline data)
@@ -385,7 +412,7 @@
 ;; Join lines in given range to single line. Return value is undefined.
 
 (define (editor-join! editor range)
-  (text-editor-modified-set! editor #t)
+  (editor-prepare-change editor)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-join! buffer sline eline)))
@@ -393,7 +420,7 @@
 ;; Remove lines in given range. Return value is undefined.
 
 (define (editor-remove! editor range)
-  (text-editor-modified-set! editor #t)
+  (editor-prepare-change editor)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-remove! buffer sline eline)))
@@ -402,7 +429,7 @@
 ;; the address of the last inserted line.
 
 (define (editor-move! editor range addr)
-  (text-editor-modified-set! editor #t)
+  (editor-prepare-change editor)
   (let-values (((sline eline) (editor-range editor range))
                ((target) (addr->line editor addr))
                ((buffer) (text-editor-buffer editor)))

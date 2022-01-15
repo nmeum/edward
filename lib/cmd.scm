@@ -661,6 +661,16 @@
   parse-addr)
 
 ;;
+; Undo Command
+;;
+
+(define (exec-undo editor)
+  (editor-undo! editor))
+
+(define-file-cmd (undo exec-undo)
+  (parse-cmd-char #\u))
+
+;;
 ; Global Non-Matched Command
 ;;
 
