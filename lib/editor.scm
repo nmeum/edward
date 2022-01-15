@@ -149,7 +149,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" '() '() #f silent? #f)))
+         (e (%make-text-editor filename h (make-buffer) 0 #f '() #f "" '() '() #f silent? #f)))
     (unless (empty-string? filename)
       ;; TODO: exec-read can raise text editor errors
       ;; but is invoked without an exception handler.
@@ -279,6 +279,12 @@
   (when (text-editor-help? editor)
     (println msg)))
 
+;; Reset all file-specific state in the editor.
+
+(define (editor-reset! editor)
+  (text-editor-buffer-set! editor (make-buffer))
+  (text-editor-marks-set! editor '()))
+
 (define (editor-mark-line editor line mark)
   (text-editor-marks-set! editor
     (alist-cons mark line (text-editor-marks editor))))
@@ -333,21 +339,28 @@
         (lambda (l num)
           (if (eq? line l)
             (exit num)))
-        (text-editor-buffer editor)
-        (iota (length (text-editor-buffer editor)) 1))
+        (buffer->list (text-editor-buffer editor))
+        (iota (editor-lines editor) 1))
       #f)))
 
 (define (editor-get-range editor range)
-  (if (null? (text-editor-buffer editor))
+  (if (buffer-empty? (text-editor-buffer editor))
     '()
-    (let-values (((sline eline) (editor-range editor range)))
-      (sublist (text-editor-buffer editor)
-               (dec sline) eline))))
+    (let-values (((sline eline) (editor-range editor range))
+                 ((list) (buffer->list (text-editor-buffer editor))))
+      (sublist list (dec sline) eline))))
 
 (define (editor-in-range editor range addr)
   (let-values (((sline eline) (editor-range editor range))
                ((line) (addr->line editor addr)))
     (and (>= line sline) (< line eline))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Returns amount of lines in the buffer.
+
+(define (editor-lines editor)
+  (buffer-length (text-editor-buffer editor)))
 
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
@@ -356,55 +369,48 @@
   (text-editor-modified-set! editor #t)
   (let ((buf  (text-editor-buffer editor))
         (line (text-editor-line editor)))
-    (text-editor-buffer-set! editor
-                             (append
-                               (take buf line)
-                               text
-                               (drop buf line)))
+    (buffer-append! buf line text)
     (+ line (length text))))
 
 ;; Replace text in given range with given data. Return line number of
 ;; last inserted line.
 
 (define (editor-replace! editor range data)
-  (let ((saddr (addr->line editor (first range))))
-    (editor-remove! editor range)
-    (editor-goto! editor (max 0 (dec saddr)))
-    (editor-append! editor data)))
+  (text-editor-modified-set! editor #t)
+  (let-values (((sline eline) (editor-range editor range))
+               ((buffer) (text-editor-buffer editor)))
+    (buffer-replace! buffer sline eline data)
+    (+ (max 0 (dec sline)) (length data))))
+
+;; Join lines in given range to single line. Return value is undefined.
 
 (define (editor-join! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
-    (text-editor-buffer-set! editor
-      (append
-        (take buffer (dec sline))
-        (list (apply string-append (sublist buffer (dec sline) eline)))
-        (drop buffer eline)))))
+    (buffer-join! buffer sline eline)))
+
+;; Remove lines in given range. Return value is undefined.
 
 (define (editor-remove! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
-    (text-editor-buffer-set! editor
-      (append
-        (sublist buffer 0 (dec sline))
-        (sublist buffer eline (length buffer))))))
+    (buffer-remove! buffer sline eline)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (%addr->line editor off line)
-  (let* ((buffer (text-editor-buffer editor))
-         (total-off (apply + off))
+  (let* ((total-off (apply + off))
          (nline (+ total-off line)))
     (if (or
           (> 0 nline)
-          (> nline (length buffer)))
+          (> nline (editor-lines editor)))
       (editor-raise "invalid final address value")
       nline)))
 
 (define (match-line direction editor bre)
-  (let ((buffer (text-editor-buffer editor))
+  (let ((lines (buffer->list (text-editor-buffer editor)))
         (regex (make-bre (editor-regex editor bre)))
         (cont-proc (match direction
                           ('forward inc)
@@ -416,12 +422,12 @@
             (when (bre-match? regex elem)
               (exit (inc idx))))
           cont-proc
-          buffer
+          lines
           ;; Forward/Backward search start at next/previous line.
           (modulo (cont-proc
                     ;; Convert line number to index.
                     (max (dec (text-editor-line editor)) 0))
-                  (length (text-editor-buffer editor))))
+                  (editor-lines editor)))
         (editor-raise "no match")))))
 
 (define addr->line
@@ -429,7 +435,7 @@
     ((e ('(current-line) off))
      (%addr->line e off (text-editor-line e)))
     ((e ('(last-line) off))
-     (%addr->line e off (length (text-editor-buffer e))))
+     (%addr->line e off (editor-lines e)))
     ((e (('nth-line . line) off))
      (%addr->line e off line))
     ((e (('marked-line . mark) off))

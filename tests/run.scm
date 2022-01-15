@@ -31,6 +31,7 @@
 (include-relative "parse-addr.scm")
 (include-relative "parse-cmd.scm")
 (include-relative "replace.scm")
+(include-relative "buffer.scm")
 
 ;; Exit with non-zero exit status if some test failed.
 (test-exit)

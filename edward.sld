@@ -21,12 +21,16 @@
   (export make-text-editor editor-start)
   (export make-bre parse-replace regex-replace)
 
+  (export make-buffer buffer->list buffer-append! buffer-remove!
+          buffer-undo! buffer-replace! buffer-join! buffer-move!)
+
   ;; Export these macros to avoid a "indirect export" compiler warning
   (export define-file-cmd define-print-cmd define-input-cmd
           define-edit-cmd define-confirm)
 
   (include "lib/util.scm"
            "lib/ffi.scm"
+           "lib/buffer.scm"
            "lib/parse.scm"
            "lib/parse-util.scm"
            "lib/parse-addr.scm"

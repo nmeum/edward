@@ -397,7 +397,7 @@
       (text-editor-filename-set! editor f))
 
     (editor-append! editor (car in))
-    (editor-goto! editor (length (text-editor-buffer editor)))
+    (editor-goto! editor (editor-lines editor))
 
     (editor-verbose editor (cdr in))))
 
@@ -460,9 +460,9 @@
 (define (exec-delete editor range)
   (let ((saddr (addr->line editor (first range))))
     (editor-remove! editor range)
-    (if (null? (text-editor-buffer editor))
+    (if (buffer-empty? (text-editor-buffer editor))
       (editor-goto! editor 0)
-      (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
+      (editor-goto! editor (min (editor-lines editor) saddr)))))
 
 (define-edit-cmd (delete exec-delete)
   (parse-default parse-addr-range (make-range))
@@ -481,9 +481,7 @@
 ;;
 
 (define (exec-edit editor filename)
-  (text-editor-buffer-set! editor '())
-  (text-editor-marks-set! editor '())
-
+  (editor-reset! editor)
   (exec-read editor (make-addr '(last-line))
              (editor-filename editor filename))
 
@@ -640,8 +638,7 @@
     (let ((data (editor-get-range editor range))
           (target (addr->line editor addr)))
       (exec-delete editor range)
-      (editor-goto! editor (min target
-                                (length (text-editor-buffer editor))))
+      (editor-goto! editor (min target (editor-lines editor)))
 
       (let ((last-inserted (editor-append! editor data)))
         (editor-goto! editor last-inserted)))))
@@ -848,7 +845,7 @@
     (if (zero? line)
       (editor-raise "invalid address")
       (begin
-        (println (list-ref (text-editor-buffer editor) (dec line)))
+        (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
         (editor-goto! editor line)))))
 
 (define-file-cmd (null exec-null)
