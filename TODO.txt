@@ -1,4 +1,3 @@
-* Implement editor-move!
 * Fix use of substitute command with global command
 	* Global command executes substitute command
 	  for each selected line

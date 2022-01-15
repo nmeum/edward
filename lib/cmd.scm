@@ -635,13 +635,7 @@
 (define (exec-move editor range addr)
   (if (editor-in-range editor range addr)
     (editor-raise "invalid move destination")
-    (let ((data (editor-get-range editor range))
-          (target (addr->line editor addr)))
-      (exec-delete editor range)
-      (editor-goto! editor (min target (editor-lines editor)))
-
-      (let ((last-inserted (editor-append! editor data)))
-        (editor-goto! editor last-inserted)))))
+    (editor-goto! editor (editor-move! editor range addr))))
 
 (define-edit-cmd (move exec-move)
   (parse-default parse-addr-range (make-range))

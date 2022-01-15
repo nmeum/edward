@@ -398,6 +398,19 @@
                ((buffer) (text-editor-buffer editor)))
     (buffer-remove! buffer sline eline)))
 
+;; Move lines in given range to given address. Returns
+;; the address of the last inserted line.
+
+(define (editor-move! editor range addr)
+  (text-editor-modified-set! editor #t)
+  (let-values (((sline eline) (editor-range editor range))
+               ((target) (addr->line editor addr))
+               ((buffer) (text-editor-buffer editor)))
+    (buffer-move! buffer sline eline target)
+    (min
+      (editor-lines editor)
+      (+ target (inc (- eline sline))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (%addr->line editor off line)
