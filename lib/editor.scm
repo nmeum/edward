@@ -379,9 +379,12 @@
   (text-editor-modified-set!
     editor
     (text-editor-last-modified? editor))
-  (text-editor-line-set!
-    editor
-    (text-editor-last-line editor))
+
+  (let ((cur-line (text-editor-line editor)))
+    (text-editor-line-set!
+      editor
+      (text-editor-last-line editor))
+    (text-editor-last-line-set! editor cur-line))
   (buffer-undo! (text-editor-buffer editor)))
 
 ;; Returns amount of lines in the buffer.
