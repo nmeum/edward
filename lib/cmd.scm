@@ -572,9 +572,7 @@
 
 (define (exec-insert editor addr data)
   (let ((line (addr->line editor addr)))
-    (editor-goto! editor (max (dec line) 0))
-    (let ((last-inserted (editor-append! editor data)))
-      (editor-goto! editor last-inserted))))
+    (editor-goto! editor (editor-insert! editor line data))))
 
 (define-input-cmd (insert exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
