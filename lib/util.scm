@@ -130,3 +130,23 @@
   (fold-right (lambda (x ys)
                 (string-append x "\n" ys))
               "" buffer))
+
+;; Read given file as a list of lines. Returns pair of retrieved
+;; lines and total amount of bytes read from the file (including
+;; newlines).
+
+(define (file->lines filename)
+  (define (%file->lines port lines numbytes)
+    (let ((l (read-line port)))
+      (if (eof-object? l)
+        (cons lines numbytes)
+        (%file->lines
+          port
+          (append lines (list l))
+          ;; inc for newline stripped by read-line
+          ;; XXX: Buggy if last line is not not terminated with \n.
+          (inc (+ numbytes (count-bytes l)))))))
+
+  (call-with-input-file filename
+    (lambda (port)
+      (%file->lines port '() 0))))

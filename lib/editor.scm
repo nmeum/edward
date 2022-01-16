@@ -1,25 +1,3 @@
-;; This file implements a text editor on top of a line-buffer. The
-;; buffer is just a list of string where each string represents a
-;; line, newlines not included.
-
-(define (file->buffer filename)
-  (define (%file->buffer port lines numbytes)
-    (let ((l (read-line port)))
-      (if (eof-object? l)
-        (cons lines numbytes)
-        (%file->buffer
-          port
-          (append lines (list l))
-          ;; inc for newline stripped by read-line
-          ;; XXX: Buggy if last line is not not terminated with \n.
-          (inc (+ numbytes (count-bytes l)))))))
-
-  (call-with-input-file filename
-    (lambda (port)
-      (%file->buffer port '() 0))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (define-record-type Editor-Irritant
   (make-editor-irritant)
   editor-irritant?)
