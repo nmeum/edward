@@ -1,0 +1,12 @@
+v/foo/a\
+  append1\
+  append2\
+.\
+i\
+  insert1\
+.
+.=
+1,$p
+u
+.=
+w
