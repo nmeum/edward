@@ -2,9 +2,10 @@
 
 The goal of this project is creating an implementation of the
 [`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
-[CHICKEN Scheme][chicken]. The majority of ed commands have been
-implemented, *only the undo command is missing at the moment* but will
-hopefully be implemented soonish.
+[CHICKEN Scheme][chicken]. Theoretically, all commands mandated by POSIX
+have been implemented for now. However, this software is still in early
+stages of development thus many commands have known bugs and
+limitations.
 
 Apart from commands, some behaviour mandated by the standard is
 currently not implemented. For example, handling of asynchronous events

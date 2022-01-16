@@ -24,10 +24,11 @@
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
         (let ((cur (make-range)))
+          ;; TODO: Rewrite using get-command-parsers
           (match x
-            (#\l (list exec-list cur))
-            (#\n (list exec-number cur))
-            (#\p (list exec-print cur))))))))
+            (#\l (make-cmd 'list exec-list (list cur)))
+            (#\n (make-cmd 'number exec-number (list cur)))
+            (#\p (make-cmd 'print exec-print (list cur)))))))))
 
 ;; Edward distinguishes four command types: (1) print commands, i.e. the
 ;; l, n, and p commands, which can be used as a suffix to (2) editor
@@ -43,14 +44,13 @@
 ;; parser created by the macro returns the handler and the arguments
 ;; passed to the command on a succesfull parse.
 
-(define (cmd-with-print handler return-value cmd-args print-args)
-  (cons
+(define (cmd-with-print symbol handler cmd-args print-cmd)
+  (make-cmd
+    symbol
     (lambda (editor . args)
-      (editor-exec editor (cons handler args))
-      (let ((pcmd print-args))
-        (when pcmd
-          (editor-exec editor pcmd)))
-      return-value)
+      (editor-exec editor (make-cmd symbol handler args))
+      (when print-cmd
+        (editor-exec editor print-cmd)))
     cmd-args))
 
 (define-syntax define-file-cmd
@@ -62,9 +62,7 @@
            BODY ...
            (parse-ignore parse-newline))
          (lambda (args)
-           (cons
-             (with-ret HANDLER (quote HANDLER))
-             args)))))))
+           (make-cmd (quote NAME) HANDLER args)))))))
 
 (define-syntax define-print-cmd
   (syntax-rules ()
@@ -77,9 +75,7 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cons
-             (with-ret HANDLER (quote HANDLER))
-             (car args))))))))
+           (make-cmd (quote NAME) HANDLER (car args))))))))
 
 (define-syntax define-input-cmd
   (syntax-rules ()
@@ -94,7 +90,9 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER (quote HANDLER)
+           (cmd-with-print
+             (quote NAME)
+             HANDLER
              (append (first args) (list (third args)))
              (second args))))))))
 
@@ -109,21 +107,21 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER (quote HANDLER)
-             (first args)
-             (second args))))))))
+           (cmd-with-print (quote NAME) HANDLER
+                           (first args) (second args))))))))
 
 ;; If changes have been made to the current buffer since the last write
 ;; of the buffer to a file, then ed should warn the user before the
 ;; buffer is destroyed. Warnings must be confirmed by repeating the
 ;; command which destroys the buffer.
 
+;; TODO: Refactor
 (define-syntax define-confirm
   (syntax-rules ()
-    ((define-confirm (NAME PROC))
+    ((define-confirm (NAME FOR PROC))
      (define (NAME editor . args)
        (if (or
-             (eqv? (text-editor-prevcmd editor) (quote NAME))
+             (eqv? (text-editor-prevcmd editor) (quote FOR))
              (not (text-editor-modified? editor)))
          (apply PROC editor args)
          ;; XXX: Can't use error here as the return value is not propagated then.
@@ -349,16 +347,16 @@
           (lambda ()
             (if fn-cmd?
               (pipe-from fn)
-              (file->buffer fn))))))))
+              (file->lines fn))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Append Comand
 
 (define (exec-append editor addr data)
-  (editor-goto! editor addr)
-  (let* ((last-inserted (editor-append! editor data)))
-    (editor-goto! editor last-inserted)))
+  (editor-goto!
+    editor
+    (editor-append! editor addr data)))
 
 (define-input-cmd (append exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
@@ -374,7 +372,9 @@
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
 (define (exec-change editor range data)
-  (editor-goto! editor (editor-replace! editor range data)))
+  (editor-goto!
+    editor
+    (editor-replace! editor range data)))
 
 (define-input-cmd (change exec-change)
   (parse-default parse-addr-range (make-range))
@@ -385,7 +385,6 @@
 ;;
 
 (define (exec-read editor addr filename)
-  (editor-goto! editor addr)
   (let* ((f  (editor-filename editor filename))
          (in (read-from f)))
     (unless in
@@ -396,8 +395,8 @@
           (not (filename-cmd? f)))
       (text-editor-filename-set! editor f))
 
-    (editor-append! editor (car in))
-    (editor-goto! editor (length (text-editor-buffer editor)))
+    (editor-append! editor addr (car in))
+    (editor-goto! editor (editor-lines editor))
 
     (editor-verbose editor (cdr in))))
 
@@ -460,9 +459,9 @@
 (define (exec-delete editor range)
   (let ((saddr (addr->line editor (first range))))
     (editor-remove! editor range)
-    (if (null? (text-editor-buffer editor))
+    (if (buffer-empty? (text-editor-buffer editor))
       (editor-goto! editor 0)
-      (editor-goto! editor (min (length (text-editor-buffer editor)) saddr)))))
+      (editor-goto! editor (min (editor-lines editor) saddr)))))
 
 (define-edit-cmd (delete exec-delete)
   (parse-default parse-addr-range (make-range))
@@ -472,7 +471,7 @@
 ; Edit Command
 ;;
 
-(define-confirm (%exec-edit exec-edit))
+(define-confirm (%exec-edit %edit exec-edit))
 (define-file-cmd (%edit %exec-edit)
   (parse-file-cmd #\e))
 
@@ -481,9 +480,7 @@
 ;;
 
 (define (exec-edit editor filename)
-  (text-editor-buffer-set! editor '())
-  (text-editor-marks-set! editor '())
-
+  (editor-reset! editor)
   (exec-read editor (make-addr '(last-line))
              (editor-filename editor filename))
 
@@ -573,10 +570,12 @@
 ;;
 
 (define (exec-insert editor addr data)
-  (let ((line (addr->line editor addr)))
-    (editor-goto! editor (max (dec line) 0))
-    (let ((last-inserted (editor-append! editor data)))
-      (editor-goto! editor last-inserted))))
+  (let* ((line (addr->line editor addr))
+         (sline (max (dec line) 0))
+         (saddr (make-addr (cons 'nth-line sline))))
+    (editor-goto!
+      editor
+      (editor-append! editor saddr data))))
 
 (define-input-cmd (insert exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
@@ -637,14 +636,7 @@
 (define (exec-move editor range addr)
   (if (editor-in-range editor range addr)
     (editor-raise "invalid move destination")
-    (let ((data (editor-get-range editor range))
-          (target (addr->line editor addr)))
-      (exec-delete editor range)
-      (editor-goto! editor (min target
-                                (length (text-editor-buffer editor))))
-
-      (let ((last-inserted (editor-append! editor data)))
-        (editor-goto! editor last-inserted)))))
+    (editor-goto! editor (editor-move! editor range addr))))
 
 (define-edit-cmd (move exec-move)
   (parse-default parse-addr-range (make-range))
@@ -660,14 +652,24 @@
     (editor-raise "invalid copy destination")
     (let ((data (editor-get-range editor range))
           (target (addr->line editor addr)))
-      (editor-goto! editor addr)
-      (let ((last-inserted (editor-append! editor data)))
-        (editor-goto! editor last-inserted)))))
+      (editor-goto!
+        editor
+        (editor-append! editor addr data)))))
 
 (define-edit-cmd (copy exec-copy)
   (parse-default parse-addr-range (make-range))
   (parse-cmd-char #\t)
   parse-addr)
+
+;;
+; Undo Command
+;;
+
+(define (exec-undo editor)
+  (editor-undo! editor))
+
+(define-file-cmd (undo exec-undo)
+  (parse-cmd-char #\u))
 
 ;;
 ; Global Non-Matched Command
@@ -710,7 +712,7 @@
 
 (define (exec-write editor range filename)
   (let ((fn (editor-filename editor filename))
-        (data (buffer->string (editor-get-range editor range))))
+        (data (lines->string (editor-get-range editor range))))
     (unless (write-to fn data)
       (editor-raise "cannot open output file"))
     ;; Assuming write-to *always* writes all bytes.
@@ -789,7 +791,7 @@
 ; Quit Command
 ;;
 
-(define-confirm (%exec-quit exec-quit))
+(define-confirm (%exec-quit %quit exec-quit))
 (define-file-cmd (%quit %exec-quit)
   (parse-cmd-char #\q))
 
@@ -848,7 +850,7 @@
     (if (zero? line)
       (editor-raise "invalid address")
       (begin
-        (println (list-ref (text-editor-buffer editor) (dec line)))
+        (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
         (editor-goto! editor line)))))
 
 (define-file-cmd (null exec-null)

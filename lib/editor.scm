@@ -1,30 +1,3 @@
-;; This file implements a text editor on top of a line-buffer. The
-;; buffer is just a list of string where each string represents a
-;; line, newlines not included.
-
-(define (file->buffer filename)
-  (define (%file->buffer port lines numbytes)
-    (let ((l (read-line port)))
-      (if (eof-object? l)
-        (cons lines numbytes)
-        (%file->buffer
-          port
-          (append lines (list l))
-          ;; inc for newline stripped by read-line
-          ;; XXX: Buggy if last line is not not terminated with \n.
-          (inc (+ numbytes (count-bytes l)))))))
-
-  (call-with-input-file filename
-    (lambda (port)
-      (%file->buffer port '() 0))))
-
-(define (buffer->string buffer)
-  (fold-right (lambda (x ys)
-                (string-append x "\n" ys))
-              "" buffer))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (define-record-type Editor-Irritant
   (make-editor-irritant)
   editor-irritant?)
@@ -115,9 +88,32 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-record-type Editor-Command
+  (make-cmd symbol proc args)
+  editor-cmd?
+  (symbol cmd-symbol)
+  (proc cmd-proc)
+  (args cmd-args))
+
+(define (cmd-reversible? cmd)
+  (member (cmd-symbol cmd)
+          '(append change delete global insert join move
+            read substitute copy global-unmatched interactive
+            interactive-unmatched)))
+
+(define (editor-exec editor cmd)
+  (apply (cmd-proc cmd) editor (cmd-args cmd)))
+
+(define (editor-exec-cmdlist editor cmds)
+  (for-each (lambda (cmd)
+              (editor-exec editor cmd))
+            cmds))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Text-Editor
-  (%make-text-editor filename input buffer line error marks state re
-                     lcmd replace modified? silent? help?)
+  (%make-text-editor filename input buffer line last-line error marks state re
+                     lcmd replace modified? last-modified? silent? help?)
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
@@ -127,6 +123,8 @@
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
   (line text-editor-line text-editor-line-set!)
+  ;; Previous line in the buffer.
+  (last-line text-editor-last-line text-editor-last-line-set!)
   ;; Last error message encountered (for h and H command).
   (error text-editor-error text-editor-error-set!)
   ;; Assoc lists of marks for this editor.
@@ -142,6 +140,8 @@
   (replace text-editor-last-replace text-editor-last-replace-set!)
   ;; Whether the editor has been modified since the last write.
   (modified? text-editor-modified? text-editor-modified-set!)
+  ;; Whether the editor has been modified before the last command was executed.
+  (last-modified? text-editor-last-modified?  text-editor-last-modified-set!)
   ;; Whether the editor is in silent mode (ed -s option).
   (silent? text-editor-silent?)
   ;; Whether help mode is activated (H command).
@@ -149,7 +149,7 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-input-handler prompt))
-         (e (%make-text-editor filename h '() 0 #f '() #f "" '() '() #f silent? #f)))
+         (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
       ;; TODO: exec-read can raise text editor errors
       ;; but is invoked without an exception handler.
@@ -184,37 +184,21 @@
               (k (handle-error editor line (error-object-message eobj)))
               (raise eobj)))
           (lambda ()
-            (text-editor-prevcmd-set!
-              editor
-              (editor-exec editor cmd)))))))
+            (editor-exec editor cmd)
+            (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
 
   (input-handler-repl
     (text-editor-input-handler editor)
-    execute-command
+    (lambda (line cmd)
+      (when (cmd-reversible? cmd)
+        (editor-snapshot editor))
+      (execute-command line cmd))
     (lambda (line reason)
       (handle-error editor line reason))))
 
 (define (editor-interactive editor)
   (let ((h (text-editor-input-handler editor)))
     (input-handler-interactive h)))
-
-;; Execute a text editor command. A text editor command is a list
-;; where the first element is a procedure and the remaining elements are
-;; arguments to that procedure.
-;;
-;; The procedure takes an editor record as the first argument and is
-;; executed with the given editor and the given additional arguments.
-
-(define (editor-exec editor cmd)
-  (apply (car cmd) editor (cdr cmd)))
-
-;; Execute a list of commands (e.g. a command list as used by the
-;; ed global command).
-
-(define (editor-exec-cmdlist editor cmds)
-  (for-each (lambda (cmd)
-              (editor-exec editor cmd))
-            cmds))
 
 ;; Returns the last executed shell command or raises an error if none.
 
@@ -279,6 +263,12 @@
   (when (text-editor-help? editor)
     (println msg)))
 
+;; Reset all file-specific state in the editor.
+
+(define (editor-reset! editor)
+  (text-editor-buffer-set! editor (make-buffer))
+  (text-editor-marks-set! editor '()))
+
 (define (editor-mark-line editor line mark)
   (text-editor-marks-set! editor
     (alist-cons mark line (text-editor-marks editor))))
@@ -294,11 +284,7 @@
 ;; line. Target can either be a line number or an address.
 
 (define (editor-goto! editor target)
-  (if (number? target)
-    ;; Target is a line number.
-    (text-editor-line-set! editor target)
-    ;; Else: Target is an address.
-    (text-editor-line-set! editor (addr->line editor target))))
+  (text-editor-line-set! editor (->line editor target)))
 
 (define (editor-range editor range)
   (define (%editor-range editor start end)
@@ -333,78 +319,118 @@
         (lambda (l num)
           (if (eq? line l)
             (exit num)))
-        (text-editor-buffer editor)
-        (iota (length (text-editor-buffer editor)) 1))
+        (buffer->list (text-editor-buffer editor))
+        (iota (editor-lines editor) 1))
       #f)))
 
 (define (editor-get-range editor range)
-  (if (null? (text-editor-buffer editor))
+  (if (buffer-empty? (text-editor-buffer editor))
     '()
-    (let-values (((sline eline) (editor-range editor range)))
-      (sublist (text-editor-buffer editor)
-               (dec sline) eline))))
+    (let-values (((sline eline) (editor-range editor range))
+                 ((list) (buffer->list (text-editor-buffer editor))))
+      (sublist list (dec sline) eline))))
 
 (define (editor-in-range editor range addr)
   (let-values (((sline eline) (editor-range editor range))
                ((line) (addr->line editor addr)))
     (and (>= line sline) (< line eline))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Prepare execution of a new undoable operation.
+
+(define (editor-snapshot editor)
+  (text-editor-last-modified-set!
+    editor
+    (text-editor-modified? editor))
+
+  (text-editor-last-line-set!
+    editor
+    (text-editor-line editor))
+
+  (buffer-snapshot (text-editor-buffer editor)))
+
+;; Undo the last operation on the buffer.
+
+(define (editor-undo! editor)
+  (text-editor-modified-set!
+    editor
+    (text-editor-last-modified? editor))
+
+  (let ((cur-line (text-editor-line editor)))
+    (text-editor-line-set!
+      editor
+      (text-editor-last-line editor))
+    (text-editor-last-line-set! editor cur-line))
+  (buffer-undo! (text-editor-buffer editor)))
+
+;; Returns amount of lines in the buffer.
+
+(define (editor-lines editor)
+  (buffer-length (text-editor-buffer editor)))
+
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
-(define (editor-append! editor text)
+(define (editor-append! editor addr text)
   (text-editor-modified-set! editor #t)
   (let ((buf  (text-editor-buffer editor))
-        (line (text-editor-line editor)))
-    (text-editor-buffer-set! editor
-                             (append
-                               (take buf line)
-                               text
-                               (drop buf line)))
+        (line (addr->line editor addr)))
+    (buffer-append! buf line text)
     (+ line (length text))))
 
 ;; Replace text in given range with given data. Return line number of
 ;; last inserted line.
 
 (define (editor-replace! editor range data)
-  (let ((saddr (addr->line editor (first range))))
-    (editor-remove! editor range)
-    (editor-goto! editor (max 0 (dec saddr)))
-    (editor-append! editor data)))
+  (text-editor-modified-set! editor #t)
+  (let-values (((sline eline) (editor-range editor range))
+               ((buffer) (text-editor-buffer editor)))
+    (buffer-replace! buffer sline eline data)
+    (+ (max 0 (dec sline)) (length data))))
+
+;; Join lines in given range to single line. Return value is undefined.
 
 (define (editor-join! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
-    (text-editor-buffer-set! editor
-      (append
-        (take buffer (dec sline))
-        (list (apply string-append (sublist buffer (dec sline) eline)))
-        (drop buffer eline)))))
+    (buffer-join! buffer sline eline)))
+
+;; Remove lines in given range. Return value is undefined.
 
 (define (editor-remove! editor range)
   (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
-    (text-editor-buffer-set! editor
-      (append
-        (sublist buffer 0 (dec sline))
-        (sublist buffer eline (length buffer))))))
+    (buffer-remove! buffer sline eline)))
+
+;; Move lines in given range to given address. Returns
+;; the address of the last inserted line.
+
+(define (editor-move! editor range addr)
+  (text-editor-modified-set! editor #t)
+  (let-values (((sline eline) (editor-range editor range))
+               ((target) (addr->line editor addr))
+               ((buffer) (text-editor-buffer editor)))
+    (buffer-move! buffer sline eline target)
+    (min
+      (editor-lines editor)
+      (+ target (inc (- eline sline))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (%addr->line editor off line)
-  (let* ((buffer (text-editor-buffer editor))
-         (total-off (apply + off))
+  (let* ((total-off (apply + off))
          (nline (+ total-off line)))
     (if (or
           (> 0 nline)
-          (> nline (length buffer)))
+          (> nline (editor-lines editor)))
       (editor-raise "invalid final address value")
       nline)))
 
 (define (match-line direction editor bre)
-  (let ((buffer (text-editor-buffer editor))
+  (let ((lines (buffer->list (text-editor-buffer editor)))
         (regex (make-bre (editor-regex editor bre)))
         (cont-proc (match direction
                           ('forward inc)
@@ -416,12 +442,12 @@
             (when (bre-match? regex elem)
               (exit (inc idx))))
           cont-proc
-          buffer
+          lines
           ;; Forward/Backward search start at next/previous line.
           (modulo (cont-proc
                     ;; Convert line number to index.
                     (max (dec (text-editor-line editor)) 0))
-                  (length (text-editor-buffer editor))))
+                  (editor-lines editor)))
         (editor-raise "no match")))))
 
 (define addr->line
@@ -429,7 +455,7 @@
     ((e ('(current-line) off))
      (%addr->line e off (text-editor-line e)))
     ((e ('(last-line) off))
-     (%addr->line e off (length (text-editor-buffer e))))
+     (%addr->line e off (editor-lines e)))
     ((e (('nth-line . line) off))
      (%addr->line e off line))
     ((e (('marked-line . mark) off))
@@ -440,6 +466,13 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
+
+(define (->line editor obj)
+  (if (number? obj)
+    ;; obj already is a line number.
+    obj
+    ;; else: assume obj is an address.
+    (addr->line editor obj)))
 
 ;; Return list of line numbers for the given range.
 

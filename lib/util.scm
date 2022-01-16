@@ -6,13 +6,6 @@
 (define (alist-values alist)
   (map cdr alist))
 
-;; Return a procedure executing proc and then returing ret.
-
-(define (with-ret proc ret)
-  (lambda (arg . args)
-    (apply proc arg args)
-    ret))
-
 ;; Like display but prints multiple objects and adds trailing newline.
 
 (define (fprintln port . objs)
@@ -123,3 +116,30 @@
 
 (define (count-bytes str)
   (bytevector-length (string->utf8 str)))
+
+;; Converts list of lines to newline seperated string.
+
+(define (lines->string buffer)
+  (fold-right (lambda (x ys)
+                (string-append x "\n" ys))
+              "" buffer))
+
+;; Read given file as a list of lines. Returns pair of retrieved
+;; lines and total amount of bytes read from the file (including
+;; newlines).
+
+(define (file->lines filename)
+  (define (%file->lines port lines numbytes)
+    (let ((l (read-line port)))
+      (if (eof-object? l)
+        (cons lines numbytes)
+        (%file->lines
+          port
+          (append lines (list l))
+          ;; inc for newline stripped by read-line
+          ;; XXX: Buggy if last line is not not terminated with \n.
+          (inc (+ numbytes (count-bytes l)))))))
+
+  (call-with-input-file filename
+    (lambda (port)
+      (%file->lines port '() 0))))
