@@ -304,11 +304,7 @@
 ;; line. Target can either be a line number or an address.
 
 (define (editor-goto! editor target)
-  (if (number? target)
-    ;; Target is a line number.
-    (text-editor-line-set! editor target)
-    ;; Else: Target is an address.
-    (text-editor-line-set! editor (addr->line editor target))))
+  (text-editor-line-set! editor (->line editor target)))
 
 (define (editor-range editor range)
   (define (%editor-range editor start end)
@@ -499,6 +495,13 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
+
+(define (->line editor obj)
+  (if (number? obj)
+    ;; obj already is a line number.
+    obj
+    ;; else: assume obj is an address.
+    (addr->line editor obj)))
 
 ;; Return list of line numbers for the given range.
 
