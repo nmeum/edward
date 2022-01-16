@@ -340,7 +340,9 @@
 
   (text-editor-last-line-set!
     editor
-    (text-editor-line editor)))
+    (text-editor-line editor))
+
+  (buffer-snapshot (text-editor-buffer editor)))
 
 ;; Undo the last operation on the buffer.
 

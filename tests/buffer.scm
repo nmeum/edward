@@ -128,6 +128,7 @@
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-snapshot b)
                  (buffer-remove! b 2 3)
                  (buffer-undo! b)))
 
@@ -142,6 +143,7 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-replace! b 1 2 '("first" "second"))
                  (buffer-undo! b)))
 
@@ -149,6 +151,7 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-append! b 2 '("second line"))
                  (buffer-undo! b)))
 
@@ -156,6 +159,7 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-replace! b 2 2 '("second line"))
                  (buffer-undo! b)))
 
@@ -163,6 +167,7 @@
                '("test" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-replace! b 1 1 '("test"))
                  (buffer-undo! b)   ;; undo replace
                  (buffer-undo! b))) ;; undo undo
@@ -171,6 +176,7 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-replace! b 0 0 '())
                  (buffer-undo! b)))
 
@@ -178,6 +184,7 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-snapshot b)
                  (buffer-join! b 0 2)
                  (buffer-undo! b)))
 
@@ -185,5 +192,6 @@
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-snapshot b)
                  (buffer-move! b 2 3 0)
                  (buffer-undo! b))))

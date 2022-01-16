@@ -6,8 +6,14 @@
 (define (make-stack)
   (%make-stack '()))
 
+(define (stack-clear! stack)
+  (stack-store-set! stack '()))
+
 (define (stack-size stack)
   (length (stack-store stack)))
+
+(define (stack-empty? stack)
+  (zero? (stack-size stack)))
 
 (define (stack-push stack elem)
   (stack-store-set!
@@ -94,12 +100,24 @@
                           sline
                           end))))))
 
-;; Undo last operation on the buffer (itself reversible).
+;; Create a snapshot of the current editor state. The editor can be
+;; reverted back to this snapshot using the buffer-undo! procedure.
+
+(define (buffer-snapshot buffer)
+  (stack-clear! (buffer-undo-stack buffer)))
+
+;; Revert back to the last snapshot.
 
 (define (buffer-undo! buffer)
-   (let* ((stk (buffer-undo-stack buffer))
-          (undo-proc (stack-pop stk)))
-     (undo-proc buffer)))
+  (define (%buffer-undo! buffer procs)
+    (for-each (lambda (proc)
+                (proc buffer))
+              procs))
+
+  (let* ((stk (buffer-undo-stack buffer))
+         (stksiz (stack-size stk))
+         (procs (stack-pops stk stksiz)))
+    (%buffer-undo! buffer procs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -107,60 +125,28 @@
 ;; undo stack. That is, the following invocation of buffer-undo! will
 ;; undo all commands executed in the body at once.
 
-(define-syntax with-atomic-undo
-  (syntax-rules ()
-    ((with-atomic-undo BUF BODY ...)
-     (let* ((stack (buffer-undo-stack BUF))
-            (oldsiz (stack-size stack)))
-
-       BODY ...
-
-       ;; Combine undo procedures of operations executed in BODY
-       ;; to a single undo procedure and pop them from the stack.
-       (let* ((newsiz (stack-size stack))
-              (diff (- newsiz oldsiz))
-              (procs (stack-pops stack diff)))
-         (buffer-register-undo BUF
-           (lambda (buffer)
-             (for-each (lambda (proc)
-                         (proc buffer))
-                       procs)
-
-             ;; Executed undo procedures add new procedures to the undo
-             ;; stack to undo them, these need to be combined into a
-             ;; single procedure again.
-             (let ((procs (stack-pops stack diff)))
-               (buffer-register-undo BUF
-                (lambda (buffer)
-                  (for-each (lambda (proc)
-                              (proc buffer))
-                            procs)))))))))))
-
 (define (buffer-replace! buffer start end text)
   (let* ((sline (max (dec start) 0))
          (cap (- (buffer-length buffer) sline)))
-    (with-atomic-undo buffer
-      (buffer-remove! buffer start end)
-      (buffer-append! buffer sline text))))
+    (buffer-remove! buffer start end)
+    (buffer-append! buffer sline text)))
 
 (define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
          (joined (apply string-append (sublist lines sindex end))))
-  (with-atomic-undo buffer
     (buffer-remove! buffer start end)
     (buffer-append!
       buffer
       sindex
-      (list joined)))))
+      (list joined))))
 
 (define (buffer-move! buffer start end dest)
   (let* ((lines (buffer-lines buffer))
          (sindex (max (dec start) 0))
          (move  (sublist lines sindex end)))
-    (with-atomic-undo buffer
-      (buffer-remove! buffer start end)
-      (buffer-append!
-        buffer
-        (min dest (length (buffer-lines buffer)))
-        move))))
+    (buffer-remove! buffer start end)
+    (buffer-append!
+      buffer
+      (min dest (length (buffer-lines buffer)))
+      move)))
