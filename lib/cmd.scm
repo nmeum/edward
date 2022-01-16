@@ -356,9 +356,9 @@
 ;; Append Comand
 
 (define (exec-append editor addr data)
-  (editor-goto! editor addr)
-  (let* ((last-inserted (editor-append! editor data)))
-    (editor-goto! editor last-inserted)))
+  (editor-goto!
+    editor
+    (editor-append! editor addr data)))
 
 (define-input-cmd (append exec-append)
   (parse-default parse-addr (make-addr '(current-line)))
@@ -374,7 +374,9 @@
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
 (define (exec-change editor range data)
-  (editor-goto! editor (editor-replace! editor range data)))
+  (editor-goto!
+    editor
+    (editor-replace! editor range data)))
 
 (define-input-cmd (change exec-change)
   (parse-default parse-addr-range (make-range))
@@ -385,7 +387,6 @@
 ;;
 
 (define (exec-read editor addr filename)
-  (editor-goto! editor addr)
   (let* ((f  (editor-filename editor filename))
          (in (read-from f)))
     (unless in
@@ -396,7 +397,7 @@
           (not (filename-cmd? f)))
       (text-editor-filename-set! editor f))
 
-    (editor-append! editor (car in))
+    (editor-append! editor addr (car in))
     (editor-goto! editor (editor-lines editor))
 
     (editor-verbose editor (cdr in))))
@@ -571,8 +572,12 @@
 ;;
 
 (define (exec-insert editor addr data)
-  (let ((line (addr->line editor addr)))
-    (editor-goto! editor (editor-insert! editor line data))))
+  (let* ((line (addr->line editor addr))
+         (sline (max (dec line) 0))
+         (saddr (make-addr (cons 'nth-line sline))))
+    (editor-goto!
+      editor
+      (editor-append! editor saddr data))))
 
 (define-input-cmd (insert exec-insert)
   (parse-default parse-addr (make-addr '(current-line)))
@@ -649,9 +654,9 @@
     (editor-raise "invalid copy destination")
     (let ((data (editor-get-range editor range))
           (target (addr->line editor addr)))
-      (editor-goto! editor addr)
-      (let ((last-inserted (editor-append! editor data)))
-        (editor-goto! editor last-inserted)))))
+      (editor-goto!
+        editor
+        (editor-append! editor addr data)))))
 
 (define-edit-cmd (copy exec-copy)
   (parse-default parse-addr-range (make-range))

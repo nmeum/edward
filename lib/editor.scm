@@ -391,22 +391,12 @@
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
-(define (editor-append! editor text)
+(define (editor-append! editor addr text)
   (editor-prepare-change editor)
   (let ((buf  (text-editor-buffer editor))
-        (line (text-editor-line editor)))
+        (line (addr->line editor addr)))
     (buffer-append! buf line text)
     (+ line (length text))))
-
-;; Append the text before the current address, return line number
-;; of last inserted line.
-
-(define (editor-insert! editor line text)
-  (editor-prepare-change editor)
-  (let ((buf (text-editor-buffer editor))
-        (sline (max (dec line) 0)))
-    (buffer-append! buf sline text)
-    (+ sline (length text))))
 
 ;; Replace text in given range with given data. Return line number of
 ;; last inserted line.
