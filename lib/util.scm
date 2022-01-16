@@ -6,13 +6,6 @@
 (define (alist-values alist)
   (map cdr alist))
 
-;; Return a procedure executing proc and then returing ret.
-
-(define (with-ret proc ret)
-  (lambda (arg . args)
-    (apply proc arg args)
-    ret))
-
 ;; Like display but prints multiple objects and adds trailing newline.
 
 (define (fprintln port . objs)

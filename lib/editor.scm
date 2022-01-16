@@ -95,6 +95,12 @@
   (proc cmd-proc)
   (args cmd-args))
 
+(define (cmd-reversible? cmd)
+  (member (cmd-symbol cmd)
+          '(append change delete global insert join move
+            read substitute copy global-unmatched interactive
+            interactive-unmatched)))
+
 (define (editor-exec editor cmd)
   (apply (cmd-proc cmd) editor (cmd-args cmd)))
 
@@ -184,8 +190,8 @@
   (input-handler-repl
     (text-editor-input-handler editor)
     (lambda (line cmd)
-      ;; Figure out if the command about to be executed is undoable.
-      ;; If it is and it isn't the undo command, create a snapshot.
+      (when (cmd-reversible? cmd)
+        (editor-snapshot editor))
       (execute-command line cmd))
     (lambda (line reason)
       (handle-error editor line reason))))
@@ -331,13 +337,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Prepare execution of a new text operation.
+;; Prepare execution of a new undoable operation.
 
-(define (editor-prepare-change editor)
+(define (editor-snapshot editor)
   (text-editor-last-modified-set!
     editor
     (text-editor-modified? editor))
-  (text-editor-modified-set! editor #t)
 
   (text-editor-last-line-set!
     editor
@@ -368,7 +373,7 @@
 ;; of last inserted line.
 
 (define (editor-append! editor addr text)
-  (editor-prepare-change editor)
+  (text-editor-modified-set! editor #t)
   (let ((buf  (text-editor-buffer editor))
         (line (addr->line editor addr)))
     (buffer-append! buf line text)
@@ -378,7 +383,7 @@
 ;; last inserted line.
 
 (define (editor-replace! editor range data)
-  (editor-prepare-change editor)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-replace! buffer sline eline data)
@@ -387,7 +392,7 @@
 ;; Join lines in given range to single line. Return value is undefined.
 
 (define (editor-join! editor range)
-  (editor-prepare-change editor)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-join! buffer sline eline)))
@@ -395,7 +400,7 @@
 ;; Remove lines in given range. Return value is undefined.
 
 (define (editor-remove! editor range)
-  (editor-prepare-change editor)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((buffer) (text-editor-buffer editor)))
     (buffer-remove! buffer sline eline)))
@@ -404,7 +409,7 @@
 ;; the address of the last inserted line.
 
 (define (editor-move! editor range addr)
-  (editor-prepare-change editor)
+  (text-editor-modified-set! editor #t)
   (let-values (((sline eline) (editor-range editor range))
                ((target) (addr->line editor addr))
                ((buffer) (text-editor-buffer editor)))
