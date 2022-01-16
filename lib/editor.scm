@@ -88,6 +88,23 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-record-type Editor-Command
+  (make-cmd symbol proc args)
+  editor-cmd?
+  (symbol cmd-symbol)
+  (proc cmd-proc)
+  (args cmd-args))
+
+(define (editor-exec editor cmd)
+  (apply (cmd-proc cmd) editor (cmd-args cmd)))
+
+(define (editor-exec-cmdlist editor cmds)
+  (for-each (lambda (cmd)
+              (editor-exec editor cmd))
+            cmds))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-record-type Text-Editor
   (%make-text-editor filename input buffer line last-line error marks state re
                      lcmd replace modified? last-modified? silent? help?)
@@ -161,37 +178,21 @@
               (k (handle-error editor line (error-object-message eobj)))
               (raise eobj)))
           (lambda ()
-            (text-editor-prevcmd-set!
-              editor
-              (editor-exec editor cmd)))))))
+            (editor-exec editor cmd)
+            (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
 
   (input-handler-repl
     (text-editor-input-handler editor)
-    execute-command
+    (lambda (line cmd)
+      ;; Figure out if the command about to be executed is undoable.
+      ;; If it is and it isn't the undo command, create a snapshot.
+      (execute-command line cmd))
     (lambda (line reason)
       (handle-error editor line reason))))
 
 (define (editor-interactive editor)
   (let ((h (text-editor-input-handler editor)))
     (input-handler-interactive h)))
-
-;; Execute a text editor command. A text editor command is a list
-;; where the first element is a procedure and the remaining elements are
-;; arguments to that procedure.
-;;
-;; The procedure takes an editor record as the first argument and is
-;; executed with the given editor and the given additional arguments.
-
-(define (editor-exec editor cmd)
-  (apply (car cmd) editor (cdr cmd)))
-
-;; Execute a list of commands (e.g. a command list as used by the
-;; ed global command).
-
-(define (editor-exec-cmdlist editor cmds)
-  (for-each (lambda (cmd)
-              (editor-exec editor cmd))
-            cmds))
 
 ;; Returns the last executed shell command or raises an error if none.
 

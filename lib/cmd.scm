@@ -24,10 +24,11 @@
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
         (let ((cur (make-range)))
+          ;; TODO: Rewrite using get-command-parsers
           (match x
-            (#\l (list exec-list cur))
-            (#\n (list exec-number cur))
-            (#\p (list exec-print cur))))))))
+            (#\l (make-cmd 'list exec-list (list cur)))
+            (#\n (make-cmd 'number exec-number (list cur)))
+            (#\p (make-cmd 'print exec-print (list cur)))))))))
 
 ;; Edward distinguishes four command types: (1) print commands, i.e. the
 ;; l, n, and p commands, which can be used as a suffix to (2) editor
@@ -43,14 +44,13 @@
 ;; parser created by the macro returns the handler and the arguments
 ;; passed to the command on a succesfull parse.
 
-(define (cmd-with-print handler return-value cmd-args print-args)
-  (cons
+(define (cmd-with-print symbol handler cmd-args print-cmd)
+  (make-cmd
+    symbol
     (lambda (editor . args)
-      (editor-exec editor (cons handler args))
-      (let ((pcmd print-args))
-        (when pcmd
-          (editor-exec editor pcmd)))
-      return-value)
+      (editor-exec editor (make-cmd symbol handler args))
+      (when print-cmd
+        (editor-exec editor print-cmd)))
     cmd-args))
 
 (define-syntax define-file-cmd
@@ -62,9 +62,7 @@
            BODY ...
            (parse-ignore parse-newline))
          (lambda (args)
-           (cons
-             (with-ret HANDLER (quote HANDLER))
-             args)))))))
+           (make-cmd (quote NAME) HANDLER args)))))))
 
 (define-syntax define-print-cmd
   (syntax-rules ()
@@ -77,9 +75,7 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cons
-             (with-ret HANDLER (quote HANDLER))
-             (car args))))))))
+           (make-cmd (quote NAME) HANDLER (car args))))))))
 
 (define-syntax define-input-cmd
   (syntax-rules ()
@@ -94,7 +90,9 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER (quote HANDLER)
+           (cmd-with-print
+             (quote NAME)
+             HANDLER
              (append (first args) (list (third args)))
              (second args))))))))
 
@@ -109,21 +107,21 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print HANDLER (quote HANDLER)
-             (first args)
-             (second args))))))))
+           (cmd-with-print (quote NAME) HANDLER
+                           (first args) (second args))))))))
 
 ;; If changes have been made to the current buffer since the last write
 ;; of the buffer to a file, then ed should warn the user before the
 ;; buffer is destroyed. Warnings must be confirmed by repeating the
 ;; command which destroys the buffer.
 
+;; TODO: Refactor
 (define-syntax define-confirm
   (syntax-rules ()
-    ((define-confirm (NAME PROC))
+    ((define-confirm (NAME FOR PROC))
      (define (NAME editor . args)
        (if (or
-             (eqv? (text-editor-prevcmd editor) (quote NAME))
+             (eqv? (text-editor-prevcmd editor) (quote FOR))
              (not (text-editor-modified? editor)))
          (apply PROC editor args)
          ;; XXX: Can't use error here as the return value is not propagated then.
@@ -473,7 +471,7 @@
 ; Edit Command
 ;;
 
-(define-confirm (%exec-edit exec-edit))
+(define-confirm (%exec-edit %edit exec-edit))
 (define-file-cmd (%edit %exec-edit)
   (parse-file-cmd #\e))
 
@@ -793,7 +791,7 @@
 ; Quit Command
 ;;
 
-(define-confirm (%exec-quit exec-quit))
+(define-confirm (%exec-quit %quit exec-quit))
 (define-file-cmd (%quit %exec-quit)
   (parse-cmd-char #\q))
 

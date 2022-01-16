@@ -21,6 +21,8 @@
   (export make-text-editor editor-start)
   (export make-bre parse-replace regex-replace)
 
+  (export editor-cmd? cmd-symbol cmd-proc cmd-args)
+
   (export make-buffer buffer->list buffer-append! buffer-remove!
           buffer-undo! buffer-replace! buffer-join! buffer-move!
           buffer-snapshot)
