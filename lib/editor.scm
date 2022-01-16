@@ -18,11 +18,6 @@
     (lambda (port)
       (%file->buffer port '() 0))))
 
-(define (buffer->string buffer)
-  (fold-right (lambda (x ys)
-                (string-append x "\n" ys))
-              "" buffer))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-record-type Editor-Irritant

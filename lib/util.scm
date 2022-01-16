@@ -123,3 +123,10 @@
 
 (define (count-bytes str)
   (bytevector-length (string->utf8 str)))
+
+;; Converts list of lines to newline seperated string.
+
+(define (lines->string buffer)
+  (fold-right (lambda (x ys)
+                (string-append x "\n" ys))
+              "" buffer))

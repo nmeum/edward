@@ -714,7 +714,7 @@
 
 (define (exec-write editor range filename)
   (let ((fn (editor-filename editor filename))
-        (data (buffer->string (editor-get-range editor range))))
+        (data (lines->string (editor-get-range editor range))))
     (unless (write-to fn data)
       (editor-raise "cannot open output file"))
     ;; Assuming write-to *always* writes all bytes.
