@@ -121,10 +121,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Perform given body of commands as an atomic unit in respect to the
-;; undo stack. That is, the following invocation of buffer-undo! will
-;; undo all commands executed in the body at once.
-
 (define (buffer-replace! buffer start end text)
   (let* ((sline (max (dec start) 0))
          (cap (- (buffer-length buffer) sline)))
