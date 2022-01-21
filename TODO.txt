@@ -1,4 +1,4 @@
-* Refactor define-command and parse-print-cmd
+* Refactor define-command
 * Fix use of substitute command with global command
 	* Global command executes substitute command
 	  for each selected line

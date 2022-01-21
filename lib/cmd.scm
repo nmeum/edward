@@ -23,12 +23,13 @@
       (parse-char (char-set #\l #\n #\p))
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
-        (let ((cur (make-range)))
-          ;; TODO: Rewrite using get-command-parsers
+        ;; XXX: Can't rely on command-parsers here as it hasn't been filled yet.
+        (let ((name 'print-suffix')
+              (args (list (make-range)))) ;; current line
           (match x
-            (#\l (make-cmd 'list exec-list (list cur)))
-            (#\n (make-cmd 'number exec-number (list cur)))
-            (#\p (make-cmd 'print exec-print (list cur)))))))))
+            (#\l (make-cmd name exec-list args))
+            (#\n (make-cmd name exec-number args))
+            (#\p (make-cmd name exec-print args))))))))
 
 ;; Edward distinguishes four command types: (1) print commands, i.e. the
 ;; l, n, and p commands, which can be used as a suffix to (2) editor
