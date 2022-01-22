@@ -24,7 +24,7 @@
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
         ;; XXX: Can't rely on command-parsers here as it hasn't been filled yet.
-        (let ((name 'print-suffix')
+        (let ((name 'print-suffix)
               (args (list (make-range)))) ;; current line
           (match x
             (#\l (make-cmd name exec-list args))
