@@ -433,17 +433,18 @@
                           ('backward dec))))
     (call-with-current-continuation
       (lambda (exit)
-        (for-each-index
-          (lambda (idx elem)
-            (when (bre-match? regex elem)
-              (exit (inc idx))))
-          cont-proc
-          lines
-          ;; Forward/Backward search start at next/previous line.
-          (modulo (cont-proc
-                    ;; Convert line number to index.
-                    (max (dec (text-editor-line editor)) 0))
-                  (editor-lines editor)))
+        (unless (zero? (editor-lines editor))
+          (for-each-index
+            (lambda (idx elem)
+              (when (bre-match? regex elem)
+                (exit (inc idx))))
+            cont-proc
+            lines
+            ;; Forward/Backward search start at next/previous line.
+            (modulo (cont-proc
+                      ;; Convert line number to index.
+                      (max (dec (text-editor-line editor)) 0))
+                    (editor-lines editor))))
         (editor-raise "no match")))))
 
 (define addr->line
