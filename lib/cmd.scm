@@ -125,7 +125,8 @@
         (eqv? (text-editor-prevcmd editor) cmd-sym)
         (not (text-editor-modified? editor)))
     (thunk)
-    ;; XXX: Can't use error here as the return value is not propagated then.
+    ;; Can't use editor-raise here as the prevcmd in the
+    ;; editor record is not updated then (see editor-start).
     (editor-error editor "Warning: buffer modified")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
