@@ -9,7 +9,8 @@
    (extension edward
               (cond-expand
                 (release
-                  (linkage static)
+                  ;; Build both static and dynamic lib in release mode
+                  ;; (the default) to allow running the unit tests.
                   (csc-options "-O2"))
                 (else
                   (linkage dynamic)
