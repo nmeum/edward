@@ -391,18 +391,19 @@
 (define (exec-read editor addr filename)
   (let* ((f  (editor-filename editor filename))
          (in (read-from f)))
-    (unless in
-      (editor-raise "cannot open input file"))
-
     (if (and
           (empty-string? (text-editor-filename editor))
           (not (filename-cmd? f)))
       (text-editor-filename-set! editor f))
 
-    (editor-append! editor addr (car in))
-    (editor-goto! editor (editor-lines editor))
+    (if in
+      (begin
+        (editor-append! editor addr (car in))
+        (editor-goto! editor (editor-lines editor))
 
-    (editor-verbose editor (cdr in))))
+        ;; Print amount of bytes read (unless in silent mode).
+        (editor-verbose editor (cdr in)))
+      (editor-error editor "cannot open input file"))))
 
 (define-file-cmd (read exec-read)
   (parse-default parse-addr (make-addr '(last-line)))
