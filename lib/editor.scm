@@ -152,8 +152,7 @@
          (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
       ;; XXX: Don't print `?` if file doesn't exist.
-      (exec-read e (make-addr '(last-line)) filename)
-      (text-editor-modified-set! e #f))
+      (exec-edit e filename))
     e))
 
 (define (handle-error editor line msg)
