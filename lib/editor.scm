@@ -159,20 +159,14 @@
 
 (define (handle-error editor line msg)
   (let* ((in (text-editor-input-handler editor))
-         (tty? (stdin-tty?))
-         (prefix (if tty?
+         (prefix (if (stdin-tty?)
                    ""
                    (string-append
                      "line " (number->string line) ": "))))
     (text-editor-prevcmd-set! editor #f)
     (editor-error
       editor
-      (string-append prefix msg))
-
-    ;; See "Consequences of Errors" section in POSIX.1-2008.
-    (if tty?
-      '()
-      (exit #f))))
+      (string-append prefix msg))))
 
 (define (editor-start editor)
   (define (execute-command line cmd)
@@ -261,7 +255,11 @@
   (text-editor-error-set! editor msg)
   (println "?")
   (when (text-editor-help? editor)
-    (println msg)))
+    (println msg))
+
+  ;; See "Consequences of Errors" section in POSIX.1-2008.
+  (unless (stdin-tty?)
+    (exit #f)))
 
 ;; Reset all file-specific state in the editor.
 
