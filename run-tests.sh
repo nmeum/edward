@@ -8,11 +8,11 @@ banner() {
 }
 
 banner "Build"
-chicken-install -n
+chicken-install -n "$@"
 echo
 
 banner "Unit Tests"
-chicken-install -n -test
+chicken-install -n "$@" -test
 
 banner "Integration Tests"
 ./tests/integration/run.sh
