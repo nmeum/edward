@@ -115,18 +115,18 @@
 ;; of the buffer to a file, then ed should warn the user before the
 ;; buffer is destroyed. Warnings must be confirmed by repeating the
 ;; command which destroys the buffer.
+;;
+;; This procedure expects an editor record, the symbol of the command
+;; to be repeated and a thunk executed if the command was confirmed or
+;; no confirmation is necessary (i.e. buffer was not modified).
 
-;; TODO: Refactor
-(define-syntax define-confirm
-  (syntax-rules ()
-    ((define-confirm (NAME FOR PROC))
-     (define (NAME editor . args)
-       (if (or
-             (eqv? (text-editor-prevcmd editor) (quote FOR))
-             (not (text-editor-modified? editor)))
-         (apply PROC editor args)
-         ;; XXX: Can't use error here as the return value is not propagated then.
-         (editor-error editor "Warning: buffer modified"))))))
+(define (call-when-confirmed editor cmd-sym thunk)
+  (if (or
+        (eqv? (text-editor-prevcmd editor) cmd-sym)
+        (not (text-editor-modified? editor)))
+    (thunk)
+    ;; XXX: Can't use error here as the return value is not propagated then.
+    (editor-error editor "Warning: buffer modified")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -472,7 +472,11 @@
 ; Edit Command
 ;;
 
-(define-confirm (%exec-edit %edit exec-edit))
+(define (%exec-edit editor filename)
+  (call-when-confirmed editor '%edit
+    (lambda ()
+      (exec-edit editor filename))))
+
 (define-file-cmd (%edit %exec-edit)
   (parse-file-cmd #\e))
 
@@ -792,7 +796,11 @@
 ; Quit Command
 ;;
 
-(define-confirm (%exec-quit %quit exec-quit))
+(define (%exec-quit editor)
+  (call-when-confirmed editor '%quit
+    (lambda ()
+      (exec-quit editor))))
+
 (define-file-cmd (%quit %exec-quit)
   (parse-cmd-char #\q))
 
