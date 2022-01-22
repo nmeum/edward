@@ -353,7 +353,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Append Comand
+;;
+; Append Comand
+;;
 
 (define (exec-append editor addr data)
   (editor-goto!
