@@ -489,8 +489,10 @@
 
 (define (exec-edit editor filename)
   (editor-reset! editor)
+
   (exec-read editor (make-addr '(last-line))
              (editor-filename editor filename))
+  (text-editor-modified-set! editor #f)
 
   ;; exec-read only updates filename if none is set.
   ;; XXX: Might be beneficial to not re-use exec-read here.
