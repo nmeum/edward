@@ -71,16 +71,22 @@ by Brian W. Kernighan and Rob Pike (Appendix 1: Editor Summary).
 
 ## Portability
 
-The code is mostly written in standard [R7RS Scheme][r7rs small].
-However, it presently uses [CHICKEN Scheme][chicken] specific code for
-pattern matching. This code will be replaced by [SRFI 204][srfi 204] in
-the near future. Furthermore, the code base relies heavily on a FFI for
-`popen(3)`, `isatty(3)` and `regexec(3)`. Since there is no finalized
-SRFI standardising a Scheme FFI, this code is presently
-implementation-specific and currently only implemented for CHICKEN.
-Furthermore, the implementation requires an `eq?` implementation which
-performs pointer comparison (undefined behaviour in R7RS but implemented
-in CHICKEN).
+The code was originally intended to be written in purely standard
+confirming [R7RS Scheme][r7rs small]. However, as it turned out that
+implementing `ed(1)` properly requires access to some POSIX functions
+(which are not standardized in R7RS or any [SRFI][srfi]) this approach
+was eventually abandoned.
+
+Presently, the following CHICKEN Scheme specific stuff is used:
+
+* The CHICKEN [matchable][chicken matchable] egg for pattern matching
+  ([SRFI 204][srfi 204] is supposed to standardize pattern matching
+  but is still in draft status)
+* The CHICKEN Foreign Function Interface (FFI) for accessing POSIX
+  functions required by `ed(1)`, e.g. `popen(3)`, `isatty(3)` and
+  `regexec(3).
+* It is assumed that `eq?` performs pointer comparison for strings
+  (undefined behaviour in R7RS but implemented in CHICKEN)
 
 ## License
 
@@ -100,8 +106,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
 [gnu ed]: https://www.gnu.org/software/ed/
+[srfi]: https://srfi.schemers.org/
 [srfi 204]: https://srfi.schemers.org/srfi-204/
-[r7rs small]: https://srfi.schemers.org/srfi-204/
+[r7rs small]: https://small.r7rs.org/
 [parser combinators]: https://en.wikipedia.org/wiki/Parser_combinator
 [GNU readline]: https://tiswww.cwru.edu/php/chet/readline/rltop.html
 [rlwrap github]: https://github.com/hanslub42/rlwrap
