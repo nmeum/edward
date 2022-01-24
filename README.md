@@ -2,17 +2,9 @@
 
 The goal of this project is creating an implementation of the
 [`ed(1)`][ed posix] text editor, as defined in POSIX.1-2008, in R7RS
-[CHICKEN Scheme][chicken]. Theoretically, all commands mandated by POSIX
-have been implemented for now. However, this software is still in early
-stages of development thus many commands have known bugs and
-limitations.
-
-Apart from commands, some behaviour mandated by the standard is
-currently not implemented. For example, handling of asynchronous events
-(i.e. signals). Furthermore, the implementation hasn't been extensively
-tested so far and thus bugs should be expected. Nonetheless, the present
-implementation should already suffice for a lot of interactive and
-scripting use cases.
+[CHICKEN Scheme][chicken]. All commands mandated by POSIX have been
+implemented. However, this software is still in early stages of
+development, expect bugs.
 
 Known bugs and future ideas are documented in the `TODO.txt` file.
 
