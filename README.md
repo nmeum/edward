@@ -6,7 +6,7 @@ The goal of this project is creating an implementation of the
 implemented. However, this software is still in early stages of
 development, expect bugs.
 
-Known bugs and future ideas are documented in the `TODO.txt` file.
+Known bugs and future ideas are documented in the `TODO.md` file.
 
 ## Design
 
