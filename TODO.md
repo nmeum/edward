@@ -11,6 +11,7 @@
 	* Both use escaped newlines: The global command uses them
 	  in the command list, the substitute command uses them
 	  to allow for multiline replacements
+	* See also https://lists.gnu.org/archive/html/bug-ed/2017-10/msg00003.html
 	* How is this supposed to be handled?
 * Global command: "The '.' terminating input mode can be omitted if it
   would be the last line of the command list."
