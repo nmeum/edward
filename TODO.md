@@ -19,6 +19,10 @@
 * "Any number of addresses can be provided to commands taking addresses;"
 	* Example: 1,2,3,4,5p
 	* Example: 3;/foo/;+2p
+* Allow omitting "delimiter of an RE or of a replacement string in a g, G, s, v, or V command"
+	* s/s1/s2 → s/s1/s2/p
+	* g/s1 → g/s1/p
+	* ?si → ?si?
 
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
