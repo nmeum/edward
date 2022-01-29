@@ -88,6 +88,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Editor-Command represents an ed(1) command as defined in
+;; POSIX.1-2008. The command is identified by a unique symbol
+;; and procedure which receives an editor object and the given
+;; arguments as procedure arguments.
+
 (define-record-type Editor-Command
   (make-cmd symbol proc args)
   editor-cmd?
@@ -95,14 +100,22 @@
   (proc cmd-proc)
   (args cmd-args))
 
+;; Retruns true if the given command is a command which is reversible
+;; according to the definition of the undo command in POSIX. For the
+;; undo command itself, #f is returned.
+
 (define (cmd-reversible? cmd)
   (member (cmd-symbol cmd)
           '(append change delete global insert join move
             read substitute copy global-unmatched interactive
             interactive-unmatched)))
 
+;; Execute given command using given editor state.
+
 (define (editor-exec editor cmd)
   (apply (cmd-proc cmd) editor (cmd-args cmd)))
+
+;; Execute a list of commands using given editor state.
 
 (define (editor-exec-cmdlist editor cmds)
   (for-each (lambda (cmd)
