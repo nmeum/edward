@@ -75,8 +75,8 @@ Presently, the following CHICKEN Scheme specific stuff is used:
   ([SRFI 204][srfi 204] is supposed to standardize pattern matching
   but is still in draft status).
 * The CHICKEN Foreign Function Interface (FFI) for accessing POSIX
-  functions required by `ed(1)`, e.g. `popen(3)`, `isatty(3)` and
-  `regexec(3).
+  functions required by `ed(1)` (e.g. `popen(3)`, `isatty(3)` and
+  `regexec(3)`).
 * It is assumed that `eq?` performs pointer comparison for strings
   (undefined behaviour in R7RS but implemented in CHICKEN).
 
