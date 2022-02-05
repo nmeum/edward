@@ -43,7 +43,8 @@ This will create an executable binary in `./bin/edward`.
 
 This repository contains both unit tests and integration tests. The
 latter require a reference implementation of a POSIX.1-2008 compatible
-ed implementation. Currently, [GNU ed][gnu ed] is used for this purpose.
+ed implementation. Currently, [GNU ed >= 1.18][gnu ed] is used for this
+purpose.
 
 Both unit and integration tests can be run using:
 

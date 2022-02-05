@@ -1,8 +1,0 @@
-10
-echo current filename is testdata/first-file
-current filename is testdata/first-file
-!
-24
-echo filename is testdata/second-file and testdata/second-file still
-filename is testdata/second-file and testdata/second-file still
-!
