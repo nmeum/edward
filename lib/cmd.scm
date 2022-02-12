@@ -190,6 +190,15 @@
     (lambda (delim)
       (parse-regex-lit delim))))
 
+;; Parameterizable handler for substution cases where no addressed
+;; line matched the desired substitution. Can be overwritten using
+;; parameterize.
+
+(define subst-nomatch-handler
+  (make-parameter
+    (lambda (msg)
+      (editor-raise msg))))
+
 ;; Read lines of a command list and perform unescaping of newlines.
 ;; Returns a string which can then be further processed using
 ;; parse-command-list. Basically, this is a two stage parsing process.
@@ -429,7 +438,7 @@
                                (cons l (+ lnum (dec (length n)))))))
                          '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
-      (editor-raise "no match")
+      ((subst-nomatch-handler) "no match")
       (begin
         (editor-replace! editor range (car re))
         (editor-goto! editor (cdr re))))))
