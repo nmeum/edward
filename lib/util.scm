@@ -118,7 +118,7 @@
                    pair))
                '(0 . ()) (iota (string-length str)))))
 
-  (%string-split (string-append str "\n") delim))
+  (%string-split (string-append str (string delim)) delim))
 
 ;; Return amount of bytes in a string.
 
