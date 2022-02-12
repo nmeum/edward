@@ -421,11 +421,12 @@
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold-right (lambda (line lnum y)
                            (let* ((r (regex-replace bre rep line nth))
-                                  (l (append (string-split r #\newline) (car y))))
+                                  (n (string-split r #\newline)) ;; string → list
+                                  (l (append n (car y))))
                              (if (or (equal? r line)        ;; not modified
                                      (not (zero? (cdr y)))) ;; not last
                                (cons l (cdr y))
-                               (cons l (+ lnum (count-newlines r))))))
+                               (cons l (+ lnum (dec (length n)))))))
                          '((). 0) lst (range->lines editor range))))
     (if (zero? (cdr re))
       (editor-raise "no match")
