@@ -241,11 +241,10 @@
                        (fk s i "incomplete command list parse")))
                    (lambda (s i reason) (editor-raise reason))))
 
-;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
+;; Execute line-proc for each matched line for a global command.
 
-(define (exec-command-list editor match-proc range regex cmdstr)
-  (let ((bre (make-bre (editor-regex editor regex)))
-        (cmds (parse-command-list cmdstr)))
+(define (each-matched-line editor range regex match-proc line-proc)
+  (let ((bre (make-bre (editor-regex editor regex))))
     (for-each (lambda (line)
                 (when (match-proc bre line)
                   ;; The executed command may perform modifications
@@ -254,11 +253,18 @@
                   ;; comparision on the text editor buffer.
                   (let ((lnum (editor-get-lnum editor line)))
                     (when lnum ;; line has not been deleted by a preceeding command
-                      (editor-goto! editor lnum)
-                      (editor-exec-cmdlist editor cmds)))))
+                      (line-proc lnum line)))))
               (editor-get-range editor range))))
 
-;; TODO: Reduce code duplication with exec-command-list.
+;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
+
+(define (exec-command-list editor match-proc range regex cmdstr)
+  (let ((cmds (parse-command-list cmdstr)))
+    (each-matched-line editor range regex match-proc
+                       (lambda (lnum line)
+                         (editor-goto! editor lnum)
+                         (editor-exec-cmdlist editor cmds)))))
+
 (define (exec-command-list-interactive editor match-proc range regex)
   (define previous-command '())
   (define (get-interactive editor)
@@ -274,17 +280,13 @@
         (set! previous-command ret))
       ret))
 
-  (let ((bre (make-bre (editor-regex editor regex))))
-    (for-each (lambda (line)
-                (when (match-proc bre line)
-                  (let ((lnum (editor-get-lnum editor line)))
-                    (when lnum ;; line has not been deleted by a preceeding command
-                      (println line)
-                      (let ((cmd (get-interactive editor)))
-                        (when cmd ;; not null command
-                          (editor-goto! editor lnum)
-                          (editor-exec editor cmd)))))))
-              (editor-get-range editor range))))
+  (each-matched-line editor range regex match-proc
+                     (lambda (lnum line)
+                       (println line)
+                       (let ((cmd (get-interactive editor)))
+                         (when cmd ;; not null command
+                           (editor-goto! editor lnum)
+                           (editor-exec editor cmd))))))
 
 ;; Parses a filename which is then read/written by ed.
 
