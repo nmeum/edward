@@ -6,13 +6,6 @@
 	* If the selected line doesn't match the substitute
 	  command an error is raised (as per POSIX)
 	* How is this supposed to be handled?
-* Figure out how multiline substitute commands are supposed to be
-  handled in global command
-	* Both use escaped newlines: The global command uses them
-	  in the command list, the substitute command uses them
-	  to allow for multiline replacements
-	* See also https://lists.gnu.org/archive/html/bug-ed/2017-10/msg00003.html
-	* How is this supposed to be handled?
 * Global command: "The '.' terminating input mode can be omitted if it
   would be the last line of the command list."
 * Allow terminating the G command with SIGINT signal
