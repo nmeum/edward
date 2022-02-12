@@ -98,6 +98,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
+[chicken matchable]: https://wiki.call-cc.org/eggref/5/matchable
 [gnu ed]: https://www.gnu.org/software/ed/
 [srfi]: https://srfi.schemers.org/
 [srfi 204]: https://srfi.schemers.org/srfi-204/
