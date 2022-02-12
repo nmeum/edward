@@ -1,6 +1,10 @@
 (define (inc n) (+ n 1))
 (define (dec n) (- n 1))
 
+;; Returns the given value.
+
+(define (id x) x)
+
 ;; Returns all values of an alist, discarding the keys.
 
 (define (alist-values alist)

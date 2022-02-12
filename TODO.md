@@ -1,11 +1,5 @@
 # POSIX Compatibility
 
-* Fix use of substitute command with global command
-	* Global command executes substitute command
-	  for each selected line
-	* If the selected line doesn't match the substitute
-	  command an error is raised (as per POSIX)
-	* How is this supposed to be handled?
 * Global command: "The '.' terminating input mode can be omitted if it
   would be the last line of the command list."
 * Allow terminating the G command with SIGINT signal

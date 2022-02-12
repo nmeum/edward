@@ -253,7 +253,8 @@
                   ;; comparision on the text editor buffer.
                   (let ((lnum (editor-get-lnum editor line)))
                     (when lnum ;; line has not been deleted by a preceeding command
-                      (line-proc lnum line)))))
+                      (parameterize ((subst-nomatch-handler id))
+                        (line-proc lnum line))))))
               (editor-get-range editor range))))
 
 ;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
