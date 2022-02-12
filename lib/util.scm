@@ -112,6 +112,21 @@
     (lambda (x) (eqv? x #\newline))
     (string->list str)))
 
+;; Return list of strings splitted at given delimiter character.
+
+;; XXX: This imlementation is probably less efficient than (chicken string).
+(define (string-split str delim)
+  (define (%string-split str delim)
+    (cdr (fold (lambda (idx pair)
+                 (if (char=? (string-ref str idx) delim)
+                   (cons
+                     (inc idx)
+                     (append (cdr pair) (list (substring str (car pair) idx))))
+                   pair))
+               '(0 . ()) (iota (string-length str)))))
+
+  (%string-split (string-append str "\n") delim))
+
 ;; Return amount of bytes in a string.
 
 (define (count-bytes str)

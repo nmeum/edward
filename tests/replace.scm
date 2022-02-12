@@ -35,4 +35,6 @@
   (test "input string with multibyte character"
         "foo|bar" (test-re "fooλbar" "λ" "|"))
   (test "replacement with multibyte character"
-        "fooλbar" (test-re "foo|bar" "|" "λ")))
+        "fooλbar" (test-re "foo|bar" "|" "λ"))
+  (test "replace with newline"
+        "foo\nbar" (test-re "foo|bar" "|" "\\\n")))
