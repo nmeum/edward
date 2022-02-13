@@ -1,0 +1,4 @@
+g/baz/p\
+s/doesn't match any line/replaced/
+.=
+w
