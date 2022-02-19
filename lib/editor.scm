@@ -199,7 +199,14 @@
         (editor-snapshot editor))
       (execute-command line cmd))
     (lambda (line reason)
-      (handle-error editor line reason))))
+      (handle-error editor line reason)))
+
+  ;; XXX: POSIX requires to be the end-of-file character to be treated
+  ;; like a quit command in command mode. For interactive usage, the
+  ;; user would have to confirm this quit when the buffer was modified.
+  ;; However, this is currently not possible with edward as we can't
+  ;; read past eof with Scheme's read-char procedure.
+  (%exec-quit editor))
 
 (define (editor-interactive editor)
   (let ((h (text-editor-input-handler editor)))
