@@ -382,7 +382,9 @@
 ;; of last inserted line.
 
 (define (editor-append! editor addr text)
-  (text-editor-modified-set! editor #t)
+  (unless (null? text)
+    (text-editor-modified-set! editor #t))
+
   (let ((buf  (text-editor-buffer editor))
         (line (addr->line editor addr)))
     (buffer-append! buf line text)
