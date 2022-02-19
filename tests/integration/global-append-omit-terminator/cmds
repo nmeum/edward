@@ -1,0 +1,7 @@
+g/foo/a\
+this line was inserted
+.=
+g/foo/a\
+also inserted this line\
+and this one too
+w

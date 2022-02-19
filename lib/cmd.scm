@@ -88,8 +88,13 @@
            (parse-optional parse-print-cmd)
            (parse-ignore parse-blanks)
            parse-input-mode
-           (parse-ignore parse-blanks)
-           (parse-ignore parse-newline))
+
+           ;; Allow input-cmds to be terminated with eof character as well.
+           ;; Required for global commands since terminating '.' can be omitted.
+           (parse-ignore
+             (parse-or
+               parse-end
+               (parse-seq parse-blanks parse-newline))))
          (lambda (args)
            (cmd-with-print
              (quote NAME)

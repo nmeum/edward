@@ -1,7 +1,5 @@
 # POSIX Compatibility
 
-* Global command: "The '.' terminating input mode can be omitted if it
-  would be the last line of the command list."
 * Allow terminating the G command with SIGINT signal
 * "Any number of addresses can be provided to commands taking addresses;"
 	* Example: 1,2,3,4,5p
