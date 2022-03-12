@@ -335,16 +335,17 @@
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
-          (lambda (eobj)
+          (lambda (eobj) ;; XXX: Check file-error?
             (fprintln (current-error-port) fn ": "
                       (error-object-message eobj))
             (k #f))
           (lambda ()
             (if fn-cmd?
               (pipe-to fn data)
+              ;; TODO: If file exists behavior is unspecified
               (call-with-output-file fn
                 (lambda (port)
-                (write-string data port))))))))))
+                  (write-string data port))))))))))
 
 ;; Read data from given filename as a list of lines. If filename start
 ;; with `!` (i.e. is a command), read data from the standard output of
