@@ -12,8 +12,10 @@
 
           ;; TODO: Replace with SRFI 204 when/if it reaches final status.
           (matchable)
-          ;; TODO: Support different FFI backends (e.g. via cond-expand).
-          (chicken foreign) (chicken gc))
+
+          (chicken foreign)
+          (chicken process signal)
+          (chicken gc))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr make-range parse-addr parse-addr-range)

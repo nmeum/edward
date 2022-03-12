@@ -67,7 +67,7 @@
         (input-handler-stream handler)
         index))))
 
-(define (input-handler-repl handler sk fk)
+(define (input-handler-repl handler editor sk fk)
   (when (input-handler-prompt? handler)
     (display (input-handler-prompt-str handler))
     (flush-output-port))
@@ -75,8 +75,18 @@
   (unless (parse-stream-end?
             (input-handler-stream handler)
             (input-handler-index handler))
-      (input-handler-parse handler parse-cmd sk fk)
-      (input-handler-repl handler sk fk)))
+    ;; Allow parsing itself (especially of input mode commands) to be
+    ;; interrupted by SIGINT signals. See "Asynchronous Events" in ed(1).
+    (call-with-current-continuation
+      (lambda (k)
+        (set-signal-handler!
+          signal/int
+          (lambda (signum)
+            (newline)
+            (editor-error editor "Interrupt")
+            (k #f)))
+        (input-handler-parse handler parse-cmd sk fk)))
+    (input-handler-repl handler editor sk fk)))
 
 (define (input-handler-interactive handler)
   (input-handler-parse
@@ -194,6 +204,7 @@
 
   (input-handler-repl
     (text-editor-input-handler editor)
+    editor
     (lambda (line cmd)
       (when (cmd-reversible? cmd)
         (editor-snapshot editor))
