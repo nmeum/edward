@@ -60,7 +60,14 @@ Ctrl+A, Ctrl+W, …) as well as input history support.
 Detailed usage instructions for the `ed(1)` text editor can be found in
 the [POSIX documentation][ed posix]. Additionally, a nice introduction
 to the editor is provided in the book *The Unix Programming Environment*
-by Brian W. Kernighan and Rob Pike (Appendix 1: Editor Summary).
+by Brian W. Kernighan and Rob Pike (Appendix 1: Editor Summary). In
+general, since ed is an old editor which hasn't changed much in the past
+centuries, many historic documents explaining its usage are still
+applicable today. Most notably, volume 2A of the seventh edition of the
+[UNIX Programmer's Manual][unix v7vol2a] contains two documents which
+provide a beginner-friendly introduction to the editor: *A Tutorial
+Introduction to the UNIX Text Editor* and *Advanced Editing on UNIX*
+both written by Brian W. Kernighan.
 
 ## Portability
 
@@ -106,3 +113,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [parser combinators]: https://en.wikipedia.org/wiki/Parser_combinator
 [GNU readline]: https://tiswww.cwru.edu/php/chet/readline/rltop.html
 [rlwrap github]: https://github.com/hanslub42/rlwrap
+[unix v7vol2a]: https://s3.amazonaws.com/plan9-bell-labs/7thEdMan/v7vol2a.pdf
