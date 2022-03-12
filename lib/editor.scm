@@ -72,21 +72,26 @@
     (display (input-handler-prompt-str handler))
     (flush-output-port))
 
-  (unless (parse-stream-end?
-            (input-handler-stream handler)
-            (input-handler-index handler))
-    ;; Allow parsing itself (especially of input mode commands) to be
-    ;; interrupted by SIGINT signals. See "Asynchronous Events" in ed(1).
-    (call-with-current-continuation
-      (lambda (k)
-        (set-signal-handler!
-          signal/int
-          (lambda (signum)
-            (newline)
-            (editor-error editor "Interrupt")
-            (k #f)))
-        (input-handler-parse handler parse-cmd sk fk)))
-    (input-handler-repl handler editor sk fk)))
+  ;; Allow parsing itself (especially of input mode commands) to be
+  ;; interrupted by SIGINT signals. See "Asynchronous Events" in ed(1).
+  (let ((eof?
+          (call-with-current-continuation
+            (lambda (k)
+              (set-signal-handler!
+                signal/int
+                (lambda (signum)
+                  (newline)
+                  (editor-error editor "Interrupt")
+                  (k #f)))
+              (if (parse-stream-end?
+                    (input-handler-stream handler)
+                    (input-handler-index handler))
+                (k #t)
+                (begin
+                  (input-handler-parse handler parse-cmd sk fk)
+                  (k #f)))))))
+    (unless eof?
+      (input-handler-repl handler editor sk fk))))
 
 (define (input-handler-interactive handler)
   (input-handler-parse
