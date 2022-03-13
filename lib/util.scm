@@ -124,6 +124,16 @@
 
   (%string-split (string-append str (string delim)) delim))
 
+;; Join a list of path elements using `/` as a path seperator.
+
+(define (path-join . elems)
+  (fold-right
+    (lambda (elem path)
+      (if (null? path)
+        elem
+        (string-append elem "/" path)))
+    '() elems))
+
 ;; Return amount of bytes in a string.
 
 (define (count-bytes str)

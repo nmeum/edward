@@ -217,8 +217,7 @@
            (data (lines->string (buffer->list buf)))
            (success? (write-file "ed.hup" data)))
       (unless success?
-        ;; XXX: Could implement path-join utility method
-        (write-file (string-append (user-home) "/" "ed.hup") data))))
+        (write-file (path-join (user-home) "ed.hup") data))))
   (exit))
 
 (define (editor-start editor)
