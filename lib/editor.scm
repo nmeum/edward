@@ -37,6 +37,23 @@
   (input-handler-stream-set! handler source)
   (input-handler-index-set! handler index))
 
+;; Skip all buffered chunks, i.e. next read will block.
+
+(define (input-handler-skip-chunks! handler)
+  (define (%input-handler-skip-chunks! source i)
+    (if (>= (+ i 1) (vector-length (parse-stream-buffer source)))
+      (%input-handler-skip-chunks! (parse-stream-tail source) i) ;; go to last chunck
+      (values
+        source
+        ;; inc to go beyond last char.
+        (inc (parse-stream-max-char source)))))
+
+  (let-values (((source i)
+                (%input-handler-skip-chunks!
+                  (input-handler-stream handler)
+                  (input-handler-index handler))))
+    (input-handler-state-set! handler source i)))
+
 (define (input-handler-parse handler f sk fk)
   (define (stream-next-line source idx)
     (let* ((next-index  (parse-stream-next-index source idx))
@@ -82,6 +99,7 @@
                 (lambda (signum)
                   (newline)
                   (editor-error editor "Interrupt")
+                  (input-handler-skip-chunks! handler)
                   (k #f)))
               (if (parse-stream-end?
                     (input-handler-stream handler)
