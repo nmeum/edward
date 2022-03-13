@@ -1,5 +1,4 @@
 (foreign-declare "
-  #include <pwd.h>
   #include <stdio.h>
   #include <regex.h>
   #include <stdlib.h>
@@ -17,14 +16,11 @@
   char*
   user_home(void)
   {
-    static struct passwd *pwd;
+    static char *home;
 
-    if (!pwd) {
-      if (!(pwd = getpwuid(getuid())))
-        return NULL;
-    }
-
-    return pwd->pw_dir;
+    if (!home)
+      home = getenv(\"HOME\"); /* may be NULL */
+    return home;
   }
 
   int
@@ -190,8 +186,6 @@
 
   (eqv? (%stdin-tty?) 1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Return home directory for current user.
 
 (define (user-home)
@@ -201,7 +195,7 @@
   (let ((home (%user-home)))
     (if home
       home
-      (error "getpwuid failed"))))
+      (error "getenv failed"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
