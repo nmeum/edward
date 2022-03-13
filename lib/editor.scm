@@ -234,6 +234,7 @@
             (editor-exec editor cmd)
             (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
 
+  (signal-mask! signal/quit)
   (set-signal-handler!
     signal/hup
     (lambda (signum)
