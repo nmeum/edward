@@ -77,12 +77,11 @@
         (fk line reason)))))
 
 (define (input-handler-line handler index)
-  ;; Surprisingly, (chibi parse) line numbers start at zero.
-  (inc
-    (car
-      (parse-stream-debug-info
-        (input-handler-stream handler)
-        index))))
+  (let ((s (input-handler-stream handler)))
+    (inc ;; XXX: For some reason line start at zero.
+      (+
+        (parse-stream-line s)
+        (car (parse-stream-count-lines s (parse-stream-max-char s)))))))
 
 (define (input-handler-repl handler editor sk fk)
   (when (input-handler-prompt? handler)
