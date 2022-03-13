@@ -211,6 +211,16 @@
       editor
       (string-append prefix msg))))
 
+(define (handle-sighup editor)
+  (when (text-editor-modified? editor)
+    (let* ((buf (text-editor-buffer editor))
+           (data (lines->string (buffer->list buf)))
+           (success? (write-file "ed.hup" data)))
+      (unless success?
+        ;; XXX: Could implement path-join utility method
+        (write-file (string-append (user-home) "/" "ed.hup") data))))
+  (exit))
+
 (define (editor-start editor)
   (define (execute-command line cmd)
     (call-with-current-continuation
@@ -223,6 +233,11 @@
           (lambda ()
             (editor-exec editor cmd)
             (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
+
+  (set-signal-handler!
+    signal/hup
+    (lambda (signum)
+      (handle-sighup editor)))
 
   (input-handler-repl
     (text-editor-input-handler editor)
