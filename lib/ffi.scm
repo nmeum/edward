@@ -1,4 +1,5 @@
 (foreign-declare "
+  #include <pwd.h>
   #include <stdio.h>
   #include <regex.h>
   #include <stdlib.h>
@@ -11,6 +12,19 @@
   {
     /* TODO: Error handling */
     return isatty(STDIN_FILENO);
+  }
+
+  char*
+  user_home(void)
+  {
+    static struct passwd *pwd;
+
+    if (!pwd) {
+      if (!(pwd = getpwuid(getuid())))
+        return NULL;
+    }
+
+    return pwd->pw_dir;
   }
 
   int
@@ -175,6 +189,19 @@
     (foreign-lambda int "stdin_isatty"))
 
   (eqv? (%stdin-tty?) 1))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Return home directory for current user.
+
+(define (user-home)
+  (define %user-home
+    (foreign-lambda c-string "user_home"))
+
+  (let ((home (%user-home)))
+    (if home
+      home
+      (error "getpwuid failed"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
