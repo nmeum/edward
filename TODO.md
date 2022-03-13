@@ -1,6 +1,5 @@
 # POSIX Compatibility
 
-* Allow terminating the G command with SIGINT signal
 * "Any number of addresses can be provided to commands taking addresses;"
 	* Example: 1,2,3,4,5p
 	* Example: 3;/foo/;+2p
@@ -20,7 +19,6 @@
 	  https://wiki.call-cc.org/unicode-transition if the
 	  transition adds an incremental UTF-8 decoder to CHICKEN
 * make sure zero address is handled correctly everywhere
-* implement asynchronous event section from POSIX.1-2008
 
 # Build Process
 
