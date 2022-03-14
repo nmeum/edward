@@ -548,6 +548,5 @@
 ;; Return list of line numbers for the given range.
 
 (define (range->lines editor range)
-  (let ((sline (addr->line editor (first range)))
-        (eline (addr->line editor (last range))))
+  (let-values (((sline eline) (editor-range editor range)))
     (iota (inc (- eline sline)) sline)))
