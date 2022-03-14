@@ -11,10 +11,12 @@ Known bugs and future ideas are documented in the `TODO.md` file.
 ## Design
 
 This implementation relies on [parser combinators][parser combinators]
-as well as hygienic Scheme macros to ease the implementation of ed
-commands. Each ed command is defined using a macro (i.e. similar to how
-one would normally define procedures in Scheme) and parsed through
-provided parser combinators. Thereby making this ed implementation very
+as well as [hygienic Scheme macros][hygienic macros] to ease the
+implementation of ed commands. Each ed command is defined using a macro
+(i.e. similar to how one would normally define procedures in Scheme) and
+parsed through provided parser combinators. In a sense, thus employing
+[language-oriented programming][language-oriented programming] to
+implement ed commands and thereby making this ed implementation very
 hackable and easy to extend. Presently, the implementation is also split
 into a CHICKEN program and library component which may allow defining
 custom commands through user-defined configuration files in the future.
@@ -114,3 +116,5 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [GNU readline]: https://tiswww.cwru.edu/php/chet/readline/rltop.html
 [rlwrap github]: https://github.com/hanslub42/rlwrap
 [unix v7vol2a]: https://s3.amazonaws.com/plan9-bell-labs/7thEdMan/v7vol2a.pdf
+[hygienic macros]: https://doi.org/10.1145/319838.319859
+[language-oriented programming]: https://doi.org/10.1145/3127323
