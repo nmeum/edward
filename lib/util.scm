@@ -24,21 +24,6 @@
 (define (empty-string? str)
   (zero? (string-length str)))
 
-;; Fold for bytevector, starts at most significant byte.
-
-(define (bytevector-fold proc seed bv)
-  (define (%bytevector-fold n)
-    (if (zero? n)
-      seed
-      (let ((idx (dec n)))
-        (proc (bytevector-u8-ref bv idx)
-              (%bytevector-fold idx)))))
-
-  (let ((len (bytevector-length bv)))
-    (if (zero? len)
-      seed
-      (%bytevector-fold len))))
-
 ;; Pad string with given string to given length.
 
 (define (pad-string str pad length)
