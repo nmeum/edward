@@ -115,9 +115,10 @@
               procs))
 
   (let* ((stk (buffer-undo-stack buffer))
-         (stksiz (stack-size stk))
-         (procs (stack-pops stk stksiz)))
-    (%buffer-undo! buffer procs)))
+         (stksiz (stack-size stk)))
+    (unless (zero? stksiz)
+      (let ((procs (stack-pops stk stksiz)))
+        (%buffer-undo! buffer procs)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
