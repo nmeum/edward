@@ -87,8 +87,12 @@ Presently, the following CHICKEN Scheme specific stuff is used:
 * The CHICKEN Foreign Function Interface (FFI) for accessing POSIX
   functions required by `ed(1)` (e.g. `popen(3)`, `isatty(3)` and
   `regexec(3)`).
+* The [`chicken process signal`][chicken process signal] is required
+  to setup signal handlers for SIGINT, SIGHUP, and SIGQUIT.
 * It is assumed that `eq?` performs pointer comparison for strings
   (undefined behaviour in R7RS but implemented in CHICKEN).
+* It is assumed that `open-output-file` will truncate existing files
+  (unspecified in R7RS but implemented in CHICKEN).
 
 ## License
 
@@ -108,6 +112,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
 [chicken matchable]: https://wiki.call-cc.org/eggref/5/matchable
+[chicken process signal]: https://api.call-cc.org/5/doc/chicken/process/signal
 [gnu ed]: https://www.gnu.org/software/ed/
 [srfi]: https://srfi.schemers.org/
 [srfi 204]: https://srfi.schemers.org/srfi-204/
