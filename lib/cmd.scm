@@ -481,7 +481,7 @@
 ;;
 
 (define (exec-delete editor range)
-  (let ((saddr (addr->line editor (first range))))
+  (let-values (((saddr _) (editor-range editor range)))
     (editor-remove! editor range)
     (if (buffer-empty? (text-editor-buffer editor))
       (editor-goto! editor 0)
@@ -616,8 +616,7 @@
 ;;
 
 (define (exec-join editor range)
-  (let ((start (addr->line editor (first range)))
-        (end (addr->line editor (last range))))
+  (let-values (((start end) (editor-range editor range)))
     (unless (eqv? start end)
       (editor-join! editor range)
       (editor-goto! editor start))))
@@ -647,13 +646,13 @@
 ;;
 
 (define (exec-list editor range)
-  (let ((lst (editor-get-range editor range))
-        (end (addr->line editor (last range))))
-  (for-each (lambda (line)
-              (display
-                (string->human-readable (string-append line "\n"))))
-            lst)
-  (editor-goto! editor end)))
+  (let-values (((lst) (editor-get-range editor range))
+               ((_ end) (editor-range editor range)))
+    (for-each (lambda (line)
+                (display
+                  (string->human-readable (string-append line "\n"))))
+              lst)
+    (editor-goto! editor end)))
 
 (define-print-cmd (list exec-list)
   (parse-default parse-addr-range (make-range))
@@ -777,8 +776,8 @@
 ;;
 
 (define (exec-number editor range)
-  (let ((lst (editor-get-range editor range))
-        (eline (addr->line editor (last range))))
+  (let-values (((lst) (editor-get-range editor range))
+               ((_ eline) (editor-range editor range)))
     (for-each
       (lambda (line number)
         (println number "\t" line))
@@ -794,10 +793,10 @@
 ;;
 
 (define (exec-print editor range)
-  (let ((lst (editor-get-range editor range))
-        (end (addr->line editor (last range))))
-  (for-each println lst)
-  (editor-goto! editor end)))
+  (let-values (((lst) (editor-get-range editor range))
+               ((_ end) (editor-range editor range)))
+    (for-each println lst)
+    (editor-goto! editor end)))
 
 (define-print-cmd (print exec-print)
   (parse-default parse-addr-range (make-range))
