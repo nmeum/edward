@@ -41,12 +41,19 @@
 
 (define (string->human-readable str)
   ;; Length at which lines are folded.
-  ;; XXX: Consider using terminal column size.
-  (define fold-length 72)
+  (define fold-length
+    (let*-values (((padding) 8)
+                  ((port) (current-output-port))
+                  ((_ cols) (if (terminal-port? port)
+                              (terminal-size port)
+                              (values 0 0))))
+      (if (> cols padding)
+        (- cols padding)
+        72)))
 
   (define (byte->human-readable byte)
     (match byte
-      ;; Mapping according to Table 5-1 in POSIX-1.217.
+      ;; Mapping according to Table 5-1 in POSIX-1.2008.
       (#x5C "\\")
       (#x07 "\\a")
       (#x08 "\\b")
