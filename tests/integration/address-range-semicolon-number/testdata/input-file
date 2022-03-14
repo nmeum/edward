@@ -1,0 +1,8 @@
+this line contains the word 'foo'
+and aftr this line there are
+5 more lines
+which can be printed
+by an ed range
+
+however, this line also has the word 'foo'
+but no 5 lines after it, hence causing an error when selected as a range start.

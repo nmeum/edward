@@ -32,7 +32,3 @@
 * Integration tests:
 	* compare exit status
 	* consider running GNU ed in traditional mode (-G)
-
-# Miscellaneous
-
-* Add more tests for addresses ranges with semicolon character
