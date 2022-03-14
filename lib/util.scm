@@ -55,6 +55,10 @@
 ;; POSIX.1-2008 ed(1) list command.
 
 (define (string->human-readable str)
+  ;; Length at which lines are folded.
+  ;; XXX: Consider using terminal column size.
+  (define fold-length 72)
+
   (define (byte->human-readable byte)
     (match byte
       ;; Mapping according to Table 5-1 in POSIX-1.217.
@@ -77,10 +81,16 @@
           (string (integer->char byte))
           (string-append "\\" (pad-string (number->string byte 8) "0" 3))))))
 
-  (bytevector-fold
-    (lambda (byte out)
-      (string-append out (byte->human-readable byte)))
-    "" (string->utf8 str)))
+  ;; Fold lines at fold-length and convert bytes according to procedure above.
+  (let ((bv (string->utf8 str)))
+    (fold (lambda (idx out)
+            (let* ((byte (bytevector-u8-ref bv idx))
+                   (ret (string-append out (byte->human-readable byte))))
+              (if (and (not (zero? idx))
+                       (zero? (modulo idx fold-length)))
+                (string-append ret "\\\n")
+                ret)))
+          "" (iota (bytevector-length bv)))))
 
 ;; Call proc for each element in lst starting at the start index.
 
