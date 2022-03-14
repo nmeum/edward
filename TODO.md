@@ -19,6 +19,7 @@
 	  https://wiki.call-cc.org/unicode-transition if the
 	  transition adds an incremental UTF-8 decoder to CHICKEN
 * make sure zero address is handled correctly everywhere
+* consider treating undo with empty undo stack as an error
 
 # Build Process
 
@@ -29,6 +30,12 @@
 	  through the library but currently not supported
 * Fix build on OpenBSD
 	* matchable egg doesn't support OpenBSD
-* Integration tests:
-	* compare exit status
-	* consider running GNU ed in traditional mode (-G)
+
+# Miscellaneous
+
+* Integration tests: compare exit status
+* Many command implementations (join, print, number, …) run
+  editor-range twice which comes with unnecessary performance penalty.
+  Idea: Pass unwrapped range to command implementations.
+	1. Directly to determine start/end address for goto
+	2. Indirectly through buffer operation (e.g. delete, move, …)
