@@ -365,8 +365,12 @@
   ;; for forwards and backwards searches.
   (match range
     ((fst #\; snd)
-     (editor-goto! editor fst)
-     (%editor-range editor fst snd))
+     (let* ((cur (make-addr '(current-line)))
+            (old (addr->line editor cur)))
+      (editor-goto! editor fst)
+      (let-values (((sline eline) (%editor-range editor cur snd)))
+        (editor-goto! editor old) ;; undo side-effect
+        (values sline eline))))
     ((fst #\, snd)
      (%editor-range editor fst snd))))
 
