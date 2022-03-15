@@ -202,7 +202,7 @@
 
 (define (handle-error editor line msg)
   (let* ((in (text-editor-input-handler editor))
-         (prefix (if (stdin-tty?)
+         (prefix (if (terminal-port? (current-input-port))
                    ""
                    (string-append
                      "line " (number->string line) ": "))))
@@ -338,7 +338,7 @@
     (println msg))
 
   ;; See "Consequences of Errors" section in POSIX.1-2008.
-  (unless (stdin-tty?)
+  (unless (terminal-port? (current-input-port))
     (exit #f)))
 
 ;; Reset all file-specific state in the editor.

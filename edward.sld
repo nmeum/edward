@@ -13,9 +13,10 @@
           (matchable)   ;; TODO: Replace with SRFI 204 (not final yet)
           (posix-regex) ;; https://github.com/nmeum/posix-regex
 
-          (chicken foreign)
           (chicken process)
           (chicken process signal)
+          (chicken port)
+          (chicken foreign)
           (chicken gc))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
