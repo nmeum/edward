@@ -268,18 +268,32 @@
       (editor-raise "no previous command")
       lcmd)))
 
-;; Returns the last RE encountered or the given bre string if it is not
-;; empty. If it is empty and there is no last RE an error is raised.
+;; Build a new regex object and handle regex syntax errors as editor
+;; errors. If the provided pattern is empty, the last used pattern is
+;; re-used, if there is no last-used pattern an editor error is raised.
 
-(define (editor-regex editor bre)
-  (if (empty-string? bre)
-    (let ((last-re (text-editor-re editor)))
-      (if (empty-string? last-re)
-        (editor-raise "no previous pattern")
-        last-re))
-    (begin
-      (text-editor-re-set! editor bre)
-      bre)))
+(define (editor-make-regex editor pattern)
+  (define (editor-pattern editor pattern)
+    (if (empty-string? pattern)
+      (let ((last-re (text-editor-re editor)))
+        (if (empty-string? last-re)
+          (editor-raise "no previous pattern")
+          last-re))
+      (begin
+        (text-editor-re-set! editor pattern)
+        pattern)))
+
+  (let* ((pattern (editor-pattern editor pattern))
+         (regex (call-with-current-continuation
+                  (lambda (k)
+                    (with-exception-handler
+                      (lambda (eobj)
+                        (k (error-object-message eobj)))
+                      (lambda ()
+                        (k (make-regex pattern))))))))
+    (if (regex? regex)
+      regex
+      (editor-raise regex))))
 
 (define (editor-restr editor subst)
   (if (equal? subst 'previous-replace)
@@ -501,7 +515,7 @@
 
 (define (match-line direction editor bre)
   (let ((lines (buffer->list (text-editor-buffer editor)))
-        (regex (make-regex (editor-regex editor bre)))
+        (regex (editor-make-regex editor bre))
         (cont-proc (match direction
                           ('forward inc)
                           ('backward dec))))

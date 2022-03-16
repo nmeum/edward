@@ -249,7 +249,7 @@
 ;; Execute line-proc for each matched line for a global command.
 
 (define (each-matched-line editor range regex match-proc line-proc)
-  (let ((bre (make-regex (editor-regex editor regex))))
+  (let ((bre (editor-make-regex editor regex)))
     (for-each (lambda (line)
                 (when (match-proc bre line)
                   ;; The executed command may perform modifications
@@ -433,7 +433,7 @@
 
 (define (exec-subst editor range subst nth)
   (let* ((lst (editor-get-range editor range))
-         (bre (make-regex (editor-regex editor (car subst))))
+         (bre (editor-make-regex editor (car subst)))
          (rep (editor-restr editor (cdr subst)))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
