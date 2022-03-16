@@ -14,6 +14,7 @@
           (posix-regex) ;; https://github.com/nmeum/posix-regex
 
           (chicken foreign)
+          (chicken process)
           (chicken process signal)
           (chicken gc))
 
