@@ -37,4 +37,6 @@
   (test "replacement with multibyte character"
         "fooλbar" (test-re "foo|bar" "|" "λ"))
   (test "replace with newline"
-        "foo\nbar" (test-re "foo|bar" "|" "\\\n")))
+        "foo\nbar" (test-re "foo|bar" "|" "\\\n"))
+  (test "non-participating submatch"
+        "baz" (test-re "foo  baz" "foo \\(..*\\)* \\(..*\\)" "\\2\\1")))

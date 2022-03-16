@@ -53,7 +53,9 @@
   (let* ((match (submatches-get subm n))
          (start (submatch-start match))
          (end (submatch-end match)))
-    (bytevector-copy bv start end)))
+    (if (and (eqv? -1 start) (eqv? -1 end)) ;; non-particapting submatch
+      #u8()
+      (bytevector-copy bv start end))))
 
 (define (regex-replace* bre subst bv nth)
   (define (apply-replacement subm bv replacement)
