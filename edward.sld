@@ -10,8 +10,8 @@
           (srfi 1)
           (srfi 14)
 
-          ;; TODO: Replace with SRFI 204 when/if it reaches final status.
-          (matchable)
+          (matchable)   ;; TODO: Replace with SRFI 204 (not final yet)
+          (posix-regex) ;; https://github.com/nmeum/posix-regex
 
           (chicken foreign)
           (chicken process signal)
@@ -21,7 +21,7 @@
   (export make-addr make-range parse-addr parse-addr-range)
   (export parse-cmd)
   (export make-text-editor editor-start)
-  (export make-bre parse-replace regex-replace)
+  (export parse-replace regex-replace)
 
   (export editor-cmd? cmd-symbol cmd-proc cmd-args)
 

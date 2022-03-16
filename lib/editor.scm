@@ -501,7 +501,7 @@
 
 (define (match-line direction editor bre)
   (let ((lines (buffer->list (text-editor-buffer editor)))
-        (regex (make-bre (editor-regex editor bre)))
+        (regex (make-regex (editor-regex editor bre)))
         (cont-proc (match direction
                           ('forward inc)
                           ('backward dec))))
@@ -510,7 +510,7 @@
         (unless (zero? (editor-lines editor))
           (for-each-index
             (lambda (idx elem)
-              (when (bre-match? regex elem)
+              (when (regex-match? regex elem)
                 (exit (inc idx))))
             cont-proc
             lines

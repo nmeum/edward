@@ -1,9 +1,11 @@
-(define (test-re str regex replacement . o)
+(define (test-re str pattern replacement . o)
   (regex-replace
-    (make-bre regex)
+    (make-regex pattern)
     (parse parse-replace replacement)
     str
     (if (null? o) 0 (car o))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "backreferences"
   (test "single backreference"

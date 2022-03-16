@@ -42,22 +42,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (max-backref subst)
-  (fold (lambda (x y)
-          (if (eqv? 'backref (car x))
-            (max (cdr x) y)
-            y))
-        0 subst))
-
 (define (submatch subm bv n)
-  (let* ((match (submatches-get subm n))
-         (start (submatch-start match))
-         (end (submatch-end match)))
-    (if (and (eqv? -1 start) (eqv? -1 end)) ;; non-particapting submatch
-      #u8()
-      (bytevector-copy bv start end))))
+  (let ((match (vector-ref subm n)))
+    (if match
+      (bytevector-copy bv (car match) (cdr match))
+      #u8())))
 
-(define (regex-replace* bre subst bv nth)
+(define (regex-replace* regex subst bv nth)
   (define (apply-replacement subm bv replacement)
     (fold (lambda (x y)
             (bytevector-append y
@@ -67,12 +58,13 @@
                 (('backref . n) (submatch subm bv n)))))
           #u8() replacement))
 
-  (define (%regex-replace* subm re start n)
-    (let ((v (bytevector-copy bv start)))
-      (if (bre-match*? bre v subm)
-        (let* ((m (submatches-get subm 0))
-               (s (submatch-start m))
-               (e (submatch-end m))
+  (define (%regex-replace* re start n)
+    (let* ((v (bytevector-copy bv start))
+           (subm (regex-exec regex v)))
+      (if subm
+        (let* ((m (vector-ref subm 0))
+               (s (car m))
+               (e (cdr m))
 
                (i (+ start e)) ;; next index in bv
                (r (delay (bytevector-append
@@ -82,17 +74,16 @@
             (bytevector-append (force r) (bytevector-copy bv i))
             (bytevector-append
               (if (zero? nth) (force r) (bytevector-copy v 0 e))
-              (%regex-replace* subm re i (inc n)))))
+              (%regex-replace* re i (inc n)))))
         v)))
 
-  (let ((subm (make-submatches (max-backref subst))))
-    (%regex-replace* subm subst 0 1)))
+  (%regex-replace* subst 0 1))
 
-;; Replace nth occurrence of bre in str with subst. If nth is zero all
+;; Replace nth occurrence of regex in str with subst. If nth is zero all
 ;; occurrences are replaced.
 
-(define (regex-replace bre subst str nth)
+(define (regex-replace regex subst str nth)
   ;; regexec(3p) offsets are byte, not character offsets.
   ;; Thus, the string needs to be converted to a bytevector.
   (utf8->string
-    (regex-replace* bre subst (string->utf8 str) nth)))
+    (regex-replace* regex subst (string->utf8 str) nth)))

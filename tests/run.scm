@@ -1,4 +1,4 @@
-(import r7rs test (edward))
+(import r7rs test posix-regex (edward))
 
 (define (%test-parse parser input)
   (define (parse-with-error parser stream)

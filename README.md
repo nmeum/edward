@@ -84,6 +84,7 @@ Presently, the following CHICKEN Scheme specific stuff is used:
 * The CHICKEN [matchable][chicken matchable] egg for pattern matching
   ([SRFI 204][srfi 204] is supposed to standardize pattern matching
   but is still in draft status).
+* The CHICKEN [posix-regex][chicken posix-regex] egg.
 * The CHICKEN Foreign Function Interface (FFI) for accessing POSIX
   functions required by `ed(1)` (e.g. `popen(3)`, `isatty(3)` and
   `regexec(3)`).
@@ -112,6 +113,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
 [chicken]: https://call-cc.org
 [chicken matchable]: https://wiki.call-cc.org/eggref/5/matchable
+[chicken posix-regex]: https://wiki.call-cc.org/eggref/5/posix-regex
 [chicken process signal]: https://api.call-cc.org/5/doc/chicken/process/signal
 [gnu ed]: https://www.gnu.org/software/ed/
 [srfi]: https://srfi.schemers.org/
