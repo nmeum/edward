@@ -41,12 +41,19 @@
 
 (define (string->human-readable str)
   ;; Length at which lines are folded.
-  ;; XXX: Consider using terminal column size.
-  (define fold-length 72)
+  (define fold-length
+    (let*-values (((padding) 8)
+                  ((port) (current-output-port))
+                  ((_ cols) (if (terminal-port? port)
+                              (terminal-size port)
+                              (values 0 0))))
+      (if (> cols padding)
+        (- cols padding)
+        72)))
 
   (define (byte->human-readable byte)
     (match byte
-      ;; Mapping according to Table 5-1 in POSIX-1.217.
+      ;; Mapping according to Table 5-1 in POSIX-1.2008.
       (#x5C "\\")
       (#x07 "\\a")
       (#x08 "\\b")
@@ -129,6 +136,14 @@
         (string-append elem "/" path)))
     '() elems))
 
+;; Return path to home directory of current user.
+
+(define (user-home)
+  (let ((home (get-environment-variable "HOME")))
+    (if home
+      home
+      (error "environment variable 'HOME' not set"))))
+
 ;; Return amount of bytes in a string.
 
 (define (count-bytes str)
@@ -160,22 +175,19 @@
               (write-string data port)))
           (k #t))))))
 
-;; Read given file as a list of lines. Returns pair of retrieved
-;; lines and total amount of bytes read from the file (including
+;; Read from given port as a list of lines. Returns pair of retrieved
+;; lines and total amount of bytes read from the port (including
 ;; newlines).
 
-(define (file->lines filename)
-  (define (%file->lines port lines numbytes)
+(define (port->lines port)
+  (define (%port->lines lines numbytes)
     (let ((l (read-line port)))
       (if (eof-object? l)
         (cons lines numbytes)
-        (%file->lines
-          port
+        (%port->lines
           (append lines (list l))
           ;; inc for newline stripped by read-line
           ;; XXX: Buggy if last line is not not terminated with \n.
           (inc (+ numbytes (count-bytes l)))))))
 
-  (call-with-input-file filename
-    (lambda (port)
-      (%file->lines port '() 0))))
+  (%port->lines '() 0))

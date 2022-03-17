@@ -335,17 +335,18 @@
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
-          (lambda (eobj) ;; XXX: Check file-error?
-            (fprintln (current-error-port) fn ": "
-                      (error-object-message eobj))
-            (k #f))
+          (lambda (eobj)
+            (if (file-error? eobj)
+              (begin
+                (fprintln (current-error-port) fn ": "
+                          (error-object-message eobj))
+                (k #f))
+              (raise eobj)))
           (lambda ()
-            (if fn-cmd?
-              (pipe-to fn data)
-              ;; TODO: If file exists behavior is unspecified
-              (call-with-output-file fn
-                (lambda (port)
-                  (write-string data port))))))))))
+            (let ((proc (lambda (port) (write-string data port))))
+              (if fn-cmd?
+                (call-with-output-pipe fn proc)
+                (call-with-output-file fn proc)))))))))
 
 ;; Read data from given filename as a list of lines. If filename start
 ;; with `!` (i.e. is a command), read data from the standard output of
@@ -355,19 +356,24 @@
 ;; current-error-port. Otherwise, returns a pair of retrieved lines and
 ;; amount of total bytes received.
 
+;; TODO: Reduce code duplication with write-to
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-cmd? filename)))
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
-            (fprintln (current-error-port) fn ": "
-                      (error-object-message eobj))
-            (k #f))
+            (if (or (read-error? eobj) (file-error? eobj))
+              (begin
+                (fprintln (current-error-port) fn ": "
+                          (error-object-message eobj))
+                (k #f))
+              (raise eobj)))
           (lambda ()
-            (if fn-cmd?
-              (pipe-from fn)
-              (file->lines fn))))))))
+            (let ((proc port->lines))
+              (if fn-cmd?
+                (call-with-input-pipe fn proc)
+                (call-with-input-file fn proc)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -852,9 +858,7 @@
                                 ys)) "" cmd)))
   (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
     (println cmdstr))
-  ;; TODO: Execute command using system(3) instead of using popen(3).
-  (let ((lines (car (pipe-from cmdstr))))
-    (for-each println lines))
+  (system cmdstr)
   (editor-verbose editor "!")
   (text-editor-last-cmd-set! editor cmdstr)))
 
