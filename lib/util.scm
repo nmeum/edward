@@ -136,6 +136,14 @@
         (string-append elem "/" path)))
     '() elems))
 
+;; Return path to home directory of current user.
+
+(define (user-home)
+  (let ((home (get-environment-variable "HOME")))
+    (if home
+      home
+      (error "environment variable 'HOME' not set"))))
+
 ;; Return amount of bytes in a string.
 
 (define (count-bytes str)

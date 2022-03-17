@@ -15,9 +15,8 @@
 
           (chicken process)
           (chicken process signal)
-          (chicken port)
-          (chicken foreign)
-          (chicken gc))
+          (chicken process-context)
+          (chicken port))
 
   (export parse call-with-parse parse-stream-end? string->parse-stream)
   (export make-addr make-range parse-addr parse-addr-range)
@@ -36,7 +35,6 @@
           define-edit-cmd)
 
   (include "lib/util.scm"
-           "lib/ffi.scm"
            "lib/buffer.scm"
            "lib/parse.scm"
            "lib/parse-util.scm"

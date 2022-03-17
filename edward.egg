@@ -20,7 +20,6 @@
               (source-dependencies
                 "edward.sld"
                 "./lib/util.scm"
-                "./lib/ffi.scm"
                 "./lib/buffer.scm"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"
