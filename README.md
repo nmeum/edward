@@ -74,26 +74,15 @@ both written by Brian W. Kernighan.
 ## Portability
 
 The code was originally intended to be written in purely standard
-confirming [R7RS Scheme][r7rs small]. However, as it turned out that
-implementing `ed(1)` properly requires access to some POSIX functions
-(which are not standardized in R7RS or any [SRFI][srfi]) this approach
-was eventually abandoned.
-
-Presently, the following CHICKEN Scheme specific stuff is used:
-
-* The CHICKEN [matchable][chicken matchable] egg for pattern matching
-  ([SRFI 204][srfi 204] is supposed to standardize pattern matching
-  but is still in draft status).
-* The CHICKEN [posix-regex][chicken posix-regex] egg.
-* The CHICKEN Foreign Function Interface (FFI) for accessing POSIX
-  functions required by `ed(1)` (e.g. `popen(3)`, `isatty(3)` and
-  `regexec(3)`).
-* The [`chicken process signal`][chicken process signal] module is
-  required to setup signal handlers for SIGINT, SIGHUP, and SIGQUIT.
-* It is assumed that `eq?` performs pointer comparison for strings
-  (undefined behaviour in R7RS but implemented in CHICKEN).
-* It is assumed that `open-output-file` will truncate existing files
-  (unspecified in R7RS but implemented in CHICKEN).
+confirming [R7RS Scheme][r7rs small]. However, turned out that
+implementing `ed(1)` properly requires access to several POSIX functions
+which are not standardized in R7RS or any [SRFI][srfi]. Initially, it
+was attempted to overcome this limitation via a custom Foreign Function
+Interface (FFI). Unfortunately, there is also no SRFI standardizing a
+Scheme FFI and as such it was difficult to support multiple
+implementations with the FFI. For this reason, this approach was
+eventually abandoned and the code now uses several CHICKEN extensions
+directly.
 
 ## License
 
