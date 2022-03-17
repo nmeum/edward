@@ -110,7 +110,7 @@ Public License for more details.
 You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>.
 
-[ed posix]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/ed.html
+[ed posix]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html
 [chicken]: https://call-cc.org
 [chicken matchable]: https://wiki.call-cc.org/eggref/5/matchable
 [chicken posix-regex]: https://wiki.call-cc.org/eggref/5/posix-regex
