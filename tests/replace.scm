@@ -41,4 +41,8 @@
   (test "replace with newline"
         "foo\nbar" (test-re "foo|bar" "|" "\\\n"))
   (test "non-participating submatch"
-        "baz" (test-re "foo  baz" "foo \\(..*\\)* \\(..*\\)" "\\2\\1")))
+        "baz" (test-re "foo  baz" "foo \\(..*\\)* \\(..*\\)" "\\2\\1"))
+  (test "empty submatch"
+        "matched: " (test-re "foo <> baz"
+                             "foo <\\(.*\\)> baz"
+                             "matched: \\1")))
