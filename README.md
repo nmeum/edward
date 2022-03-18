@@ -74,7 +74,7 @@ both written by Brian W. Kernighan.
 ## Portability
 
 The code was originally intended to be written in purely standard
-confirming [R7RS Scheme][r7rs small]. However, turned out that
+confirming [R7RS Scheme][r7rs small]. However, it turned out that
 implementing `ed(1)` properly requires access to several POSIX functions
 which are not standardized in R7RS or any [SRFI][srfi]. Initially, it
 was attempted to overcome this limitation via a custom Foreign Function
