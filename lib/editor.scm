@@ -1,15 +1,10 @@
-(define-record-type Editor-Irritant
-  (make-editor-irritant)
-  editor-irritant?)
-
-(define (editor-error-object? eobj)
-  (let ((irritants (error-object-irritants eobj)))
-    (if (and (list? irritants) (not (null? irritants)))
-      (editor-irritant? (car irritants))
-      #f)))
+(define-record-type Editor-Error
+  (make-editor-error msg)
+  editor-error?
+  (msg editor-error-msg))
 
 (define (editor-raise msg)
-  (error msg (make-editor-irritant)))
+  (raise (make-editor-error msg)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -226,8 +221,8 @@
       (lambda (k)
         (with-exception-handler
           (lambda (eobj)
-            (if (editor-error-object? eobj)
-              (k (handle-error editor line (error-object-message eobj)))
+            (if (editor-error? eobj)
+              (k (handle-error editor line (editor-error-msg eobj)))
               (raise eobj)))
           (lambda ()
             (editor-exec editor cmd)
