@@ -326,27 +326,31 @@
     (values #t (string-copy fn 1))
     (values #f fn)))
 
+(define (with-io-error-handler fn thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (with-exception-handler
+        (lambda (eobj)
+          (if (and (file-error? eobj) (read-error? eobj))
+            (begin
+              (fprintln (current-error-port) fn ": "
+                        (error-object-message eobj))
+              (k #f))
+            (raise eobj)))
+        thunk))))
+
 ;; Write given data to given filename. If filename starts with `!` (i.e.
 ;; is a command according to filename-cmd?), write data to standard
 ;; input of given command string.
 
 (define (write-to filename data)
   (let-values (((fn-cmd? fn) (filename-cmd? filename)))
-    (call-with-current-continuation
-      (lambda (k)
-        (with-exception-handler
-          (lambda (eobj)
-            (if (file-error? eobj)
-              (begin
-                (fprintln (current-error-port) fn ": "
-                          (error-object-message eobj))
-                (k #f))
-              (raise eobj)))
-          (lambda ()
-            (let ((proc (lambda (port) (write-string data port))))
-              (if fn-cmd?
-                (call-with-output-pipe fn proc)
-                (call-with-output-file fn proc)))))))))
+    (with-io-error-handler fn
+      (lambda ()
+        (let ((proc (lambda (port) (write-string data port))))
+          (if fn-cmd?
+            (call-with-output-pipe fn proc)
+            (call-with-output-file fn proc)))))))
 
 ;; Read data from given filename as a list of lines. If filename start
 ;; with `!` (i.e. is a command), read data from the standard output of
@@ -356,24 +360,13 @@
 ;; current-error-port. Otherwise, returns a pair of retrieved lines and
 ;; amount of total bytes received.
 
-;; TODO: Reduce code duplication with write-to
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-cmd? filename)))
-    (call-with-current-continuation
-      (lambda (k)
-        (with-exception-handler
-          (lambda (eobj)
-            (if (or (read-error? eobj) (file-error? eobj))
-              (begin
-                (fprintln (current-error-port) fn ": "
-                          (error-object-message eobj))
-                (k #f))
-              (raise eobj)))
-          (lambda ()
-            (let ((proc port->lines))
-              (if fn-cmd?
-                (call-with-input-pipe fn proc)
-                (call-with-input-file fn proc)))))))))
+    (with-io-error-handler fn
+      (lambda ()
+        (if fn-cmd?
+          (call-with-input-pipe fn port->lines)
+          (call-with-input-file fn port->lines))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
