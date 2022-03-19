@@ -39,3 +39,5 @@
   Idea: Pass unwrapped range to command implementations.
 	1. Directly to determine start/end address for goto
 	2. Indirectly through buffer operation (e.g. delete, move, …)
+* Remove custom error irritant, raise editor error directly via (raise)
+* Use posix-regex multiline feature instead of matching lines individually
