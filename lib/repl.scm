@@ -1,45 +1,48 @@
-(define-record-type Input-Handler
-  (%make-input-handler prompt-str prompt? stream index)
-  input-handler?
-  ;; Prompt string used for input prompt.
-  (prompt-str input-handler-prompt-str)
-  ;; Whether the prompt should be shown or hidden.
-  (prompt? input-handler-prompt? input-handler-set-prompt!)
-  ;; Parse stream used for the parser combinator.
-  (stream input-handler-stream input-handler-stream-set!)
-  ;; Last index in parse stream.
-  (index input-handler-index input-handler-index-set!))
+;; TODO: Make this more independend of lib/editor.scm
+;; That is, don't use editor-raise etc. directly.
 
-(define (make-input-handler prompt)
+(define-record-type Read-Eval-Print-Loop
+  (%make-repl prompt-str prompt? stream index)
+  repl?
+  ;; Prompt string used for input prompt.
+  (prompt-str repl-prompt-str)
+  ;; Whether the prompt should be shown or hidden.
+  (prompt? repl-prompt? repl-set-prompt!)
+  ;; Parse stream used for the parser combinator.
+  (stream repl-stream repl-stream-set!)
+  ;; Last index in parse stream.
+  (index repl-index repl-index-set!))
+
+(define (make-repl prompt)
   (let ((prompt? (not (empty-string? prompt))))
-    (%make-input-handler
+    (%make-repl
       (if prompt? prompt "*")
       prompt?
       (make-parse-stream "stdin" (current-input-port))
       0)))
 
-(define (input-handler-state-set! handler source index)
-  (input-handler-stream-set! handler source)
-  (input-handler-index-set! handler index))
+(define (repl-state-set! repl source index)
+  (repl-stream-set! repl source)
+  (repl-index-set! repl index))
 
 ;; Skip all buffered chunks, i.e. next read will block.
 
-(define (input-handler-skip-chunks! handler)
-  (define (%input-handler-skip-chunks! source i)
+(define (repl-skip-chunks! repl)
+  (define (%repl-skip-chunks! source i)
     (if (>= (+ i 1) (vector-length (parse-stream-buffer source)))
-      (%input-handler-skip-chunks! (parse-stream-tail source) i) ;; go to last chunck
+      (%repl-skip-chunks! (parse-stream-tail source) i) ;; go to last chunck
       (values
         source
         ;; inc to go beyond last char.
         (inc (parse-stream-max-char source)))))
 
   (let-values (((source i)
-                (%input-handler-skip-chunks!
-                  (input-handler-stream handler)
-                  (input-handler-index handler))))
-    (input-handler-state-set! handler source i)))
+                (%repl-skip-chunks!
+                  (repl-stream repl)
+                  (repl-index repl))))
+    (repl-state-set! repl source i)))
 
-(define (input-handler-parse handler f sk fk)
+(define (repl-parse repl f sk fk)
   (define (stream-next-line source idx)
     (let* ((next-index  (parse-stream-next-index source idx))
            (next-source (parse-stream-next-source source idx)))
@@ -50,27 +53,27 @@
           next-index))))
 
   (call-with-parse f
-    (input-handler-stream handler)
-    (input-handler-index handler)
+    (repl-stream repl)
+    (repl-index repl)
     (lambda (r s i fk)
-      (input-handler-state-set! handler s i)
-      (sk (input-handler-line handler i) r))
+      (repl-state-set! repl s i)
+      (sk (repl-line repl i) r))
     (lambda (s i reason)
-      (let ((line (input-handler-line handler i))
-            (next (stream-next-line (input-handler-stream handler) i)))
-        (input-handler-state-set! handler (car next) (cdr next))
+      (let ((line (repl-line repl i))
+            (next (stream-next-line (repl-stream repl) i)))
+        (repl-state-set! repl (car next) (cdr next))
         (fk line reason)))))
 
-(define (input-handler-line handler index)
-  (let ((s (input-handler-stream handler)))
+(define (repl-line repl index)
+  (let ((s (repl-stream repl)))
     (inc ;; XXX: For some reason line start at zero.
       (+
         (parse-stream-line s)
         (car (parse-stream-count-lines s (parse-stream-max-char s)))))))
 
-(define (input-handler-repl handler editor sk fk)
-  (when (input-handler-prompt? handler)
-    (display (input-handler-prompt-str handler))
+(define (repl-run repl editor sk fk)
+  (when (repl-prompt? repl)
+    (display (repl-prompt-str repl))
     (flush-output-port))
 
   ;; Allow parsing itself (especially of input mode commands) to be
@@ -83,21 +86,21 @@
                 (lambda (signum)
                   (newline)
                   (editor-error editor "Interrupt")
-                  (input-handler-skip-chunks! handler)
+                  (repl-skip-chunks! repl)
                   (k #f)))
               (if (parse-stream-end?
-                    (input-handler-stream handler)
-                    (input-handler-index handler))
+                    (repl-stream repl)
+                    (repl-index repl))
                 (k #t)
                 (begin
-                  (input-handler-parse handler parse-cmd sk fk)
+                  (repl-parse repl parse-cmd sk fk)
                   (k #f)))))))
     (unless eof?
-      (input-handler-repl handler editor sk fk))))
+      (repl-run repl editor sk fk))))
 
-(define (input-handler-interactive handler)
-  (input-handler-parse
-    handler
+(define (repl-interactive repl)
+  (repl-parse
+    repl
     parse-interactive-cmd
     (lambda (line value) value)
     (lambda (line reason)

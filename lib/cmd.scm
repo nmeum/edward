@@ -806,11 +806,9 @@
 ;;
 
 (define (exec-prompt editor)
-  (let* ((input-handler (text-editor-input-handler editor))
-         (prompt? (input-handler-prompt? input-handler)))
-    (input-handler-set-prompt!
-      input-handler
-      (not prompt?))))
+  (let* ((repl (text-editor-repl editor))
+         (prompt? (repl-prompt? repl)))
+    (repl-set-prompt! repl (not prompt?))))
 
 (define-edit-cmd (prompt exec-prompt)
   (parse-cmd-char #\P))

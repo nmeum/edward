@@ -48,8 +48,8 @@
   text-editor?
   ;; Name of the file currently being edited.
   (filename text-editor-filename text-editor-filename-set!)
-  ;; Input handler for this text editor.
-  (input text-editor-input-handler)
+  ;; Input repl for this text editor.
+  (input text-editor-repl)
   ;; List of strings representing all lines in the file.
   (buffer text-editor-buffer text-editor-buffer-set!)
   ;; Current line in the buffer.
@@ -61,7 +61,7 @@
   ;; Assoc lists of marks for this editor.
   ;; XXX: Since data is never deleted from an assoc list this leaks memory.
   (marks text-editor-marks text-editor-marks-set!)
-  ;; Symbol with previous handler name executed by the editor or #f if none.
+  ;; Symbol with previous repl name executed by the editor or #f if none.
   (state text-editor-prevcmd text-editor-prevcmd-set!)
   ;; String representing last encountered RE.
   (re text-editor-re text-editor-re-set!)
@@ -79,7 +79,7 @@
   (help? text-editor-help? text-editor-help-set!))
 
 (define (make-text-editor filename prompt silent?)
-  (let* ((h (make-input-handler prompt))
+  (let* ((h (make-repl prompt))
          (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
       ;; XXX: Don't print `?` if file doesn't exist.
@@ -87,7 +87,7 @@
     e))
 
 (define (handle-error editor line msg)
-  (let* ((in (text-editor-input-handler editor))
+  (let* ((in (text-editor-repl editor))
          (prefix (if (terminal-port? (current-input-port))
                    ""
                    (string-append
@@ -125,8 +125,8 @@
     (lambda (signum)
       (handle-sighup editor)))
 
-  (input-handler-repl
-    (text-editor-input-handler editor)
+  (repl-run
+    (text-editor-repl editor)
     editor
     (lambda (line cmd)
       (when (cmd-reversible? cmd)
@@ -143,8 +143,8 @@
   (%exec-quit editor))
 
 (define (editor-interactive editor)
-  (let ((h (text-editor-input-handler editor)))
-    (input-handler-interactive h)))
+  (let ((h (text-editor-repl editor)))
+    (repl-interactive h)))
 
 ;; Returns the last executed shell command or raises an error if none.
 
