@@ -40,5 +40,6 @@
            "lib/parse-util.scm"
            "lib/parse-addr.scm"
            "lib/replace.scm"
+           "lib/repl.scm"
            "lib/editor.scm"
            "lib/cmd.scm"))
