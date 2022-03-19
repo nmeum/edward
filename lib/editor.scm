@@ -1,3 +1,6 @@
+;; Editor-Error is a custom object raised to indicate a non-fatal
+;; error condition handled according to the ed(1) POSIX specification.
+
 (define-record-type Editor-Error
   (make-editor-error msg)
   editor-error?
