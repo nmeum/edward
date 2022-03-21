@@ -137,8 +137,7 @@
     parse-mark
     parse-forward-bre
     parse-backward-bre
-    parse-relative
-    (parse-fail "unknown address format")))
+    parse-relative))
 
 ;; Addresses can be followed by zero or more address offsets, optionally
 ;; <blank>-separated. Offsets are a decimal number optionally prefixed
@@ -157,9 +156,12 @@
       car)))
 
 (define parse-addr-with-off
-  (parse-seq
-    %parse-addr
-    parse-addr-offsets))
+  (parse-or
+    (parse-atomic
+      (parse-seq
+        %parse-addr
+        parse-addr-offsets))
+    (parse-fail "unknown address format")))
 
 ;; From POSIX-1.2008:
 ;;
