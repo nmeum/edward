@@ -45,9 +45,10 @@
 (define (repl-parse repl f sk fk)
   (define (stream-next-line source idx)
     (let* ((next-index  (parse-stream-next-index source idx))
-           (next-source (parse-stream-next-source source idx)))
-      (if (eqv? (parse-stream-ref source idx) #\newline)
-        (cons next-source next-index) ;; first index after newline
+           (next-source (parse-stream-next-source source idx))
+           (char        (parse-stream-ref source idx)))
+      (if (or (eof-object? char) (char=? char #\newline))
+        (cons next-source next-index) ;; first index after newline/eof
         (stream-next-line
           next-source
           next-index))))
