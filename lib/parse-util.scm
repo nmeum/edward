@@ -10,8 +10,7 @@
 (define (parse-as-string parser)
   (parse-map
     parser
-    (lambda (lst)
-      (list->string lst))))
+    list->string))
 
 (define parse-digits
   (parse-map
