@@ -209,6 +209,7 @@
 ;; parse-command-list. Basically, this is a two stage parsing process.
 
 (define unwrap-command-list+
+  ;; TODO: This can cause exponential backtracking and needs to be rewritten.
   (parse-map
     (parse-seq
       (parse-repeat
