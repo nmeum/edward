@@ -858,13 +858,14 @@
       (parse-ignore-optional
         (parse-bind '(previous-command) (parse-char #\!)))
       (parse-repeat
-        (parse-or
-          (parse-bind 'current-file (parse-char #\%))
-          (parse-as-string
-            (parse-repeat+
-              (parse-or
-                (parse-esc (parse-char #\%))
-                (parse-not-char (char-set #\% #\newline))))))))
+        (parse-atomic
+          (parse-or
+            (parse-bind 'current-file (parse-char #\%))
+            (parse-as-string
+              (parse-repeat+
+                (parse-or
+                  (parse-esc (parse-char #\%))
+                  (parse-not-char (char-set #\% #\newline)))))))))
     concatenate))
 
 ;;
