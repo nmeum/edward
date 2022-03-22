@@ -331,12 +331,9 @@
     (lambda (k)
       (with-exception-handler
         (lambda (eobj)
-          (if (and (file-error? eobj) (read-error? eobj))
-            (begin
-              (fprintln (current-error-port) fn ": "
-                        (error-object-message eobj))
-              (k #f))
-            (raise eobj)))
+          (fprintln (current-error-port) fn ": "
+                    (error-object-message eobj))
+          (k #f))
         thunk))))
 
 ;; Write given data to given filename. If filename starts with `!` (i.e.
