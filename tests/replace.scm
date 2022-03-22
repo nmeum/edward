@@ -1,7 +1,7 @@
 (define (test-re str pattern replacement . o)
   (regex-replace
     (make-regex pattern)
-    (parse parse-replace replacement)
+    (parse (parse-replace #\/) replacement)
     str
     (if (null? o) 0 (car o))))
 

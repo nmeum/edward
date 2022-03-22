@@ -464,7 +464,7 @@
                         (and
                           (not (char=? c delim))
                           (char=? c #\%)))))
-        parse-replace)))
+        (parse-replace delim))))
 
   (parse-default
     (parse-or

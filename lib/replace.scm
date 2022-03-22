@@ -1,5 +1,3 @@
-(define replace-ctrl (char-set #\\ #\& #\newline))
-
 (define parse-backref
   (parse-map
     (parse-seq
@@ -14,7 +12,10 @@
     (lambda (ch)
       (cons 'matched ch))))
 
-(define parse-restr
+(define (parse-restr delim)
+  (define replace-ctrl
+    (char-set-adjoin (char-set #\\ #\& #\newline) delim))
+
   (parse-map
     (parse-as-string
       (parse-repeat+
@@ -27,13 +28,14 @@
     (lambda (str)
       (cons 'restr str))))
 
-(define parse-replace
+(define (parse-replace delim)
   (parse-map
     (parse-repeat
-      (parse-or
-        parse-backref
-        parse-matched
-        parse-restr))
+      (parse-atomic
+        (parse-or
+          parse-backref
+          parse-matched
+          (parse-restr delim))))
     (lambda (lst)
       ;; If the replacement is empty replace matched text with an empty string.
       (if (null? lst)
