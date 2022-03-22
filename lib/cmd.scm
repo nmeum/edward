@@ -209,6 +209,7 @@
 ;; parse-command-list. Basically, this is a two stage parsing process.
 
 (define unwrap-command-list+
+  ;; TODO: This can cause exponential backtracking and needs to be rewritten.
   (parse-map
     (parse-seq
       (parse-repeat
@@ -297,14 +298,15 @@
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
-  (parse-or
-    (parse-map
-      (parse-seq
-        (parse-string "!")
-        (parse-as-string
-          (parse-repeat+ (parse-not-char #\newline))))
-      (lambda (lst) (apply string-append lst)))
-    (parse-as-string (parse-repeat (parse-char char-set:graphic)))))
+  (parse-atomic
+    (parse-or
+      (parse-map
+        (parse-seq
+          (parse-string "!")
+          (parse-as-string
+            (parse-repeat+ (parse-not-char #\newline))))
+        (lambda (lst) (apply string-append lst)))
+      (parse-as-string (parse-repeat (parse-char char-set:graphic))))))
 
 ;; Parses a command character followed by an optional file parameter.
 ;; The compontests **must** be separated by one or more <blank>
@@ -460,11 +462,11 @@
       (parse-or
         (parse-bind
           'previous-replace
-          (parse-assert
-            (parse-repeat+ (parse-not-char delim))
-            (lambda (lst)
-              (equal? lst '(#\%)))))
-        parse-replace)))
+          (parse-char (lambda (c)
+                        (and
+                          (not (char=? c delim))
+                          (char=? c #\%)))))
+        (parse-replace delim))))
 
   (parse-default
     (parse-or
@@ -857,13 +859,14 @@
       (parse-ignore-optional
         (parse-bind '(previous-command) (parse-char #\!)))
       (parse-repeat
-        (parse-or
-          (parse-bind 'current-file (parse-char #\%))
-          (parse-as-string
-            (parse-repeat+
-              (parse-or
-                (parse-esc (parse-char #\%))
-                (parse-not-char (char-set #\% #\newline))))))))
+        (parse-atomic
+          (parse-or
+            (parse-bind 'current-file (parse-char #\%))
+            (parse-as-string
+              (parse-repeat+
+                (parse-or
+                  (parse-esc (parse-char #\%))
+                  (parse-not-char (char-set #\% #\newline)))))))))
     concatenate))
 
 ;;

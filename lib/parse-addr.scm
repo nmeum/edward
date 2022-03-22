@@ -60,15 +60,16 @@
 ;; Utility procedure for parsing BRE addresses.
 
 (define (parse-regex-lit ch)
-  (parse-as-string
-    (parse-between
-      (parse-char ch)
-      (parse-repeat (parse-or
-                      (parse-esc (parse-char ch))
-                      (parse-not-char ch)))
-      (parse-or
+  (parse-atomic
+    (parse-as-string
+      (parse-between
         (parse-char ch)
-        parse-end))))
+        (parse-repeat (parse-or
+                        (parse-esc (parse-char ch))
+                        (parse-not-char ch)))
+        (parse-or
+          (parse-char ch)
+          parse-end)))))
 
 ;; From POSIX.1-2008:
 ;;
@@ -137,8 +138,7 @@
     parse-mark
     parse-forward-bre
     parse-backward-bre
-    parse-relative
-    (parse-fail "unknown address format")))
+    parse-relative))
 
 ;; Addresses can be followed by zero or more address offsets, optionally
 ;; <blank>-separated. Offsets are a decimal number optionally prefixed
@@ -157,9 +157,12 @@
       car)))
 
 (define parse-addr-with-off
-  (parse-seq
-    %parse-addr
-    parse-addr-offsets))
+  (parse-or
+    (parse-atomic
+      (parse-seq
+        %parse-addr
+        parse-addr-offsets))
+    (parse-fail "unknown address format")))
 
 ;; From POSIX-1.2008:
 ;;
