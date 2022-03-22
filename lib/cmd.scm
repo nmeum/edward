@@ -297,14 +297,15 @@
 ;; Parses a filename which is then read/written by ed.
 
 (define parse-filename
-  (parse-or
-    (parse-map
-      (parse-seq
-        (parse-string "!")
-        (parse-as-string
-          (parse-repeat+ (parse-not-char #\newline))))
-      (lambda (lst) (apply string-append lst)))
-    (parse-as-string (parse-repeat (parse-char char-set:graphic)))))
+  (parse-atomic
+    (parse-or
+      (parse-map
+        (parse-seq
+          (parse-string "!")
+          (parse-as-string
+            (parse-repeat+ (parse-not-char #\newline))))
+        (lambda (lst) (apply string-append lst)))
+      (parse-as-string (parse-repeat (parse-char char-set:graphic))))))
 
 ;; Parses a command character followed by an optional file parameter.
 ;; The compontests **must** be separated by one or more <blank>
