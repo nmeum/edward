@@ -468,7 +468,7 @@
 
   (parse-default
     (parse-or
-      (parse-map (parse-char #\g) (lambda (x) 0))
+      (parse-bind 0 (parse-char #\g))
       parse-digits)
     1))
 
