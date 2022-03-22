@@ -40,3 +40,4 @@
 	1. Directly to determine start/end address for goto
 	2. Indirectly through buffer operation (e.g. delete, move, …)
 * Use posix-regex multiline feature instead of matching lines individually
+* Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
