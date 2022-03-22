@@ -77,11 +77,12 @@
 ;; Parse a single line (excluding the terminating newline).
 
 (define parse-line
-  (parse-map
-    (parse-seq
-      (parse-as-string (parse-repeat (parse-not-char #\newline)))
-      (parse-char #\newline))
-    car))
+  (parse-atomic
+    (parse-map
+      (parse-seq
+        (parse-as-string (parse-repeat (parse-not-char #\newline)))
+        (parse-char #\newline))
+      car)))
 
 ;; Feed the result of the parser ctx to a single argument procedure f.
 ;; The procedure must then return a new parser which is executed
