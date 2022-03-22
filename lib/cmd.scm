@@ -460,10 +460,10 @@
       (parse-or
         (parse-bind
           'previous-replace
-          (parse-assert
-            (parse-repeat+ (parse-not-char delim))
-            (lambda (lst)
-              (equal? lst '(#\%)))))
+          (parse-char (lambda (c)
+                        (and
+                          (not (char=? c delim))
+                          (char=? c #\%)))))
         parse-replace)))
 
   (parse-default
