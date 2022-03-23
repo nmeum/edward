@@ -236,14 +236,19 @@
   (text-editor-buffer-set! editor (make-buffer))
   (text-editor-marks-set! editor '()))
 
-(define (editor-mark-line editor line mark)
-  (text-editor-marks-set! editor
-    (alist-cons mark line (text-editor-marks editor))))
+(define (editor-mark-line editor addr mark)
+  (let ((lines (editor-get-range editor (make-range addr))))
+    (text-editor-marks-set! editor
+      (alist-cons mark (car lines) (text-editor-marks editor)))))
 
 (define (editor-get-mark editor mark)
   (let ((pair (assv mark (text-editor-marks editor))))
     (if pair
-      (cdr pair)
+      (let ((lnum (editor-get-lnum editor (cdr pair))))
+        (if lnum
+          lnum
+          ;; XXX: Delete mark if it is found to be invalid (e.g. line deleted)?
+          (editor-raise (string-append "invalid mark: " (string mark)))))
       (editor-raise (string-append "unknown mark: " (string mark))))))
 
 ;; Move editor cursor to specified line/address. Line 1 is the first

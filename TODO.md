@@ -41,3 +41,4 @@
 	2. Indirectly through buffer operation (e.g. delete, move, …)
 * Use posix-regex multiline feature instead of matching lines individually
 * Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
+* Use chicken locative instead of editor-get-lnum hack to deal with pointers to lines

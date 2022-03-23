@@ -638,8 +638,7 @@
 ;;
 
 (define (exec-mark editor addr mark)
-  (editor-mark-line
-    editor (addr->line editor addr) mark))
+  (editor-mark-line editor addr mark))
 
 (define-edit-cmd (mark exec-mark)
   (parse-default parse-addr (make-addr '(current-line)))
