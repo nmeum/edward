@@ -77,11 +77,13 @@
 
 (define parse-line
   (parse-atomic
-    (parse-map
-      (parse-seq
-        (parse-token (lambda (x) (not (char=? x #\newline))))
-        (parse-char #\newline))
-      car)))
+    (parse-or
+      (parse-bind "" parse-newline) ;; empty line
+      (parse-map
+        (parse-seq
+          (parse-token (lambda (x) (not (char=? x #\newline))))
+          parse-newline)
+        car))))
 
 ;; Feed the result of the parser ctx to a single argument procedure f.
 ;; The procedure must then return a new parser which is executed
