@@ -14,8 +14,7 @@
 
 (define parse-digits
   (parse-map
-    (parse-as-string
-      (parse-repeat+ (parse-char char-set:digit)))
+    (parse-token char-set:digit)
     string->number))
 
 (define (parse-default parser def)
@@ -80,7 +79,7 @@
   (parse-atomic
     (parse-map
       (parse-seq
-        (parse-as-string (parse-repeat (parse-not-char #\newline)))
+        (parse-token (lambda (x) (not (char=? x #\newline))))
         (parse-char #\newline))
       car)))
 

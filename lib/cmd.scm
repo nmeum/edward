@@ -211,15 +211,17 @@
 (define parse-line-continuation
   (parse-map
     (parse-seq
-      (parse-as-string (parse-repeat+ (parse-not-char (char-set #\\ #\newline))))
+      (parse-token (lambda (x)
+                     (and
+                       (not (char=? x #\\))
+                       (not (char=? x #\newline)))))
       (parse-esc (parse-char #\newline)))
     (lambda (lst)
       (string-append (car lst) "\n"))))
 
 (define parse-last-line
   (parse-map
-    (parse-as-string
-      (parse-repeat+ (parse-not-char #\newline)))
+    (parse-token (lambda (x) (not (char=? x #\newline))))
     (lambda (str)
       (string-append str "\n"))))
 
@@ -309,10 +311,9 @@
       (parse-map
         (parse-seq
           (parse-string "!")
-          (parse-as-string
-            (parse-repeat+ (parse-not-char #\newline))))
+          (parse-token (lambda (x) (not (char=? x #\newline)))))
         (lambda (lst) (apply string-append lst)))
-      (parse-as-string (parse-repeat (parse-char char-set:graphic))))))
+      (parse-token char-set:graphic))))
 
 ;; Parses a command character followed by an optional file parameter.
 ;; The compontests **must** be separated by one or more <blank>
