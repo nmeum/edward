@@ -208,24 +208,30 @@
 ;; Returns a string which can then be further processed using
 ;; parse-command-list. Basically, this is a two stage parsing process.
 
-(define unwrap-command-list+
-  ;; TODO: This can cause exponential backtracking and needs to be rewritten.
+(define parse-line-continuation
   (parse-map
     (parse-seq
-      (parse-repeat
-        (parse-map
-          (parse-seq
-            (parse-repeat+ (parse-not-char (char-set #\\ #\newline)))
-            (parse-esc (parse-char #\newline)))
-          (match-lambda
-            ((lst chr) (append lst (list chr))))))
-      (parse-repeat+ (parse-not-char #\newline))) ;; last line
-    (match-lambda
-      ((lines last-line)
-        (string-append
-          (apply string-append (map list->string lines))
-          (list->string last-line)
-          "\n"))))) ;; terminate last command with newline
+      (parse-as-string (parse-repeat+ (parse-not-char (char-set #\\ #\newline))))
+      (parse-esc (parse-char #\newline)))
+    (lambda (lst)
+      (string-append (car lst) "\n"))))
+
+(define parse-last-line
+  (parse-map
+    (parse-as-string
+      (parse-repeat+ (parse-not-char #\newline)))
+    (lambda (str)
+      (string-append str "\n"))))
+
+(define unwrap-command-list+
+  (parse-map
+    (parse-seq
+      (parse-repeat parse-line-continuation)
+      parse-last-line)
+    (lambda (lst)
+      (string-append
+        (apply string-append (first lst))
+        (second lst)))))
 
 (define unwrap-command-list
   (parse-or
