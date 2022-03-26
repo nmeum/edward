@@ -34,10 +34,12 @@
 
 (define parse-blank
   (parse-char char-set:blank))
-(define parse-blanks
-  (parse-repeat parse-blank))
 (define parse-blanks+
-  (parse-repeat+ parse-blank))
+  (parse-token char-set:blank))
+(define parse-blanks
+  (parse-or
+    parse-epsilon
+    parse-blanks+))
 
 (define (parse-between lhs parser rhs)
   (parse-map
