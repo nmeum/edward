@@ -238,8 +238,10 @@
 
 (define (editor-mark-line editor addr mark)
   (let ((lines (editor-get-range editor (make-range addr))))
-    (text-editor-marks-set! editor
-      (alist-cons mark (car lines) (text-editor-marks editor)))))
+    (if (null? lines)
+      (editor-raise "invalid address")
+      (text-editor-marks-set! editor
+        (alist-cons mark (car lines) (text-editor-marks editor))))))
 
 (define (editor-get-mark editor mark)
   (let ((pair (assv mark (text-editor-marks editor))))
