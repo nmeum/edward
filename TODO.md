@@ -42,3 +42,11 @@
 * Use posix-regex multiline feature instead of matching lines individually
 * Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
 * Use chicken locative instead of editor-get-lnum hack to deal with pointers to lines
+* Separate address and command parsing
+	* Currently address is re-parsed during backtracking (performance penalty)
+	* Also: This would allow disabling backtracking during command
+	  parsing itself, i.e. if the command character matches there
+	  should be no need to backtrack afterwards.
+	* Besides this may make it easier to implement the POSIX
+	  requirement that each command can take a any number of
+	  addresses and only extracts those that it needs.
