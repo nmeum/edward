@@ -865,7 +865,7 @@
       (parse-ignore-optional
         (parse-bind '(previous-command) (parse-char #\!)))
       (parse-repeat
-        (parse-atomic
+        (parse-commit
           (parse-or
             (parse-bind 'current-file (parse-char #\%))
             (parse-as-string
