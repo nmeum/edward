@@ -906,9 +906,10 @@
 ;; have parsed the address successfully (the same address may be
 ;; applicable to different commands).
 (define (%parse-cmd parsers)
-  (apply
-    parse-or
-    (append parsers (list (parse-fail "unknown command")))))
+  (parse-memoize "command parser"
+    (apply
+      parse-or
+      (append parsers (list (parse-fail "unknown command"))))))
 
 (define parse-cmd
   (%parse-cmd (get-command-parsers '())))
