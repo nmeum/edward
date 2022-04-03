@@ -24,12 +24,11 @@
       (lambda (x)
         ;; Current line shall be written described below under the l, n, and p commands.
         ;; XXX: Can't rely on command-parsers here as it hasn't been filled yet.
-        (let ((name 'print-suffix)
-              (args (list (make-range)))) ;; current line
+        (let ((name 'print-suffix))
           (match x
-            (#\l (make-cmd name exec-list args))
-            (#\n (make-cmd name exec-number args))
-            (#\p (make-cmd name exec-print args))))))))
+            (#\l (make-cmd name (make-range) exec-list '()))
+            (#\n (make-cmd name (make-range) exec-number '()))
+            (#\p (make-cmd name (make-range) exec-print '()))))))))
 
 ;; Edward distinguishes four command types: (1) print commands, i.e. the
 ;; l, n, and p commands, which can be used as a suffix to (2) editor
@@ -45,29 +44,34 @@
 ;; parser created by the macro returns the handler and the arguments
 ;; passed to the command on a succesfull parse.
 
-(define (cmd-with-print symbol handler cmd-args print-cmd)
+(define (cmd-with-print symbol def-addr handler cmd-args print-cmd)
   (make-cmd
     symbol
+    def-addr
     (lambda (editor . args)
-      (editor-exec editor (make-cmd symbol handler args))
+      (if (null? def-addr) ;; If command expects address
+        (editor-exec editor #f (make-cmd symbol def-addr handler args))
+        (editor-exec editor (car args) (make-cmd symbol def-addr handler (cdr args))))
       (when print-cmd
-        (editor-exec editor print-cmd)))
+        (editor-exec editor #f print-cmd)))
     cmd-args))
 
 (define-syntax define-file-cmd
   (syntax-rules ()
-    ((define-file-cmd (NAME HANDLER) BODY ...)
+    ((define-file-cmd (NAME HANDLER ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-blanks-seq
            BODY ...
            (parse-ignore parse-newline))
          (lambda (args)
-           (make-cmd (quote NAME) HANDLER args)))))))
+           (make-cmd (quote NAME) ADDR HANDLER args)))))
+    ((define-file-cmd (NAME HANDLER) BODY ...)
+     (define-file-cmd (NAME HANDLER '()) BODY ...))))
 
 (define-syntax define-print-cmd
   (syntax-rules ()
-    ((define-print-cmd (NAME HANDLER) BODY ...)
+    ((define-print-cmd (NAME HANDLER ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-seq
@@ -76,11 +80,11 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (make-cmd (quote NAME) HANDLER (car args))))))))
+           (make-cmd (quote NAME) ADDR HANDLER (car args))))))))
 
 (define-syntax define-input-cmd
   (syntax-rules ()
-    ((define-input-cmd (NAME HANDLER) BODY ...)
+    ((define-input-cmd (NAME HANDLER ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-seq
@@ -98,13 +102,14 @@
          (lambda (args)
            (cmd-with-print
              (quote NAME)
+             ADDR
              HANDLER
              (append (first args) (list (third args)))
              (second args))))))))
 
 (define-syntax define-edit-cmd
   (syntax-rules ()
-    ((define-edit-cmd (NAME HANDLER) BODY ...)
+    ((define-edit-cmd (NAME HANDLER ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-seq
@@ -113,8 +118,10 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print (quote NAME) HANDLER
-                           (first args) (second args))))))))
+           (cmd-with-print (quote NAME) ADDR HANDLER
+                           (first args) (second args))))))
+    ((define-edit-cmd (NAME HANDLER) BODY ...)
+     (define-edit-cmd (NAME HANDLER '()) BODY ...))))
 
 ;; If changes have been made to the current buffer since the last write
 ;; of the buffer to a file, then ed should warn the user before the
@@ -298,10 +305,10 @@
   (each-matched-line editor range regex match-proc
                      (lambda (lnum line)
                        (println line)
-                       (let ((cmd (get-interactive editor)))
-                         (when cmd ;; not null command
+                       (let ((cmd-pair (get-interactive editor)))
+                         (when cmd-pair ;; not null command
                            (editor-goto! editor lnum)
-                           (editor-exec editor cmd))))))
+                           (editor-exec editor (car cmd-pair) (cdr cmd-pair)))))))
 
 ;; Parses a filename which is then read/written by ed.
 
@@ -380,13 +387,14 @@
 ; Append Comand
 ;;
 
+;; TODO: Integrate address handling with marcos
+
 (define (exec-append editor addr data)
   (editor-goto!
     editor
     (editor-append! editor addr data)))
 
-(define-input-cmd (append exec-append)
-  (parse-default parse-addr (make-addr '(current-line)))
+(define-input-cmd (append exec-append (make-addr '(current-line)))
   (parse-cmd-char #\a))
 
 ;;
@@ -403,8 +411,7 @@
     editor
     (editor-replace! editor range data)))
 
-(define-input-cmd (change exec-change)
-  (parse-default parse-addr-range (make-range))
+(define-input-cmd (change exec-change (make-range))
   (parse-cmd-char #\c))
 
 ;;
@@ -428,8 +435,7 @@
         (editor-verbose editor (cdr in)))
       (editor-error editor "cannot open input file"))))
 
-(define-file-cmd (read exec-read)
-  (parse-default parse-addr (make-addr '(last-line)))
+(define-file-cmd (read exec-read (make-addr '(last-line)))
   (parse-file-cmd #\r))
 
 ;;
@@ -457,8 +463,7 @@
         (editor-replace! editor range (car re))
         (editor-goto! editor (cdr re))))))
 
-(define-edit-cmd (substitute exec-subst)
-  (parse-default parse-addr-range (make-range))
+(define-edit-cmd (substitute exec-subst (make-range))
   (parse-cmd-char #\s)
 
   ;; Pair: (RE, replacement)
@@ -492,8 +497,7 @@
       (editor-goto! editor 0)
       (editor-goto! editor (min (editor-lines editor) saddr)))))
 
-(define-edit-cmd (delete exec-delete)
-  (parse-default parse-addr-range (make-range))
+(define-edit-cmd (delete exec-delete (make-range))
   (parse-cmd-char #\d))
 
 ;;
@@ -551,11 +555,10 @@
 (define (exec-global editor range regex cmdstr)
   (exec-command-list editor regex-match? range regex cmdstr))
 
-(define-file-cmd (global exec-global)
-  (parse-default parse-addr-range
-                 (make-range
-                   (make-addr '(nth-line . 1))
-                   (make-addr '(last-line))))
+(define-file-cmd (global exec-global
+                         (make-range
+                           (make-addr '(nth-line . 1))
+                           (make-addr '(last-line))))
   (parse-cmd-char #\g)
   parse-re
   unwrap-command-list)
@@ -567,11 +570,10 @@
 (define (exec-interactive editor range regex)
   (exec-command-list-interactive editor regex-match? range regex))
 
-(define-file-cmd (interactive exec-interactive)
-  (parse-default parse-addr-range
-                 (make-range
-                   (make-addr '(nth-line . 1))
-                   (make-addr '(last-line))))
+(define-file-cmd (interactive exec-interactive
+                              (make-range
+                                (make-addr '(nth-line . 1))
+                                (make-addr '(last-line))))
   (parse-cmd-char #\G)
   parse-re)
 
@@ -612,8 +614,7 @@
       editor
       (editor-append! editor saddr data))))
 
-(define-input-cmd (insert exec-insert)
-  (parse-default parse-addr (make-addr '(current-line)))
+(define-input-cmd (insert exec-insert (make-addr '(current-line)))
   (parse-cmd-char #\i))
 
 ;;
@@ -626,11 +627,9 @@
       (editor-join! editor range)
       (editor-goto! editor start))))
 
-(define-edit-cmd (join exec-join)
-  (parse-default parse-addr-range
-                 (make-range
-                   (make-addr '(current-line))
-                   (make-addr '(current-line) '(1))))
+(define-edit-cmd (join exec-join (make-range
+                                   (make-addr '(current-line))
+                                   (make-addr '(current-line) '(1))))
   (parse-cmd-char #\j))
 
 ;;
@@ -640,8 +639,7 @@
 (define (exec-mark editor addr mark)
   (editor-mark-line editor addr mark))
 
-(define-edit-cmd (mark exec-mark)
-  (parse-default parse-addr (make-addr '(current-line)))
+(define-edit-cmd (mark exec-mark (make-addr '(current-line)))
   (parse-cmd-char #\k)
   (parse-char char-set:lower-case))
 
@@ -658,8 +656,7 @@
               lst)
     (editor-goto! editor end)))
 
-(define-print-cmd (list exec-list)
-  (parse-default parse-addr-range (make-range))
+(define-print-cmd (list exec-list (make-range))
   (parse-cmd-char #\l))
 
 ;;
@@ -671,8 +668,7 @@
     (editor-raise "invalid move destination")
     (editor-goto! editor (editor-move! editor range addr))))
 
-(define-edit-cmd (move exec-move)
-  (parse-default parse-addr-range (make-range))
+(define-edit-cmd (move exec-move (make-range))
   (parse-cmd-char #\m)
   parse-addr)
 
@@ -689,8 +685,7 @@
         editor
         (editor-append! editor addr data)))))
 
-(define-edit-cmd (copy exec-copy)
-  (parse-default parse-addr-range (make-range))
+(define-edit-cmd (copy exec-copy (make-range))
   (parse-cmd-char #\t)
   parse-addr)
 
@@ -713,11 +708,10 @@
                               (not (regex-match? bre line)))
                      range regex cmdstr))
 
-(define-file-cmd (global-unmatched exec-global-unmatched)
-  (parse-default parse-addr-range
-                 (make-range
-                   (make-addr '(nth-line . 1))
-                   (make-addr '(last-line))))
+(define-file-cmd (global-unmatched exec-global-unmatched
+                                   (make-range
+                                     (make-addr '(nth-line . 1))
+                                     (make-addr '(last-line))))
   (parse-cmd-char #\v)
   parse-re
   unwrap-command-list)
@@ -731,11 +725,10 @@
                                           (not (regex-match? bre line)))
                                  range regex))
 
-(define-file-cmd (interactive-unmatched exec-interactive-unmatched)
-  (parse-default parse-addr-range
-                 (make-range
-                   (make-addr '(nth-line . 1))
-                   (make-addr '(last-line))))
+(define-file-cmd (interactive-unmatched exec-interactive-unmatched
+                                        (make-range
+                                          (make-addr '(nth-line . 1))
+                                          (make-addr '(last-line))))
   (parse-cmd-char #\V)
   parse-re)
 
@@ -756,12 +749,11 @@
         (text-editor-filename-set! editor fn))
       (text-editor-modified-set! editor #f))))
 
-(define-file-cmd (write exec-write)
-  (parse-default parse-addr-range
-                 (list
-                   (make-addr '(nth-line . 1))
-                   #\,
-                   (make-addr '(last-line))))
+(define-file-cmd (write exec-write
+                        (list
+                          (make-addr '(nth-line . 1))
+                          #\,
+                          (make-addr '(last-line))))
   (parse-file-cmd #\w))
 
 ;;
@@ -771,8 +763,7 @@
 (define (exec-line-number editor addr)
   (println (text-editor-line editor)))
 
-(define-edit-cmd (line-number exec-line-number)
-  (parse-default parse-addr (make-addr '(last-line)))
+(define-edit-cmd (line-number exec-line-number (make-addr '(last-line)))
   (parse-cmd-char #\=))
 
 ;;
@@ -788,8 +779,7 @@
       lst (range->lines editor range))
     (editor-goto! editor eline)))
 
-(define-print-cmd (number exec-number)
-  (parse-default parse-addr-range (make-range))
+(define-print-cmd (number exec-number (make-range))
   (parse-cmd-char #\n))
 
 ;;
@@ -802,8 +792,7 @@
     (for-each println lst)
     (editor-goto! editor end)))
 
-(define-print-cmd (print exec-print)
-  (parse-default parse-addr-range (make-range))
+(define-print-cmd (print exec-print (make-range))
   (parse-cmd-char #\p))
 
 ;;
@@ -887,8 +876,8 @@
         (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
         (editor-goto! editor line)))))
 
-(define-file-cmd (null exec-null)
-  (parse-default parse-addr (make-addr '(current-line) '(+1))))
+(define-file-cmd (null exec-null (make-addr '(current-line) '(+1)))
+  (parse-ignore parse-epsilon))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -907,9 +896,16 @@
 ;; applicable to different commands).
 (define (%parse-cmd parsers)
   (parse-memoize "command parser"
-    (apply
-      parse-or
-      (append parsers (list (parse-fail "unknown command"))))))
+    (parse-map
+      (parse-seq
+        (parse-optional parse-addr-range)
+        (apply
+          parse-or
+          (append parsers (list (parse-fail "unknown command")))))
+      (lambda (x)
+        (let ((cmd (last x))
+              (addr (first x)))
+          (cons addr cmd))))))
 
 (define parse-cmd
   (%parse-cmd (get-command-parsers '())))

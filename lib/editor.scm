@@ -15,8 +15,9 @@
 ;; arguments as procedure arguments.
 
 (define-record-type Editor-Command
-  (make-cmd symbol proc args)
+  (make-cmd symbol default-addr proc args)
   editor-cmd?
+  (default-addr cmd-default-addr)
   (symbol cmd-symbol)
   (proc cmd-proc)
   (args cmd-args))
@@ -33,15 +34,28 @@
 
 ;; Execute given command using given editor state.
 
-(define (editor-exec editor cmd)
-  (apply (cmd-proc cmd) editor (cmd-args cmd)))
+(define (editor-exec editor addr cmd)
+  (let* ((default-addr (cmd-default-addr cmd))
+         ;; Convert given address to a single address or
+         ;; a range address (depending on default address).
+         (new-addr (if addr
+                     (if (range? default-addr)
+                       (addr->range addr)
+                       (range->addr addr))
+                     default-addr))
+         ;; Only execute with address argument if default
+         ;; address (specified for cmd) is not null.
+         (args (if (null? default-addr)
+                 (cmd-args cmd)
+                 (append (list new-addr) (cmd-args cmd)))))
+    (apply (cmd-proc cmd) editor args)))
 
 ;; Execute a list of commands using given editor state.
 
-(define (editor-exec-cmdlist editor cmds)
-  (for-each (lambda (cmd)
-              (editor-exec editor cmd))
-            cmds))
+(define (editor-exec-cmdlist editor cmd-pairs)
+  (for-each (lambda (cmd-pair)
+              (editor-exec editor (car cmd-pair) (cdr cmd-pair)))
+            cmd-pairs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -110,7 +124,7 @@
   (exit))
 
 (define (editor-start editor)
-  (define (execute-command line cmd)
+  (define (execute-command line cmd addr)
     (call-with-current-continuation
       (lambda (k)
         (with-exception-handler
@@ -119,7 +133,7 @@
               (k (handle-error editor line (editor-error-msg eobj)))
               (raise eobj)))
           (lambda ()
-            (editor-exec editor cmd)
+            (editor-exec editor addr cmd)
             (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
 
   (signal-mask! signal/quit)
@@ -131,10 +145,12 @@
   (repl-run
     (text-editor-repl editor)
     editor
-    (lambda (line cmd)
-      (when (cmd-reversible? cmd)
-        (editor-snapshot editor))
-      (execute-command line cmd))
+    (lambda (line res)
+      (let ((cmd  (cdr res))
+            (addr (car res)))
+        (when (cmd-reversible? cmd)
+          (editor-snapshot editor))
+        (execute-command line cmd addr)))
     (lambda (line reason)
       (handle-error editor line reason)))
 

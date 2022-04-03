@@ -222,3 +222,28 @@
   (parse-map
     parse-addr-range
     last))
+
+;; XXX: Currently edward distinguishes single addresses and ranges.
+;; This is not conforming to POSIX since POSIX says that an arbitrary
+;; amount of addresses can be passed to a command and the command only
+;; uses the last N it actually needs and ignores the rest.
+
+;; Returns true if the parsed address is a range.
+
+(define (range? obj)
+  (and (list? obj)
+       (eqv? (length obj) 3)))
+
+;; Convert the given address to a range.
+
+(define (addr->range addr)
+  (if (range? addr)
+    addr
+    (make-range addr)))
+
+;; Convert the given range to an address.
+
+(define (range->addr addr)
+  (if (range? addr)
+    (last addr)
+    addr))
