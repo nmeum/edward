@@ -890,17 +890,16 @@
 ;; handler.
 
 (define (%parse-cmd parsers)
-  (parse-memoize "command parser"
-    (parse-map
-      (parse-seq
-        (parse-optional parse-addr-range)
-        (apply
-          parse-or
-          (append parsers (list (parse-fail "unknown command")))))
-      (lambda (x)
-        (let ((cmd (last x))
-              (addr (first x)))
-          (cons addr cmd))))))
+  (parse-map
+    (parse-seq
+      (parse-optional parse-addr-range)
+      (apply
+        parse-or
+        (append parsers (list (parse-fail "unknown command")))))
+    (lambda (x)
+      (let ((cmd (last x))
+            (addr (first x)))
+        (cons addr cmd)))))
 
 (define parse-cmd
   (%parse-cmd (get-command-parsers '())))
