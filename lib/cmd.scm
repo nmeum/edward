@@ -148,7 +148,7 @@
 ;; returned.
 
 (define (parse-cmd-char ch)
-  (parse-ignore (parse-char ch)))
+  (parse-ignore (parse-commit (parse-char ch))))
 
 ;; Read input data in the input mode format. Returns a list of parsed
 ;; lines as strings which do not include the terminating newlines.
@@ -889,11 +889,6 @@
 ;; cdr are the arguments which are supposed to be passed to this
 ;; handler.
 
-;; TODO: Commit to individual command parsers and don't backtrack.
-;; Implementing this would require separating address parsing from
-;; command parsing since we can only commit to a command after we
-;; have parsed the address successfully (the same address may be
-;; applicable to different commands).
 (define (%parse-cmd parsers)
   (parse-memoize "command parser"
     (parse-map
