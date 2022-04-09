@@ -148,6 +148,7 @@
 ;; returned.
 
 (define (parse-cmd-char ch)
+  ;; TODO: Prefix failure reason with command char that failed to parse.
   (parse-ignore (parse-commit (parse-char ch))))
 
 ;; Read input data in the input mode format. Returns a list of parsed
