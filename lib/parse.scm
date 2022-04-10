@@ -10,7 +10,7 @@
 
 (define-record-type Parse-Stream
   (%make-parse-stream
-   filename port buffer cache offset prev-char line column tail)
+   filename port buffer cache offset prev-char line column tail fk)
   parse-stream?
   ;; The file the data came from, for debugging and error reporting.
   (filename parse-stream-filename)
@@ -37,7 +37,10 @@
   (column parse-stream-column)
   ;; The successor Parse-Stream chunk, created on demand and filled
   ;; from the same port.
-  (tail %parse-stream-tail %parse-stream-tail-set!))
+  (tail %parse-stream-tail %parse-stream-tail-set!)
+  ;; Initial fk as passed to call-with-parse. Retained as part of
+  ;; the Parse-Stream for the parse-commit procedure.
+  (fk parse-stream-fk parse-stream-fk-set!))
 
 ;; We want to balance avoiding reallocating buffers with avoiding
 ;; holding many memoized values in memory.
@@ -50,7 +53,7 @@
   (let ((port (if (pair? o) (car o) (open-input-file filename)))
         (len (if (and (pair? o) (pair? (cdr o))) (cadr o) default-buffer-size)))
     (%make-parse-stream
-     filename port (make-vector len #f) (make-vector len '()) 0 #f 0 0 #f)))
+     filename port (make-vector len #f) (make-vector len '()) 0 #f 0 0 #f #f)))
 
 ;;> Open \var{filename} and create a parse stream on it.
 
@@ -80,7 +83,8 @@
                                        (parse-stream-last-char source)
                                        line
                                        col
-                                       #f)))
+                                       #f
+                                       (parse-stream-fk source))))
         (%parse-stream-tail-set! source tail)
         tail)))
 
@@ -265,6 +269,7 @@
 (define (call-with-parse f source index sk . o)
   (let ((s (if (string? source) (string->parse-stream source) source))
         (fk (if (pair? o) (car o) (lambda (s i reason) #f))))
+    (parse-stream-fk-set! s fk)
     (f s index sk fk)))
 
 ;;> Call the parser combinator \var{f} on the parse stream
@@ -523,7 +528,7 @@
 
 (define (parse-commit f)
   (lambda (source index sk fk)
-    (f source index (lambda (res s i fk) (sk res s i (lambda (s i r) #f))) fk)))
+    (f source index (lambda (res s i fk) (sk res s i (parse-stream-fk source))) fk)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -663,7 +668,7 @@
 (define (parse-string str)
   (parse-map (parse-with-failure-reason
               (parse-seq-list (map parse-char (string->list str)))
-              `(expected ,str))
+              (string-append "expected '" str "'"))
              list->string))
 
 ;;> Parse a sequence of characters matching \var{x} as with
@@ -686,41 +691,3 @@
                  (fk s i r)
                  (sk (parse-stream-substring source0 index0 source index)
                      source index fk))))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;> \section{Memoization}
-
-;; debugging
-(define *procedures* '())
-(define (procedure-name f)
-  (cond ((assq f *procedures*) => cdr) (else #f)))
-(define (procedure-name-set! f name)
-  (set! *procedures* (cons (cons f name) *procedures*)))
-
-(define memoized-failure (list 'failure))
-
-;;> Parse the same strings as \var{f}, but memoize the result at each
-;;> source and index to avoid exponential backtracking.  \var{name} is
-;;> provided for debugging only.
-
-(define (parse-memoize name f)
-  ;;(if (not (procedure-name f)) (procedure-name-set! f name))
-  (lambda (source index sk fk)
-    (cond
-     ((parse-stream-cache-cell source index f)
-      => (lambda (cell)
-           (if (and (pair? (cdr cell)) (eq? memoized-failure (cadr cell)))
-               (fk source index (cddr cell))
-               (apply sk (append (cdr cell) (list fk))))))
-     (else
-      (f source
-         index
-         (lambda (res s i fk)
-           (parse-stream-cache-set! source index f (list res s i))
-           (sk res s i fk))
-         (lambda (s i r)
-           (if (not (pair? (parse-stream-cache-cell source index f)))
-               (parse-stream-cache-set!
-                source index f (cons memoized-failure r)))
-           (fk s i r)))))))
