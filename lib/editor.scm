@@ -48,7 +48,9 @@
          (args (if (null? default-addr)
                  (cmd-args cmd)
                  (append (list new-addr) (cmd-args cmd)))))
-    (apply (cmd-proc cmd) editor args)))
+    (if (and (null? default-addr) addr)
+      (editor-raise "unexpected address")
+      (apply (cmd-proc cmd) editor args))))
 
 ;; Execute a list of commands using given editor state.
 
