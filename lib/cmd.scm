@@ -751,9 +751,8 @@
       (text-editor-modified-set! editor #f))))
 
 (define-file-cmd (write exec-write
-                        (list
+                        (make-range
                           (make-addr '(nth-line . 1))
-                          #\,
                           (make-addr '(last-line))))
   (parse-file-cmd #\w))
 
