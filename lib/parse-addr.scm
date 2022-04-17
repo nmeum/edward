@@ -175,6 +175,55 @@
 ;; on either side of the separation character. Consult the standard for
 ;; more information.
 
+(define (address-seperator? obj)
+  (or
+    (eq? obj #\,)
+    (eq? obj #\;)))
+
+(define parse-range-sep
+  (parse-char address-seperator?))
+
+(define %parse-addr-ng
+  (parse-or
+    (parse-repeat+
+      (parse-seq
+        (parse-or
+          parse-addr-with-off
+          (parse-bind #f parse-beginning-of-line))
+        parse-range-sep
+        (parse-or
+          parse-addr-with-off
+          (parse-bind #f parse-epsilon))))
+    (parse-map
+      parse-addr-with-off
+      (lambda (addr)
+        (list (make-range addr))))))
+
+(define transform-addr
+  (match-lambda
+    ((#f #\, #f)
+     (list (make-addr '(nth-line . 1))
+           #\,
+           (make-addr '(last-line))))
+    ((#f #\, addr)
+     (list (make-addr '(nth-line . 1)) #\, addr))
+    ((addr #\, #f)
+     (list addr #\, addr))
+    ((#f #\; #f)
+     (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
+    ((#f #\; addr)
+     (list (make-addr '(current-line)) #\; addr))
+    ((addr #\; #f)
+     (list addr #\; addr))
+    ((addr1 sep addr2)
+     (list addr1 sep addr2))))
+
+(define parse-addr-ng
+  (parse-map
+    %parse-addr-ng
+    (lambda (lst)
+      (map transform-addr lst))))
+
 (define %parse-addr-range
   (parse-map
     (parse-seq

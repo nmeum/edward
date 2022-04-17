@@ -18,8 +18,8 @@
           (chicken process-context)
           (chicken port))
 
-  (export parse call-with-parse parse-stream-end? string->parse-stream)
-  (export make-addr make-range addr->range range->addr parse-addr parse-addr-range)
+  (export parse parse-fully call-with-parse parse-stream-end? string->parse-stream)
+  (export parse-addr-ng make-addr make-range addr->range range->addr parse-addr parse-addr-range)
   (export parse-cmd)
   (export make-text-editor editor-start)
   (export parse-replace regex-replace)
