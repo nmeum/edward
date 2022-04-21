@@ -20,7 +20,8 @@
   (case-lambda
     (() (make-range (make-addr '(current-line))))
     ((addr) (list addr #\, addr))
-    ((start end) (list start #\, end))))
+    ((start end) (list start #\, end))
+    ((start sep end) (list start sep end))))
 
 ;; Returns true if the parsed address is a range.
 
