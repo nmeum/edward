@@ -163,7 +163,7 @@
 
 ;; Utility procedure for parsing addresses without offset.
 
-(define %parse-addr
+(define parse-addr
   (parse-or
     parse-current
     parse-last
@@ -179,7 +179,7 @@
 ;; <hyphen-minus> character not followed by a decimal number shall be
 ;; interpreted as +1/-1.
 
-(define parse-addr-offsets
+(define %parse-addr-with-off
   (parse-repeat
     (parse-map
       (parse-seq
@@ -193,8 +193,8 @@
   (parse-or
     (parse-atomic
       (parse-seq
-        %parse-addr
-        parse-addr-offsets))
+        parse-addr
+        %parse-addr-with-off))
     (parse-fail "unknown address format")))
 
 ;; From POSIX-1.2008:
@@ -216,22 +216,6 @@
 (define parse-range-sep
   (parse-char address-seperator?))
 
-(define %parse-addr-ng
-  (parse-or
-    (parse-repeat+
-      (parse-seq
-        (parse-or
-          parse-addr-with-off
-          (parse-bind #f parse-beginning-of-line))
-        parse-range-sep
-        (parse-or
-          parse-addr-with-off
-          (parse-bind #f parse-epsilon))))
-    (parse-map
-      parse-addr-with-off
-      (lambda (addr)
-        (list (make-range addr))))))
-
 (define transform-addr
   (match-lambda
     ((#f #\, #f)
@@ -251,56 +235,24 @@
     ((addr1 sep addr2)
      (list addr1 sep addr2))))
 
-(define parse-addr-ng
-  (parse-map
-    %parse-addr-ng
-    (lambda (lst)
-      (map transform-addr lst))))
-
-(define %parse-addr-range
-  (parse-map
-    (parse-seq
-      (parse-optional parse-addr-with-off)
-      (parse-ignore parse-blanks)
-      (parse-or
-        (parse-char #\,)
-        (parse-char #\;))
-      (parse-ignore parse-blanks)
-      (parse-optional parse-addr-with-off))
-
-    (match-lambda
-      ((#f #\, #f)
-       (list (make-addr '(nth-line . 1))
-             #\,
-             (make-addr '(last-line))))
-      ((#f #\, addr)
-       (list (make-addr '(nth-line . 1)) #\, addr))
-      ((addr #\, #f)
-       (list addr #\, addr))
-      ((#f #\; #f)
-       (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
-      ((#f #\; addr)
-       (list (make-addr '(current-line)) #\; addr))
-      ((addr #\; #f)
-       (list addr #\; addr))
-      ((addr1 sep addr2)
-       (list addr1 sep addr2)))))
-
-;; From the OpenBSD ed(1) man page:
-;;
-;;   If only one address is given in a range, then the second address is
-;;   set to the given address. If only one address is expected, then the
-;;   last address is used.
-
-(define parse-addr-range
+(define %parse-addrs
   (parse-or
-    %parse-addr-range
+    (parse-repeat+
+      (parse-seq
+        (parse-or
+          parse-addr-with-off
+          (parse-bind #f parse-beginning-of-line))
+        parse-range-sep
+        (parse-or
+          parse-addr-with-off
+          (parse-bind #f parse-epsilon))))
     (parse-map
       parse-addr-with-off
       (lambda (addr)
-        (list addr #\, addr)))))
+        (list (make-range addr))))))
 
-(define parse-addr
+(define parse-addrs
   (parse-map
-    parse-addr-range
-    last))
+    %parse-addrs
+    (lambda (lst)
+      (map transform-addr lst))))

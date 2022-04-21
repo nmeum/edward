@@ -669,7 +669,7 @@
 
 (define-edit-cmd (move exec-move (make-range))
   (parse-cmd-char #\m)
-  parse-addr)
+  parse-addr-with-off)
 
 ;;
 ; Copy Command
@@ -687,7 +687,7 @@
 
 (define-edit-cmd (copy exec-copy (make-range))
   (parse-cmd-char #\t)
-  parse-addr)
+  parse-addr-with-off)
 
 ;;
 ; Undo Command
@@ -890,7 +890,7 @@
 (define (%parse-cmd parsers)
   (parse-map
     (parse-seq
-      (parse-optional parse-addr-ng)
+      (parse-optional parse-addrs)
       (apply
         parse-or
         (append parsers (list (parse-fail "unknown command")))))
