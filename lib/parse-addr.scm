@@ -1,13 +1,46 @@
+;; The edward address parsing code distinguishes single addresses
+;; and ranges. The latter consisting of a start and end address as well
+;; as a address separator (as defined in POSIX). The parse-addr
+;; procedure returns a list of address ranges. The editor implementation
+;; is capable of converting this list to a pair of line numbers using
+;; the addrlst->lpair procedure. Command implementations expecting a
+;; range address receive this pair, commands which only expect a single
+;; address only receive the first element of the pair as an argument.
+
+;; Create a single address with an optional offset.
+
 (define make-addr
   (case-lambda
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
+
+;; Create an address range consisting of two addresses.
 
 (define make-range
   (case-lambda
     (() (make-range (make-addr '(current-line))))
     ((addr) (list addr #\, addr))
     ((start end) (list start #\, end))))
+
+;; Returns true if the parsed address is a range.
+
+(define (range? obj)
+  (and (list? obj)
+       (eqv? (length obj) 3)))
+
+;; Convert the given address to a range.
+
+(define (addr->range addr)
+  (if (range? addr)
+    addr
+    (make-range addr)))
+
+;; Convert the given range to an address.
+
+(define (range->addr addr)
+  (if (range? addr)
+    (last addr)
+    addr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -271,28 +304,3 @@
   (parse-map
     parse-addr-range
     last))
-
-;; XXX: Currently edward distinguishes single addresses and ranges.
-;; This is not conforming to POSIX since POSIX says that an arbitrary
-;; amount of addresses can be passed to a command and the command only
-;; uses the last N it actually needs and ignores the rest.
-
-;; Returns true if the parsed address is a range.
-
-(define (range? obj)
-  (and (list? obj)
-       (eqv? (length obj) 3)))
-
-;; Convert the given address to a range.
-
-(define (addr->range addr)
-  (if (range? addr)
-    addr
-    (make-range addr)))
-
-;; Convert the given range to an address.
-
-(define (range->addr addr)
-  (if (range? addr)
-    (last addr)
-    addr))
