@@ -1,8 +1,5 @@
 # POSIX Compatibility
 
-* "Any number of addresses can be provided to commands taking addresses;"
-	* Example: 1,2,3,4,5p
-	* Example: 3;/foo/;+2p
 * Allow omitting "delimiter of an RE or of a replacement string in a g, G, s, v, or V command"
 	* s/s1/s2 → s/s1/s2/p
 	* g/s1 → g/s1/p
@@ -34,11 +31,6 @@
 # Miscellaneous
 
 * Integration tests: compare exit status
-* Many command implementations (join, print, number, …) run
-  editor-range twice which comes with unnecessary performance penalty.
-  Idea: Pass unwrapped range to command implementations.
-	1. Directly to determine start/end address for goto
-	2. Indirectly through buffer operation (e.g. delete, move, …)
 * Use posix-regex multiline feature instead of matching lines individually
 * Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
 * Use chicken locative instead of editor-get-lnum hack to deal with pointers to lines
