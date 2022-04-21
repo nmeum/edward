@@ -242,7 +242,9 @@
         (parse-or
           parse-addr-with-off
           (parse-bind #f parse-beginning-of-line))
+        (parse-ignore parse-blanks)
         parse-range-sep
+        (parse-ignore parse-blanks)
         (parse-or
           parse-addr-with-off
           (parse-bind #f parse-epsilon))))
