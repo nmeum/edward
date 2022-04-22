@@ -45,10 +45,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (submatch subm bv n)
-  (let ((match (vector-ref subm n)))
-    (if match
-      (bytevector-copy bv (car match) (cdr match))
-      #u8())))
+  (if (>= n (vector-length subm))
+    (editor-raise "invalid backreference") ;; XXX: GNU ed doesn't error out
+    (let ((match (vector-ref subm n)))
+      (if match
+        (bytevector-copy bv (car match) (cdr match))
+        #u8()))))
 
 (define (regex-replace* regex subst bv nth)
   (define (apply-replacement subm bv replacement)
