@@ -219,22 +219,42 @@
 
 (define transform-addr
   (match-lambda
-    ((#f #\, #f)
+    ((#\,)
      (list (make-addr '(nth-line . 1))
            #\,
            (make-addr '(last-line))))
-    ((#f #\, addr)
+    ((#\, addr)
      (list (make-addr '(nth-line . 1)) #\, addr))
-    ((addr #\, #f)
+    ((addr #\,)
      (list addr #\, addr))
-    ((#f #\; #f)
+    ((#\;)
      (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
-    ((#f #\; addr)
+    ((#\; addr)
      (list (make-addr '(current-line)) #\; addr))
-    ((addr #\; #f)
+    ((addr #\;)
      (list addr #\; addr))
     ((addr1 sep addr2)
      (list addr1 sep addr2))))
+
+;; The ',' and ';' operators for addresses seem to be right-associative
+;; (i.e. the operations are grouped from the right). POSIX doesn't
+;; mandate this outright but the address table in the rationale sections
+;; assumes right-associative behavior. The table contains the example
+;; address `7,5,` which is supposed to be evaluated as `7,(5,)`
+;; ultimately yielding `5,5` instead of `(7,5),` which would yield
+;; `1,$`. The procedure below converts left-to-right parsed address
+;; ranges to ranges which enforce right-associative behavior.
+
+(define (lr->rl lst)
+  (fold-right
+    (lambda (cur prev-addrlst)
+      (let ((last-addr (car prev-addrlst)))
+        (if (address-seperator? cur)
+          (if (find address-seperator? last-addr)
+            (cons (list cur) prev-addrlst)
+            (cons (cons cur last-addr) (cdr prev-addrlst)))
+          (cons (cons cur last-addr) (cdr prev-addrlst)))))
+    '(()) (concatenate lst)))
 
 (define %parse-addrs
   (parse-or
@@ -242,13 +262,13 @@
       (parse-seq
         (parse-or
           parse-addr-with-off
-          (parse-bind #f parse-beginning-of-line))
+          (parse-ignore parse-beginning-of-line))
         (parse-ignore parse-blanks)
         parse-range-sep
         (parse-ignore parse-blanks)
         (parse-or
           parse-addr-with-off
-          (parse-bind #f parse-epsilon))))
+          (parse-ignore parse-epsilon))))
     (parse-map
       parse-addr-with-off
       (lambda (addr)
@@ -258,4 +278,4 @@
   (parse-map
     %parse-addrs
     (lambda (lst)
-      (map transform-addr lst))))
+      (map transform-addr (lr->rl lst)))))

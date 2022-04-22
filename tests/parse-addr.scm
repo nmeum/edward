@@ -130,3 +130,45 @@
         #\,
         (make-addr '(nth-line . 42) '(42 23))))
     parse-addrs "23  +23 +42,  42 +42   +23"))
+
+(test-group "multiple addresses"
+  (test-parse
+    (list
+      (make-range
+        (make-addr '(nth-line . 1))
+        (make-addr '(nth-line . 1)))
+      (make-range
+        (make-addr '(nth-line . 2))
+        (make-addr '(nth-line . 3))))
+    parse-addrs "1,2,3")
+
+  (test-parse
+    (list
+      (make-range
+        (make-addr '(nth-line . 1))
+        (make-addr '(last-line)))
+      (make-range
+        (make-addr '(nth-line . 1))
+        (make-addr '(last-line))))
+    parse-addrs ",,")
+
+  (test-parse
+    (list
+      (make-range
+        (make-addr '(nth-line . 1))
+        (make-addr '(last-line)))
+      (make-range
+        (make-addr '(current-line))
+        #\;
+        (make-addr '(last-line))))
+    parse-addrs ",;")
+
+  (test-parse
+    (list
+      (make-range
+        (make-addr '(nth-line . 7))
+        (make-addr '(nth-line . 7)))
+      (make-range
+        (make-addr '(nth-line . 5))
+        (make-addr '(nth-line . 5))))
+    parse-addrs "7,5,"))
