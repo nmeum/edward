@@ -354,7 +354,7 @@
     (let ((sline (car lines))
           (eline (cdr lines))
           (lst   (buffer->list (text-editor-buffer editor))))
-      (sublist lst (dec sline) eline))))
+      (sublist lst (max (dec sline) 0) eline))))
 
 (define (editor-in-range editor lines line)
   (let ((sline (car lines))
