@@ -259,16 +259,17 @@
 (define %parse-addrs
   (parse-or
     (parse-repeat+
-      (parse-seq
-        (parse-or
-          parse-addr-with-off
-          (parse-ignore parse-beginning-of-line))
-        (parse-ignore parse-blanks)
-        parse-range-sep
-        (parse-ignore parse-blanks)
-        (parse-or
-          parse-addr-with-off
-          (parse-ignore parse-epsilon))))
+      (parse-memoize "address parser"
+        (parse-seq
+          (parse-or
+            parse-addr-with-off
+            (parse-ignore parse-beginning-of-line))
+          (parse-ignore parse-blanks)
+          parse-range-sep
+          (parse-ignore parse-blanks)
+          (parse-or
+            parse-addr-with-off
+            (parse-ignore parse-epsilon)))))
     (parse-map
       parse-addr-with-off
       (lambda (addr)
