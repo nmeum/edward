@@ -290,12 +290,11 @@
           (editor-raise (string-append "invalid mark: " (string mark)))))
       (editor-raise (string-append "unknown mark: " (string mark))))))
 
-;; Move editor cursor to specified line/address. Line 1 is the first
-;; line, specifying 0 as a line moves the cursor **before** the first
-;; line. Target can either be a line number or an address.
+;; Move editor cursor to specified line. Line 1 is the first line,
+;; specifying 0 as a line moves the cursor **before** the first line.
 
-(define (editor-goto! editor target)
-  (text-editor-line-set! editor (->line editor target)))
+(define (editor-goto! editor line)
+  (text-editor-line-set! editor line))
 
 (define (range->lpair! editor range)
   (define (%range->lpair! editor start end)
@@ -311,7 +310,7 @@
   ;; for forwards and backwards searches.
   (match range
     ((fst #\; snd)
-      (editor-goto! editor fst) ;; side-effect
+      (editor-goto! editor (addr->line editor fst)) ;; side-effect
       (%range->lpair! editor (make-addr '(current-line)) snd))
     ((fst #\, snd)
      (%range->lpair! editor fst snd))))
@@ -498,13 +497,6 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
-
-(define (->line editor obj)
-  (if (number? obj)
-    ;; obj already is a line number.
-    obj
-    ;; else: assume obj is an address.
-    (addr->line editor obj)))
 
 ;; Return list of line numbers for given lines.
 
