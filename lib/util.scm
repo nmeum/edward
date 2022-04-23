@@ -126,7 +126,7 @@
 
   (%string-split (string-append str (string delim)) delim))
 
-;; Join a list of path elements using `/` as a path seperator.
+;; Join a list of path elements using `/` as a path separator.
 
 (define (path-join . elems)
   (fold-right

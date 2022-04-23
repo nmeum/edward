@@ -207,13 +207,13 @@
 ;; on either side of the separation character. Consult the standard for
 ;; more information.
 
-(define (address-seperator? obj)
+(define (address-separator? obj)
   (or
     (eq? obj #\,)
     (eq? obj #\;)))
 
-(define parse-range-sep
-  (parse-char address-seperator?))
+(define parse-separator
+  (parse-char address-separator?))
 
 ;; This procedure transform a given parsed address according to the
 ;; omission rules mandated by the POSIX standard. The return value
@@ -251,8 +251,8 @@
   (fold-right
     (lambda (cur prev-addrlst)
       (let ((last-addr (car prev-addrlst)))
-        (if (address-seperator? cur)
-          (if (find address-seperator? last-addr)
+        (if (address-separator? cur)
+          (if (find address-separator? last-addr)
             (cons (list cur) prev-addrlst)
             (cons (cons cur last-addr) (cdr prev-addrlst)))
           (cons (cons cur last-addr) (cdr prev-addrlst)))))
@@ -271,7 +271,7 @@
             parse-addr-with-off
             (parse-ignore parse-beginning-of-line))
           (parse-ignore parse-blanks)
-          parse-range-sep
+          parse-separator
           (parse-ignore parse-blanks)
           (parse-or
             parse-addr-with-off
