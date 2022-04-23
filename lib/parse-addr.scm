@@ -201,9 +201,7 @@
 ;; From POSIX-1.2008:
 ;;
 ;;   Addresses shall be separated from each other by a <comma> (',') or
-;;   <semicolon> character (';'). In the case of a <semicolon>
-;;   separator, the current line ('.') shall be set to the first
-;;   address, and only then will the second address be calculated.
+;;   <semicolon> character (';').
 ;;
 ;; POSIX also mandates a table with rules in case addresses are omitted
 ;; on either side of the separation character. Consult the standard for
@@ -216,6 +214,10 @@
 
 (define parse-range-sep
   (parse-char address-seperator?))
+
+;; This procedure transform a given parsed address according to the
+;; omission rules mandated by the POSIX standard. The return value
+;; will also be an address range.
 
 (define transform-addr
   (match-lambda
@@ -255,6 +257,10 @@
             (cons (cons cur last-addr) (cdr prev-addrlst)))
           (cons (cons cur last-addr) (cdr prev-addrlst)))))
     '(()) (concatenate lst)))
+
+;; Parse an address chain consisting of multiple addresses separated by
+;; <comma> or <semicolon> characters. Returns an address list which can
+;; be converted to a line pair using the addrlst->lpair procedure.
 
 (define %parse-addrs
   (parse-or
