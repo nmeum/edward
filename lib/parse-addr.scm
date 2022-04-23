@@ -222,21 +222,21 @@
 (define transform-addr
   (match-lambda
     ((#\,)
-     (list (make-addr '(nth-line . 1))
-           #\,
-           (make-addr '(last-line))))
+     (make-range (make-addr '(nth-line . 1))
+                 #\,
+                 (make-addr '(last-line))))
     ((#\, addr)
-     (list (make-addr '(nth-line . 1)) #\, addr))
+     (make-range (make-addr '(nth-line . 1)) #\, addr))
     ((addr #\,)
-     (list addr #\, addr))
+     (make-range addr #\, addr))
     ((#\;)
-     (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
+     (make-range (make-addr '(current-line)) #\; (make-addr '(last-line))))
     ((#\; addr)
-     (list (make-addr '(current-line)) #\; addr))
+     (make-range (make-addr '(current-line)) #\; addr))
     ((addr #\;)
-     (list addr #\; addr))
+     (make-range addr #\; addr))
     ((addr1 sep addr2)
-     (list addr1 sep addr2))))
+     (make-range addr1 sep addr2))))
 
 ;; The ',' and ';' operators for addresses seem to be right-associative
 ;; (i.e. the operations are grouped from the right). POSIX doesn't
