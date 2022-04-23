@@ -1,0 +1,7 @@
+this line already contains the string "foo"
+however, we only start searching at line 3
+<--we start searching here-->
+hence "foo" will not be matched before line 3.
+line 1 after match
+line 2 after match
+last line
