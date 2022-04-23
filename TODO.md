@@ -1,13 +1,14 @@
 # POSIX Compatibility
 
-* "Any number of addresses can be provided to commands taking addresses;"
-	* Example: 1,2,3,4,5p
-	* Example: 3;/foo/;+2p
+* Handling of address chains like `,,`, `;;`, `;,`, …
+	* POSIX wants `,,` etc. to evaluate to `$,$`
+	* In edward (and BSD ed) `,,` evaluates to `1,$` instead
+	* The address chain evaluation algorithm is not clearly
+	  specified in POSIX, this should be addressed in the spec
 * Allow omitting "delimiter of an RE or of a replacement string in a g, G, s, v, or V command"
 	* s/s1/s2 → s/s1/s2/p
 	* g/s1 → g/s1/p
 	* ?si → ?si?
-
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
 	  reading past EOF but ed requires this
@@ -34,11 +35,6 @@
 # Miscellaneous
 
 * Integration tests: compare exit status
-* Many command implementations (join, print, number, …) run
-  editor-range twice which comes with unnecessary performance penalty.
-  Idea: Pass unwrapped range to command implementations.
-	1. Directly to determine start/end address for goto
-	2. Indirectly through buffer operation (e.g. delete, move, …)
 * Use posix-regex multiline feature instead of matching lines individually
 * Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
 * Use chicken locative instead of editor-get-lnum hack to deal with pointers to lines

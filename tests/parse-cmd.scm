@@ -12,9 +12,15 @@
   (test-parse-cmd "preceeding whitespaces"
     (list #f '()) "  a\n.")
   (test-parse-cmd "custom address without offset"
-    (list (addr->range (make-addr '(nth-line . 2342))) '()) "2342    a\n.")
+    (list
+      (list (addr->range (make-addr '(nth-line . 2342))))
+      '())
+    "2342    a\n.")
   (test-parse-cmd "custom address with offset"
-    (list (addr->range (make-addr '(last-line . ()) '(42))) '()) "$+42 a\n."))
+    (list
+      (list (addr->range (make-addr '(last-line . ()) '(42))))
+      '())
+    "$+42 a\n."))
 
 (test-group "read command"
   (test-parse-cmd "no arguments"
@@ -24,12 +30,12 @@
 
   (test-parse-cmd "custom address"
     (list
-      (addr->range (make-addr '(nth-line . 42)))
+      (list (addr->range (make-addr '(nth-line . 42))))
       "") "42r")
 
   (test-parse-cmd "custom address and file"
     (list
-      (addr->range (make-addr '(regex-backward . "foo") '(23 -42)))
+      (list (addr->range (make-addr '(regex-backward . "foo") '(23 -42))))
       "foobar") "?foo? +23 -42 r foobar")
 
   (test-parse-error "failed char pred" parse-cmd "rfoo"))
@@ -42,9 +48,9 @@
 
   (test-parse-cmd "custom address and offset, no whitespaces"
     (list
-      (make-range
-        (make-addr '(current-line))
-        (make-addr '(current-line) '(10)))
+      (list (make-range
+              (make-addr '(current-line))
+              (make-addr '(current-line) '(10))))
       "foobar") ".,.+10w foobar")
 
   (test-parse-error "failed char pred" parse-cmd "wfoo"))
@@ -68,9 +74,9 @@
 (test-group "global command"
   (test-parse-cmd "single command no newline"
     (list
-      (make-range
-        (make-addr '(nth-line . 1))
-        (make-addr '(last-line)))
+      (list (make-range
+              (make-addr '(nth-line . 1))
+              (make-addr '(last-line))))
       "foo"
       "p\n") "1,$g/foo/p")
 
@@ -82,28 +88,28 @@
 
   (test-parse-cmd "single trailing whitespace"
     (list
-      (make-range
-        (make-addr '(nth-line . 1))
-        (make-addr '(last-line)))
+      (list (make-range
+              (make-addr '(nth-line . 1))
+              (make-addr '(last-line))))
       "foobar"
       "p \n") "1,$g/foobar/p ")
 
   (test-parse-cmd "single command no newline"
     (list
-      (make-range
-        (make-addr '(nth-line . 23))
-        (make-addr '(nth-line . 42)))
+      (list (make-range
+              (make-addr '(nth-line . 23))
+              (make-addr '(nth-line . 42))))
       "test"
       "p \np\n") "23,42g/test/p \\\np"))
 
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
-    (list (addr->range (make-addr '(nth-line . 2342)))
+    (list (list (addr->range (make-addr '(nth-line . 2342))))
           '())
     "2342a     \n.")
 
   (test-parse-cmd "append command with suffixed printing command"
-    (list (addr->range (make-addr '(nth-line . 42)))
+    (list (list (addr->range (make-addr '(nth-line . 42))))
           '())
      "42an\n.")
 

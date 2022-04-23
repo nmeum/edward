@@ -34,23 +34,42 @@
 
 ;; Execute given command using given editor state.
 
-(define (editor-exec editor addr cmd)
-  (let* ((default-addr (cmd-default-addr cmd))
-         ;; Convert given address to a single address or
-         ;; a range address (depending on default address).
-         (new-addr (if addr
-                     (if (range? default-addr)
-                       (addr->range addr)
-                       (range->addr addr))
-                     default-addr))
-         ;; Only execute with address argument if default
-         ;; address (specified for cmd) is not null.
-         (args (if (null? default-addr)
-                 (cmd-args cmd)
-                 (append (list new-addr) (cmd-args cmd)))))
-    (if (and (null? default-addr) addr)
-      (editor-raise "unexpected address")
-      (apply (cmd-proc cmd) editor args))))
+(define (editor-xexec editor line-addr cmd)
+  (let ((default-addr (cmd-default-addr cmd)))
+    (when (and (null? default-addr) line-addr)
+      (editor-raise "unexpected address"))
+    (when (and (range? default-addr) (zero? (car line-addr)))
+      (editor-raise "ranges cannot start at address zero"))
+
+    (apply (cmd-proc cmd)
+           editor
+           (if (null? (cmd-default-addr cmd)) ;; doesn't expect address
+             (cmd-args cmd)
+             (append (list line-addr) (cmd-args cmd))))))
+
+(define (editor-exec editor addrlst cmd)
+  ;; XXX: Special handling for write command with empty buffer.
+  ;; Without this, it would be impossible to use write with
+  ;; an empty buffer since the default address is invalid then.
+  ;;
+  ;; TODO: Find a better way to deal with this edge case.
+  (if (and (eqv? (cmd-symbol cmd) 'write)
+           (not addrlst)
+           (buffer-empty? (text-editor-buffer editor)))
+      (editor-xexec editor '(1 . 1) cmd)
+      (let* ((default-addr (cmd-default-addr cmd))
+             ;; Convert addrlst to line pair (if any given) or
+             ;; use default address and convert that (if any).
+             (line-pair (if addrlst
+                          (addrlst->lpair editor addrlst)
+                          (and (not (null? default-addr))
+                               (range->lpair editor (addr->range default-addr)))))
+             ;; Convert given address (if any) to a single line
+             ;; or a line pair (depending on default address).
+             (line-addr (if (or (not line-pair) (range? default-addr))
+                          line-pair
+                          (car line-pair))))
+          (editor-xexec editor line-addr cmd))))
 
 ;; Execute a list of commands using given editor state.
 
@@ -254,8 +273,8 @@
   (text-editor-buffer-set! editor (make-buffer))
   (text-editor-marks-set! editor '()))
 
-(define (editor-mark-line editor addr mark)
-  (let ((lines (editor-get-range editor (make-range addr))))
+(define (editor-mark-line editor line mark)
+  (let ((lines (editor-get-lines editor (cons line line))))
     (if (null? lines)
       (editor-raise "invalid address")
       (text-editor-marks-set! editor
@@ -271,21 +290,19 @@
           (editor-raise (string-append "invalid mark: " (string mark)))))
       (editor-raise (string-append "unknown mark: " (string mark))))))
 
-;; Move editor cursor to specified line/address. Line 1 is the first
-;; line, specifying 0 as a line moves the cursor **before** the first
-;; line. Target can either be a line number or an address.
+;; Move editor cursor to specified line. Line 1 is the first line,
+;; specifying 0 as a line moves the cursor **before** the first line.
 
-(define (editor-goto! editor target)
-  (text-editor-line-set! editor (->line editor target)))
+(define (editor-goto! editor line)
+  (text-editor-line-set! editor line))
 
-(define (editor-range editor range)
-  (define (%editor-range editor start end)
+(define (range->lpair! editor range)
+  (define (%range->lpair! editor start end)
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
-      (cond
-        ((zero? sline)   (editor-raise "ranges cannot start at address zero"))
-        ((> sline eline) (editor-raise "invalid range specification"))
-        (else (values sline eline)))))
+      (if (> sline eline)
+        (editor-raise "invalid range specification")
+        (cons sline eline))))
 
   ;; In the case of a <semicolon> separator, the current line ('.') shall
   ;; be set to the first address, and only then will the second address be
@@ -293,14 +310,25 @@
   ;; for forwards and backwards searches.
   (match range
     ((fst #\; snd)
-     (let* ((cur (make-addr '(current-line)))
-            (old (addr->line editor cur)))
-      (editor-goto! editor fst)
-      (let-values (((sline eline) (%editor-range editor cur snd)))
-        (editor-goto! editor old) ;; undo side-effect
-        (values sline eline))))
+      (editor-goto! editor (addr->line editor fst)) ;; side-effect
+      (%range->lpair! editor (make-addr '(current-line)) snd))
     ((fst #\, snd)
-     (%editor-range editor fst snd))))
+     (%range->lpair! editor fst snd))))
+
+(define (range->lpair editor range)
+  (let* ((cur (make-addr '(current-line)))
+         (old (addr->line editor cur))
+         (ret (range->lpair! editor range)))
+    (editor-goto! editor old) ;; undo range->lpair! side-effect
+    ret))
+
+(define (addrlst->lpair editor lst)
+  (let* ((cur (make-addr '(current-line)))
+         (old (addr->line editor cur))
+         (ret (fold (lambda (range _)
+                      (range->lpair! editor range)) '() lst)))
+    (editor-goto! editor old) ;; undo side-effect
+    ret))
 
 ;; Find current line number for a given line in the editor buffer. False
 ;; is returned if the line does not exist in the editor buffer.
@@ -319,16 +347,17 @@
         (iota (editor-lines editor) 1))
       #f)))
 
-(define (editor-get-range editor range)
+(define (editor-get-lines editor lines)
   (if (buffer-empty? (text-editor-buffer editor))
     '()
-    (let-values (((sline eline) (editor-range editor range))
-                 ((list) (buffer->list (text-editor-buffer editor))))
-      (sublist list (dec sline) eline))))
+    (let ((sline (car lines))
+          (eline (cdr lines))
+          (lst   (buffer->list (text-editor-buffer editor))))
+      (sublist lst (max (dec sline) 0) eline))))
 
-(define (editor-in-range editor range addr)
-  (let-values (((sline eline) (editor-range editor range))
-               ((line) (addr->line editor addr)))
+(define (editor-in-range editor lines line)
+  (let ((sline (car lines))
+        (eline (cdr lines)))
     (and (>= line sline) (< line eline))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -368,53 +397,55 @@
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
-(define (editor-append! editor addr text)
+(define (editor-append! editor line text)
   (unless (null? text)
     (text-editor-modified-set! editor #t))
 
-  (let ((buf  (text-editor-buffer editor))
-        (line (addr->line editor addr)))
+  (let ((buf (text-editor-buffer editor)))
     (buffer-append! buf line text)
     (+ line (length text))))
 
-;; Replace text in given range with given data. Return line number of
+;; Replace text of given lines with given data. Return line number of
 ;; last inserted line.
 
-(define (editor-replace! editor range data)
+(define (editor-replace! editor lines data)
   (text-editor-modified-set! editor #t)
-  (let-values (((sline eline) (editor-range editor range))
-               ((buffer) (text-editor-buffer editor)))
+  (let* ((sline  (car lines))
+         (eline  (cdr lines))
+         (buffer (text-editor-buffer editor)))
     (buffer-replace! buffer sline eline data)
     (+ (max 0 (dec sline)) (length data))))
 
-;; Join lines in given range to single line. Return value is undefined.
+;; Join given lines to single line. Return value is undefined.
 
-(define (editor-join! editor range)
+(define (editor-join! editor lines)
   (text-editor-modified-set! editor #t)
-  (let-values (((sline eline) (editor-range editor range))
-               ((buffer) (text-editor-buffer editor)))
+  (let ((sline  (car lines))
+        (eline  (cdr lines))
+        (buffer (text-editor-buffer editor)))
     (buffer-join! buffer sline eline)))
 
-;; Remove lines in given range. Return value is undefined.
+;; Remove given lines Return value is undefined.
 
-(define (editor-remove! editor range)
+(define (editor-remove! editor lines)
   (text-editor-modified-set! editor #t)
-  (let-values (((sline eline) (editor-range editor range))
-               ((buffer) (text-editor-buffer editor)))
+  (let ((sline  (car lines))
+        (eline  (cdr lines))
+        (buffer (text-editor-buffer editor)))
     (buffer-remove! buffer sline eline)))
 
-;; Move lines in given range to given address. Returns
-;; the address of the last inserted line.
+;; Move given lines to given address. Returns the address of the
+;; last inserted line.
 
-(define (editor-move! editor range addr)
+(define (editor-move! editor lines dest-line)
   (text-editor-modified-set! editor #t)
-  (let-values (((sline eline) (editor-range editor range))
-               ((target) (addr->line editor addr))
-               ((buffer) (text-editor-buffer editor)))
-    (buffer-move! buffer sline eline target)
+  (let ((sline  (car lines))
+        (eline  (cdr lines))
+        (buffer (text-editor-buffer editor)))
+    (buffer-move! buffer sline eline dest-line)
     (min
       (editor-lines editor)
-      (+ target (inc (- eline sline))))))
+      (+ dest-line (inc (- eline sline))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -424,7 +455,8 @@
     (if (or
           (> 0 nline)
           (> nline (editor-lines editor)))
-      (editor-raise "invalid final address value")
+      (editor-raise (string-append "invalid final address value: "
+                                   (number->string nline)))
       nline)))
 
 (define (match-line direction editor bre)
@@ -466,15 +498,9 @@
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
 
-(define (->line editor obj)
-  (if (number? obj)
-    ;; obj already is a line number.
-    obj
-    ;; else: assume obj is an address.
-    (addr->line editor obj)))
+;; Return list of line numbers for given lines.
 
-;; Return list of line numbers for the given range.
-
-(define (range->lines editor range)
-  (let-values (((sline eline) (editor-range editor range)))
+(define (line-numbers lines)
+  (let ((sline (car lines))
+        (eline (cdr lines)))
     (iota (inc (- eline sline)) sline)))

@@ -51,7 +51,7 @@
     (lambda (editor . args)
       (if (null? def-addr) ;; If command expects address
         (editor-exec editor #f (make-cmd symbol def-addr handler args))
-        (editor-exec editor (car args) (make-cmd symbol def-addr handler (cdr args))))
+        (editor-xexec editor (car args) (make-cmd symbol def-addr handler (cdr args))))
       (when print-cmd
         (editor-exec editor #f print-cmd)))
     cmd-args))
@@ -265,7 +265,7 @@
 
 ;; Execute line-proc for each matched line for a global command.
 
-(define (each-matched-line editor range regex match-proc line-proc)
+(define (each-matched-line editor lines regex match-proc line-proc)
   (let ((bre (editor-make-regex editor regex)))
     (for-each (lambda (line)
                 (when (match-proc bre line)
@@ -277,18 +277,18 @@
                     (when lnum ;; line has not been deleted by a preceeding command
                       (parameterize ((subst-nomatch-handler id))
                         (line-proc lnum line))))))
-              (editor-get-range editor range))))
+              (editor-get-lines editor lines))))
 
 ;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
 
-(define (exec-command-list editor match-proc range regex cmdstr)
+(define (exec-command-list editor match-proc lines regex cmdstr)
   (let ((cmds (parse-command-list cmdstr)))
-    (each-matched-line editor range regex match-proc
+    (each-matched-line editor lines regex match-proc
                        (lambda (lnum line)
                          (editor-goto! editor lnum)
                          (editor-exec-cmdlist editor cmds)))))
 
-(define (exec-command-list-interactive editor match-proc range regex)
+(define (exec-command-list-interactive editor match-proc lines regex)
   (define previous-command '())
   (define (get-interactive editor)
     (let* ((cmd (editor-interactive editor))
@@ -303,7 +303,7 @@
         (set! previous-command ret))
       ret))
 
-  (each-matched-line editor range regex match-proc
+  (each-matched-line editor lines regex match-proc
                      (lambda (lnum line)
                        (println line)
                        (let ((cmd-pair (get-interactive editor)))
@@ -388,12 +388,10 @@
 ; Append Comand
 ;;
 
-;; TODO: Integrate address handling with marcos
-
-(define (exec-append editor addr data)
+(define (exec-append editor line data)
   (editor-goto!
     editor
-    (editor-append! editor addr data)))
+    (editor-append! editor line data)))
 
 (define-input-cmd (append exec-append (make-addr '(current-line)))
   (parse-cmd-char #\a))
@@ -407,10 +405,10 @@
 ;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
 ;;   * https://austingroupbugs.net/view.php?id=1130
 
-(define (exec-change editor range data)
+(define (exec-change editor lines data)
   (editor-goto!
     editor
-    (editor-replace! editor range data)))
+    (editor-replace! editor lines data)))
 
 (define-input-cmd (change exec-change (make-range))
   (parse-cmd-char #\c))
@@ -419,7 +417,7 @@
 ; Read Command
 ;;
 
-(define (exec-read editor addr filename)
+(define (exec-read editor line filename)
   (let* ((f  (editor-filename editor filename))
          (in (read-from f)))
     (if (and
@@ -429,7 +427,7 @@
 
     (if in
       (begin
-        (editor-append! editor addr (car in))
+        (editor-append! editor line (car in))
         (editor-goto! editor (editor-lines editor))
 
         ;; Print amount of bytes read (unless in silent mode).
@@ -443,8 +441,8 @@
 ; Substitute Command
 ;;
 
-(define (exec-subst editor range subst nth)
-  (let* ((lst (editor-get-range editor range))
+(define (exec-subst editor lines subst nth)
+  (let* ((lst (editor-get-lines editor lines))
          (bre (editor-make-regex editor (car subst)))
          (rep (editor-restr editor (cdr subst)))
 
@@ -457,11 +455,11 @@
                                      (not (zero? (cdr y)))) ;; not last
                                (cons l (cdr y))
                                (cons l (+ lnum (dec (length n)))))))
-                         '((). 0) lst (range->lines editor range))))
+                         '((). 0) lst (line-numbers lines))))
     (if (zero? (cdr re))
       ((subst-nomatch-handler) "no match")
       (begin
-        (editor-replace! editor range (car re))
+        (editor-replace! editor lines (car re))
         (editor-goto! editor (cdr re))))))
 
 (define-edit-cmd (substitute exec-subst (make-range))
@@ -491,9 +489,9 @@
 ; Delete Command
 ;;
 
-(define (exec-delete editor range)
-  (let-values (((saddr _) (editor-range editor range)))
-    (editor-remove! editor range)
+(define (exec-delete editor lines)
+  (let ((saddr (car lines)))
+    (editor-remove! editor lines)
     (if (buffer-empty? (text-editor-buffer editor))
       (editor-goto! editor 0)
       (editor-goto! editor (min (editor-lines editor) saddr)))))
@@ -520,7 +518,7 @@
 (define (exec-edit editor filename)
   (editor-reset! editor)
 
-  (exec-read editor (make-addr '(last-line))
+  (exec-read editor (addr->line editor (make-addr '(last-line)))
              (editor-filename editor filename))
   (text-editor-modified-set! editor #f)
 
@@ -553,8 +551,8 @@
 ; Global Command
 ;;
 
-(define (exec-global editor range regex cmdstr)
-  (exec-command-list editor regex-match? range regex cmdstr))
+(define (exec-global editor lines regex cmdstr)
+  (exec-command-list editor regex-match? lines regex cmdstr))
 
 (define-file-cmd (global exec-global
                          (make-range
@@ -568,8 +566,8 @@
 ; Interactive Global Command
 ;;
 
-(define (exec-interactive editor range regex)
-  (exec-command-list-interactive editor regex-match? range regex))
+(define (exec-interactive editor lines regex)
+  (exec-command-list-interactive editor regex-match? lines regex))
 
 (define-file-cmd (interactive exec-interactive
                               (make-range
@@ -607,13 +605,11 @@
 ; Insert Command
 ;;
 
-(define (exec-insert editor addr data)
-  (let* ((line (addr->line editor addr))
-         (sline (max (dec line) 0))
-         (saddr (make-addr (cons 'nth-line sline))))
+(define (exec-insert editor line data)
+  (let* ((sline (max (dec line) 0)))
     (editor-goto!
       editor
-      (editor-append! editor saddr data))))
+      (editor-append! editor sline data))))
 
 (define-input-cmd (insert exec-insert (make-addr '(current-line)))
   (parse-cmd-char #\i))
@@ -622,10 +618,11 @@
 ; Join Command
 ;;
 
-(define (exec-join editor range)
-  (let-values (((start end) (editor-range editor range)))
+(define (exec-join editor lines)
+  (let ((start (car lines))
+        (end   (cdr lines)))
     (unless (eqv? start end)
-      (editor-join! editor range)
+      (editor-join! editor lines)
       (editor-goto! editor start))))
 
 (define-edit-cmd (join exec-join (make-range
@@ -637,8 +634,8 @@
 ; Mark Command
 ;;
 
-(define (exec-mark editor addr mark)
-  (editor-mark-line editor addr mark))
+(define (exec-mark editor line mark)
+  (editor-mark-line editor line mark))
 
 (define-edit-cmd (mark exec-mark (make-addr '(current-line)))
   (parse-cmd-char #\k)
@@ -648,9 +645,9 @@
 ; List Command
 ;;
 
-(define (exec-list editor range)
-  (let-values (((lst) (editor-get-range editor range))
-               ((_ end) (editor-range editor range)))
+(define (exec-list editor lines)
+  (let ((lst (editor-get-lines editor lines))
+        (end (cdr lines)))
     (for-each (lambda (line)
                 (display
                   (string->human-readable (string-append line "\n"))))
@@ -664,31 +661,33 @@
 ; Move Command
 ;;
 
-(define (exec-move editor range addr)
-  (if (editor-in-range editor range addr)
-    (editor-raise "invalid move destination")
-    (editor-goto! editor (editor-move! editor range addr))))
+(define (exec-move editor lines addr)
+  (let ((dest-line (addr->line editor addr)))
+    (if (editor-in-range editor lines dest-line)
+      (editor-raise "invalid move destination")
+      (editor-goto! editor (editor-move! editor lines dest-line)))))
 
 (define-edit-cmd (move exec-move (make-range))
   (parse-cmd-char #\m)
-  parse-addr)
+  parse-addr-with-off)
 
 ;;
 ; Copy Command
 ;;
 
-(define (exec-copy editor range addr)
-  (if (editor-in-range editor range addr)
-    (editor-raise "invalid copy destination")
-    (let ((data (editor-get-range editor range))
-          (target (addr->line editor addr)))
-      (editor-goto!
-        editor
-        (editor-append! editor addr data)))))
+(define (exec-copy editor lines addr)
+  (let ((dest-line (addr->line editor addr)))
+    (if (editor-in-range editor lines dest-line)
+      (editor-raise "invalid copy destination")
+      (let ((data (editor-get-lines editor lines))
+            (target (addr->line editor addr)))
+        (editor-goto!
+          editor
+          (editor-append! editor target data))))))
 
 (define-edit-cmd (copy exec-copy (make-range))
   (parse-cmd-char #\t)
-  parse-addr)
+  parse-addr-with-off)
 
 ;;
 ; Undo Command
@@ -704,10 +703,10 @@
 ; Global Non-Matched Command
 ;;
 
-(define (exec-global-unmatched editor range regex cmdstr)
+(define (exec-global-unmatched editor lines regex cmdstr)
   (exec-command-list editor (lambda (bre line)
                               (not (regex-match? bre line)))
-                     range regex cmdstr))
+                     lines regex cmdstr))
 
 (define-file-cmd (global-unmatched exec-global-unmatched
                                    (make-range
@@ -721,10 +720,10 @@
 ; Interactive Global Not-Matched Command
 ;;
 
-(define (exec-interactive-unmatched editor range regex)
+(define (exec-interactive-unmatched editor lines regex)
   (exec-command-list-interactive editor (lambda (bre line)
                                           (not (regex-match? bre line)))
-                                 range regex))
+                                 lines regex))
 
 (define-file-cmd (interactive-unmatched exec-interactive-unmatched
                                         (make-range
@@ -737,9 +736,9 @@
 ; Write Command
 ;;
 
-(define (exec-write editor range filename)
+(define (exec-write editor lines filename)
   (let ((fn (editor-filename editor filename))
-        (data (lines->string (editor-get-range editor range))))
+        (data (lines->string (editor-get-lines editor lines))))
     (unless (write-to fn data)
       (editor-raise "cannot open output file"))
     ;; Assuming write-to *always* writes all bytes.
@@ -770,13 +769,13 @@
 ; Number Command
 ;;
 
-(define (exec-number editor range)
-  (let-values (((lst) (editor-get-range editor range))
-               ((_ eline) (editor-range editor range)))
+(define (exec-number editor lines)
+  (let ((lst (editor-get-lines editor lines))
+        (eline (cdr lines)))
     (for-each
       (lambda (line number)
         (println number "\t" line))
-      lst (range->lines editor range))
+      lst (line-numbers lines))
     (editor-goto! editor eline)))
 
 (define-print-cmd (number exec-number (make-range))
@@ -786,9 +785,9 @@
 ; Print Command
 ;;
 
-(define (exec-print editor range)
-  (let-values (((lst) (editor-get-range editor range))
-               ((_ end) (editor-range editor range)))
+(define (exec-print editor lines)
+  (let ((lst (editor-get-lines editor lines))
+        (end (cdr lines)))
     (for-each println lst)
     (editor-goto! editor end)))
 
@@ -868,13 +867,12 @@
 ; Null Command
 ;;
 
-(define (exec-null editor addr)
-  (let ((line (addr->line editor addr)))
-    (if (zero? line)
-      (editor-raise "invalid address")
-      (begin
-        (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
-        (editor-goto! editor line)))))
+(define (exec-null editor line)
+  (if (zero? line)
+    (editor-raise "invalid address")
+    (begin
+      (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
+      (editor-goto! editor line))))
 
 (define-file-cmd (null exec-null (make-addr '(current-line) '(+1)))
   (parse-ignore parse-epsilon))
@@ -892,7 +890,7 @@
 (define (%parse-cmd parsers)
   (parse-map
     (parse-seq
-      (parse-optional parse-addr-range)
+      (parse-optional parse-addrs)
       (apply
         parse-or
         (append parsers (list (parse-fail "unknown command")))))

@@ -1,13 +1,47 @@
+;; The edward address parsing code distinguishes single addresses
+;; and ranges. The latter consisting of a start and end address as well
+;; as a address separator (as defined in POSIX). The parse-addr
+;; procedure returns a list of address ranges. The editor implementation
+;; is capable of converting this list to a pair of line numbers using
+;; the addrlst->lpair procedure. Command implementations expecting a
+;; range address receive this pair, commands which only expect a single
+;; address only receive the first element of the pair as an argument.
+
+;; Create a single address with an optional offset.
+
 (define make-addr
   (case-lambda
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
 
+;; Create an address range consisting of two addresses.
+
 (define make-range
   (case-lambda
     (() (make-range (make-addr '(current-line))))
     ((addr) (list addr #\, addr))
-    ((start end) (list start #\, end))))
+    ((start end) (list start #\, end))
+    ((start sep end) (list start sep end))))
+
+;; Returns true if the parsed address is a range.
+
+(define (range? obj)
+  (and (list? obj)
+       (eqv? (length obj) 3)))
+
+;; Convert the given address to a range.
+
+(define (addr->range addr)
+  (if (range? addr)
+    addr
+    (make-range addr)))
+
+;; Convert the given range to an address.
+
+(define (range->addr addr)
+  (if (range? addr)
+    (last addr)
+    addr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -130,7 +164,7 @@
 
 ;; Utility procedure for parsing addresses without offset.
 
-(define %parse-addr
+(define parse-addr
   (parse-or
     parse-current
     parse-last
@@ -146,7 +180,7 @@
 ;; <hyphen-minus> character not followed by a decimal number shall be
 ;; interpreted as +1/-1.
 
-(define parse-addr-offsets
+(define %parse-addr-with-off
   (parse-repeat
     (parse-map
       (parse-seq
@@ -160,90 +194,95 @@
   (parse-or
     (parse-atomic
       (parse-seq
-        %parse-addr
-        parse-addr-offsets))
+        parse-addr
+        %parse-addr-with-off))
     (parse-fail "unknown address format")))
 
 ;; From POSIX-1.2008:
 ;;
 ;;   Addresses shall be separated from each other by a <comma> (',') or
-;;   <semicolon> character (';'). In the case of a <semicolon>
-;;   separator, the current line ('.') shall be set to the first
-;;   address, and only then will the second address be calculated.
+;;   <semicolon> character (';').
 ;;
 ;; POSIX also mandates a table with rules in case addresses are omitted
 ;; on either side of the separation character. Consult the standard for
 ;; more information.
 
-(define %parse-addr-range
-  (parse-map
-    (parse-seq
-      (parse-optional parse-addr-with-off)
-      (parse-ignore parse-blanks)
-      (parse-or
-        (parse-char #\,)
-        (parse-char #\;))
-      (parse-ignore parse-blanks)
-      (parse-optional parse-addr-with-off))
+(define (address-separator? obj)
+  (or
+    (eq? obj #\,)
+    (eq? obj #\;)))
 
-    (match-lambda
-      ((#f #\, #f)
-       (list (make-addr '(nth-line . 1))
-             #\,
-             (make-addr '(last-line))))
-      ((#f #\, addr)
-       (list (make-addr '(nth-line . 1)) #\, addr))
-      ((addr #\, #f)
-       (list addr #\, addr))
-      ((#f #\; #f)
-       (list (make-addr '(current-line)) #\; (make-addr '(last-line))))
-      ((#f #\; addr)
-       (list (make-addr '(current-line)) #\; addr))
-      ((addr #\; #f)
-       (list addr #\; addr))
-      ((addr1 sep addr2)
-       (list addr1 sep addr2)))))
+(define parse-separator
+  (parse-char address-separator?))
 
-;; From the OpenBSD ed(1) man page:
-;;
-;;   If only one address is given in a range, then the second address is
-;;   set to the given address. If only one address is expected, then the
-;;   last address is used.
+;; This procedure transform a given parsed address according to the
+;; omission rules mandated by the POSIX standard. The return value
+;; will also be an address range.
 
-(define parse-addr-range
+(define transform-addr
+  (match-lambda
+    ((#\,)
+     (make-range (make-addr '(nth-line . 1))
+                 #\,
+                 (make-addr '(last-line))))
+    ((#\, addr)
+     (make-range (make-addr '(nth-line . 1)) #\, addr))
+    ((addr #\,)
+     (make-range addr #\, addr))
+    ((#\;)
+     (make-range (make-addr '(current-line)) #\; (make-addr '(last-line))))
+    ((#\; addr)
+     (make-range (make-addr '(current-line)) #\; addr))
+    ((addr #\;)
+     (make-range addr #\; addr))
+    ((addr1 sep addr2)
+     (make-range addr1 sep addr2))))
+
+;; The ',' and ';' operators for addresses seem to be right-associative
+;; (i.e. the operations are grouped from the right). POSIX doesn't
+;; mandate this outright but the address table in the rationale sections
+;; assumes right-associative behavior. The table contains the example
+;; address `7,5,` which is supposed to be evaluated as `7,(5,)`
+;; ultimately yielding `5,5` instead of `(7,5),` which would yield
+;; `1,$`. The procedure below converts left-to-right parsed address
+;; ranges to ranges which enforce right-associative behavior.
+
+(define (lr->rl lst)
+  (fold-right
+    (lambda (cur prev-addrlst)
+      (let ((last-addr (car prev-addrlst)))
+        (if (address-separator? cur)
+          (if (find address-separator? last-addr)
+            (cons (list cur) prev-addrlst)
+            (cons (cons cur last-addr) (cdr prev-addrlst)))
+          (cons (cons cur last-addr) (cdr prev-addrlst)))))
+    '(()) (concatenate lst)))
+
+;; Parse an address chain consisting of multiple addresses separated by
+;; <comma> or <semicolon> characters. Returns an address list which can
+;; be converted to a line pair using the addrlst->lpair procedure.
+
+(define %parse-addrs
   (parse-or
-    %parse-addr-range
+    (parse-repeat+
+      (parse-memoize "address parser"
+        (parse-seq
+          (parse-or
+            parse-addr-with-off
+            (parse-ignore parse-beginning-of-line))
+          (parse-ignore parse-blanks)
+          parse-separator
+          (parse-ignore parse-blanks)
+          (parse-or
+            parse-addr-with-off
+            (parse-ignore parse-epsilon)))))
     (parse-map
       parse-addr-with-off
       (lambda (addr)
-        (list addr #\, addr)))))
+        (list (make-range addr))))))
 
-(define parse-addr
+(define parse-addrs
   (parse-map
-    parse-addr-range
-    last))
-
-;; XXX: Currently edward distinguishes single addresses and ranges.
-;; This is not conforming to POSIX since POSIX says that an arbitrary
-;; amount of addresses can be passed to a command and the command only
-;; uses the last N it actually needs and ignores the rest.
-
-;; Returns true if the parsed address is a range.
-
-(define (range? obj)
-  (and (list? obj)
-       (eqv? (length obj) 3)))
-
-;; Convert the given address to a range.
-
-(define (addr->range addr)
-  (if (range? addr)
-    addr
-    (make-range addr)))
-
-;; Convert the given range to an address.
-
-(define (range->addr addr)
-  (if (range? addr)
-    (last addr)
-    addr))
+    %parse-addrs
+    (lambda (lst)
+      (map transform-addr (lr->rl lst)))))
