@@ -1,0 +1,6 @@
+1,$s/foo/test
+g/bar
+v/bar
+?test
+/baz
+w

@@ -100,10 +100,10 @@
         (parse-char ch)
         (parse-repeat (parse-or
                         (parse-esc (parse-char ch))
-                        (parse-not-char ch)))
+                        (parse-char (char-set-complement (char-set ch #\newline)))))
         (parse-or
           (parse-char ch)
-          parse-end)))))
+          parse-end-of-line)))))
 
 ;; From POSIX.1-2008:
 ;;

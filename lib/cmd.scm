@@ -179,7 +179,7 @@
 ;; passed the utilized delimiter as a single character function
 ;; argument.
 ;;
-;; Returns pair (RE, replacement).
+;; Returns triplet (RE, replacement, print?).
 
 (define (parse-re-pair delim-proc)
   (parse-with-context
@@ -187,12 +187,12 @@
     (parse-char (char-set-complement (char-set #\space #\newline)))
 
     (lambda (delim)
-      (parse-map
-        (parse-seq
-          (parse-regex-lit delim)
-          (delim-proc delim)
-          (parse-ignore (parse-char delim)))
-        (lambda (lst) (cons (first lst) (second lst)))))))
+      (parse-seq
+        (parse-regex-lit delim)
+        (delim-proc delim)
+        (parse-or
+          (parse-bind #t parse-end-of-line)
+          (parse-bind #f (parse-char delim)))))))
 
 ;; TODO: Reduce code duplication with parse-re-pair
 (define parse-re
@@ -441,10 +441,11 @@
 ; Substitute Command
 ;;
 
-(define (exec-subst editor lines subst nth)
+(define (exec-subst editor lines triplet nth)
   (let* ((lst (editor-get-lines editor lines))
-         (bre (editor-make-regex editor (car subst)))
-         (rep (editor-restr editor (cdr subst)))
+         (bre (editor-make-regex editor (first triplet)))
+         (rep (editor-restr editor (second triplet)))
+         (print? (third triplet))
 
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold-right (lambda (line lnum y)
@@ -460,12 +461,14 @@
       ((subst-nomatch-handler) "no match")
       (begin
         (editor-replace! editor lines (car re))
-        (editor-goto! editor (cdr re))))))
+        (editor-goto! editor (cdr re))))
+    (when print?
+      (exec-print editor (range->lpair editor (make-range))))))
 
 (define-edit-cmd (substitute exec-subst (make-range))
   (parse-cmd-char #\s)
 
-  ;; Pair: (RE, replacement)
+  ;; Triplet: (RE, replacement, print?)
   (parse-re-pair
     ;; POSIX only mentions escaping of the delimiter character within
     ;; the RE but not within the replacement thus this is not implemented.
