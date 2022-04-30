@@ -5,6 +5,7 @@
 	* In edward (and BSD ed) `,,` evaluates to `1,$` instead
 	* The address chain evaluation algorithm is not clearly
 	  specified in POSIX, this should be addressed in the spec
+	* See https://austingroupbugs.net/view.php?id=1582
 * Allow omitting "delimiter of an RE or of a replacement string in a g, G, s, v, or V command"
 	* s/s1/s2 → s/s1/s2/p
 	* g/s1 → g/s1/p
