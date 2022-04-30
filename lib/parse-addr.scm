@@ -91,9 +91,9 @@
     (lambda (lst)
       (cons 'marked-line (cadr lst)))))
 
-;; Utility procedure for parsing BRE addresses.
+;; Utility procedures for parsing BRE addresses.
 
-(define (parse-regex-lit ch)
+(define (%parse-regex-lit ch end)
   (parse-atomic
     (parse-as-string
       (parse-between
@@ -101,9 +101,19 @@
         (parse-repeat (parse-or
                         (parse-esc (parse-char ch))
                         (parse-char (char-set-complement (char-set ch #\newline)))))
-        (parse-or
-          (parse-char ch)
-          parse-end-of-line)))))
+        end))))
+
+(define (parse-regex-lit ch)
+  (%parse-regex-lit
+    ch
+    (parse-or
+      (parse-char ch)
+      parse-end-of-line)))
+
+(define (parse-regex-lit* ch)
+  (%parse-regex-lit
+    ch
+    (parse-char ch)))
 
 ;; From POSIX.1-2008:
 ;;

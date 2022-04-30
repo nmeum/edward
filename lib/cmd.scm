@@ -188,7 +188,7 @@
 
     (lambda (delim)
       (parse-seq
-        (parse-regex-lit delim)
+        (parse-regex-lit* delim)
         (delim-proc delim)
         (parse-or
           (parse-bind #t parse-end-of-line)
@@ -462,6 +462,10 @@
       (begin
         (editor-replace! editor lines (car re))
         (editor-goto! editor (cdr re))))
+
+    ;; Special case handling of omitted regex delimiter in substitute
+    ;; command. For the substitute command only the delimiter of the
+    ;; replacement can be omitted, not the regex delimiter itself.
     (when print?
       (exec-print editor (range->lpair editor (make-range))))))
 
