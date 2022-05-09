@@ -1,11 +1,5 @@
 # POSIX Compatibility
 
-* Handling of address chains like `,,`, `;;`, `;,`, …
-	* POSIX wants `,,` etc. to evaluate to `$,$`
-	* In edward (and BSD ed) `,,` evaluates to `1,$` instead
-	* The address chain evaluation algorithm is not clearly
-	  specified in POSIX, this should be addressed in the spec
-	* See https://austingroupbugs.net/view.php?id=1582
 * align handling of end-of-file character with POSIX
 	* Scheme's read-char procedure does not allow
 	  reading past EOF but ed requires this

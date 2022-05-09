@@ -147,9 +147,7 @@
       (make-range
         (make-addr '(nth-line . 1))
         (make-addr '(last-line)))
-      (make-range
-        (make-addr '(nth-line . 1))
-        (make-addr '(last-line))))
+      (make-range (make-addr '(last-line))))
     parse-addrs ",,")
 
   (test-parse
@@ -158,7 +156,7 @@
         (make-addr '(nth-line . 1))
         (make-addr '(last-line)))
       (make-range
-        (make-addr '(current-line))
+        (make-addr '(last-line))
         #\;
         (make-addr '(last-line))))
     parse-addrs ",;")
