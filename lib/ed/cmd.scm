@@ -337,11 +337,15 @@
     car))
 
 (define (filename-cmd? fn)
-  (if (and
-        (not (empty-string? fn))
-        (eqv? (string-ref fn 0) #\!))
-    (values #t (string-copy fn 1))
-    (values #f fn)))
+  (and
+    (not (empty-string? fn))
+    (eqv? (string-ref fn 0) #\!)))
+
+(define (filename-unwrap fn)
+  (let ((fn-cmd? (filename-cmd? fn)))
+    (if fn-cmd?
+      (values #t (string-copy fn 1))
+      (values #f fn))))
 
 (define (with-io-error-handler fn thunk)
   (call-with-current-continuation
@@ -358,7 +362,7 @@
 ;; input of given command string.
 
 (define (write-to filename data)
-  (let-values (((fn-cmd? fn) (filename-cmd? filename)))
+  (let-values (((fn-cmd? fn) (filename-unwrap filename)))
     (with-io-error-handler fn
       (lambda ()
         (let ((proc (lambda (port) (write-string data port))))
@@ -375,7 +379,7 @@
 ;; amount of total bytes received.
 
 (define (read-from filename)
-  (let-values (((fn-cmd? fn) (filename-cmd? filename)))
+  (let-values (((fn-cmd? fn) (filename-unwrap filename)))
     (with-io-error-handler fn
       (lambda ()
         (if fn-cmd?
