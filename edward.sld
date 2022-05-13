@@ -5,10 +5,10 @@
           (scheme case-lambda)
           (scheme process-context)
           (scheme write)
-          (scheme lazy)
 
           (edward util)
           (edward parse)
+          (edward replace)
           (edward buffer)
 
           (srfi 1)
@@ -39,6 +39,5 @@
           define-edit-cmd)
 
   (include "lib/parse-addr.scm"
-           "lib/replace.scm"
            "lib/editor.scm"
            "lib/cmd.scm"))

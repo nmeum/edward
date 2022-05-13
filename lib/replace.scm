@@ -46,7 +46,7 @@
 
 (define (submatch subm bv n)
   (if (>= n (vector-length subm))
-    (editor-raise "invalid backreference") ;; XXX: GNU ed doesn't error out
+    (string->utf8 (string-append "\\" (number->string n)))
     (let ((match (vector-ref subm n)))
       (if match
         (bytevector-copy bv (car match) (cdr match))
@@ -78,7 +78,7 @@
             (bytevector-append (force r) (bytevector-copy bv i))
             (bytevector-append
               (if (zero? nth) (force r) (bytevector-copy v 0 e))
-              (%regex-replace* re i (inc n)))))
+              (%regex-replace* re i (+ n 1)))))
         v)))
 
   (%regex-replace* subst 0 1))
