@@ -6,28 +6,6 @@
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
  (test-dependencies test)
  (components
-   (extension edward
-              (cond-expand
-                (release
-                  ;; Build both static and dynamic lib in release mode
-                  ;; (the default) to allow running the unit tests.
-                  (csc-options "-O2"))
-                (else
-                  (linkage dynamic)
-                  (csc-options "-d3")))
-
-              (component-dependencies
-                edward.util
-                edward.parse
-                edward.replace
-                edward.buffer)
-
-              (source "edward.scm")
-              (source-dependencies
-                "edward.sld"
-                "./lib/parse-addr.scm"
-                "./lib/editor.scm"
-                "./lib/cmd.scm"))
    (extension edward.util
               (csc-options "-X" "r7rs" "-R" "r7rs")
 
@@ -61,6 +39,20 @@
               (source-dependencies
                 "./lib/buffer/stack.scm"
                 "./lib/buffer/buffer.scm"))
+   (extension edward.ed
+              (csc-options "-X" "r7rs" "-R" "r7rs")
+
+              (component-dependencies
+                edward.util
+                edward.parse
+                edward.replace
+                edward.buffer)
+
+              (source "./lib/ed.sld")
+              (source-dependencies
+                "./lib/ed/parse-addr.scm"
+                "./lib/ed/editor.scm"
+                "./lib/ed/cmd.scm"))
    (program bin/edward
             (cond-expand
               (release
@@ -78,4 +70,4 @@
               (else))
 
             (install-name "edward")
-            (component-dependencies edward))))
+            (component-dependencies edward.ed))))
