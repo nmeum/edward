@@ -16,10 +16,12 @@
                   (linkage dynamic)
                   (csc-options "-d3")))
 
+              (component-dependencies
+                edward.util)
+
               (source "edward.scm")
               (source-dependencies
                 "edward.sld"
-                "./lib/util.scm"
                 "./lib/buffer.scm"
                 "./lib/parse.scm"
                 "./lib/parse-util.scm"
@@ -28,6 +30,12 @@
                 "./lib/repl.scm"
                 "./lib/editor.scm"
                 "./lib/cmd.scm"))
+   (extension edward.util
+              (csc-options "-X" "r7rs" "-R" "r7rs")
+
+              (source "./lib/util.sld")
+              (source-dependencies
+                "./lib/util.scm"))
    (program bin/edward
             (cond-expand
               (release

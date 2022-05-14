@@ -7,6 +7,8 @@
           (scheme write)
           (scheme lazy)
 
+          (edward util)
+
           (srfi 1)
           (srfi 14)
 
@@ -34,8 +36,7 @@
   (export define-file-cmd define-print-cmd define-input-cmd
           define-edit-cmd)
 
-  (include "lib/util.scm"
-           "lib/buffer.scm"
+  (include "lib/buffer.scm"
            "lib/parse.scm"
            "lib/parse-util.scm"
            "lib/parse-addr.scm"
