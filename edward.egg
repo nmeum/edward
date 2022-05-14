@@ -50,7 +50,7 @@
 
               (source "./lib/ed.sld")
               (source-dependencies
-                "./lib/ed/parse-addr.scm"
+                "./lib/ed/addr.scm"
                 "./lib/ed/editor.scm"
                 "./lib/ed/cmd.scm"))
    (program bin/edward

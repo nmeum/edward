@@ -22,6 +22,6 @@
 
   (export make-text-editor editor-start)
 
-  (include "lib/ed/parse-addr.scm"
+  (include "lib/ed/addr.scm"
            "lib/ed/editor.scm"
            "lib/ed/cmd.scm"))
