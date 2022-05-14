@@ -91,30 +91,6 @@
     (lambda (lst)
       (cons 'marked-line (cadr lst)))))
 
-;; Utility procedures for parsing BRE addresses.
-
-(define (%parse-regex-lit ch end)
-  (parse-atomic
-    (parse-as-string
-      (parse-between
-        (parse-char ch)
-        (parse-repeat (parse-or
-                        (parse-esc (parse-char ch))
-                        (parse-char (char-set-complement (char-set ch #\newline)))))
-        end))))
-
-(define (parse-regex-lit ch)
-  (%parse-regex-lit
-    ch
-    (parse-or
-      (parse-char ch)
-      parse-end-of-line)))
-
-(define (parse-regex-lit* ch)
-  (%parse-regex-lit
-    ch
-    (parse-char ch)))
-
 ;; From POSIX.1-2008:
 ;;
 ;;   A BRE enclosed by <slash> characters ('/') shall address the first

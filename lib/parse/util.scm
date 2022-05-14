@@ -53,6 +53,30 @@
       f)
     cadr))
 
+;; Utility procedures for parsing BRE addresses.
+
+(define (%parse-regex-lit ch end)
+  (parse-atomic
+    (parse-as-string
+      (parse-between
+        (parse-char ch)
+        (parse-repeat (parse-or
+                        (parse-esc (parse-char ch))
+                        (parse-char (char-set-complement (char-set ch #\newline)))))
+        end))))
+
+(define (parse-regex-lit ch)
+  (%parse-regex-lit
+    ch
+    (parse-or
+      (parse-char ch)
+      parse-end-of-line)))
+
+(define (parse-regex-lit* ch)
+  (%parse-regex-lit
+    ch
+    (parse-char ch)))
+
 ;; Invoke given parser and strip trailing blanks (if any).
 
 (define (parse-strip-blanks parser)

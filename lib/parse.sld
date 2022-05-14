@@ -35,7 +35,7 @@
           parse-default parse-ignore-optional parse-newline parse-blank
           parse-blanks+ parse-blanks parse-between parse-esc
           parse-strip-blanks parse-blanks-seq parse-line
-          parse-with-context)
+          parse-with-context parse-regex-lit* parse-regex-lit)
 
   ;; repl.scm
   (export make-repl repl? repl-run repl-interactive repl-prompt?  repl-set-prompt!)
