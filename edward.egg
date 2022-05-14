@@ -5,16 +5,14 @@
  (license "GPLv3")
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
  (test-dependencies test)
+ (component-options
+   (csc-options "-X" "r7rs" "-R" "r7rs"))
  (components
    (extension edward.util
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (source "./lib/util.sld")
               (source-dependencies
                 "./lib/util.scm"))
    (extension edward.parse
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (component-dependencies edward.util)
 
               (source "./lib/parse.sld")
@@ -23,16 +21,12 @@
                 "./lib/parse/util.scm"
                 "./lib/parse/repl.scm"))
    (extension edward.replace
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (component-dependencies edward.parse)
 
               (source "./lib/replace.sld")
               (source-dependencies
                 "./lib/replace.scm"))
    (extension edward.buffer
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (component-dependencies edward.util)
 
               (source "./lib/buffer.sld")
@@ -40,8 +34,6 @@
                 "./lib/buffer/stack.scm"
                 "./lib/buffer/buffer.scm"))
    (extension edward.ed
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (component-dependencies
                 edward.util
                 edward.parse
@@ -54,7 +46,5 @@
                 "./lib/ed/editor.scm"
                 "./lib/ed/cmd.scm"))
    (program bin/edward
-            (csc-options "-X" "r7rs" "-R" "r7rs")
-
             (install-name "edward")
             (component-dependencies edward.ed))))
