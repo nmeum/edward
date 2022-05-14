@@ -54,20 +54,7 @@
                 "./lib/ed/editor.scm"
                 "./lib/ed/cmd.scm"))
    (program bin/edward
-            (cond-expand
-              (release
-                (linkage static)
-                (csc-options "-O2"))
-              (else
-                (linkage dynamic)
-                (csc-options "-d3")))
-
-            ;; Link against libchicken and libc statically as
-            ;; well if `-feature fully-static` is passed.
-            (cond-expand
-              (fully-static
-                (link-options "-L" "-static"))
-              (else))
+            (csc-options "-X" "r7rs" "-R" "r7rs")
 
             (install-name "edward")
             (component-dependencies edward.ed))))
