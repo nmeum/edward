@@ -26,5 +26,8 @@
   ;; XXX: Only exported for unit tests
   (export parse-cmd cmd-args)
 
+  ;; XXX: Silence "indirect export of syntax binding" warnings
+  (export define-edit-cmd  define-input-cmd define-print-cmd define-file-cmd)
+
   (include "lib/ed/cmd.scm"
            "lib/ed/editor.scm"))
