@@ -22,6 +22,12 @@
 
   (export make-text-editor editor-start)
 
+  ;; XXX: Only exported for unit tests
+  ;; Might split (edward ed addr) and (edward ed cmd) to address that.
+  (export parse-cmd cmd-args)
+  (export make-addr make-range range? addr->range range->addr
+          parse-addrs parse-addr-with-off)
+
   (include "lib/ed/addr.scm"
            "lib/ed/editor.scm"
            "lib/ed/cmd.scm"))
