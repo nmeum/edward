@@ -8,6 +8,7 @@
           (scheme lazy)
 
           (edward util)
+          (edward parse)
 
           (srfi 1)
           (srfi 14)
@@ -37,8 +38,6 @@
           define-edit-cmd)
 
   (include "lib/buffer.scm"
-           "lib/parse.scm"
-           "lib/parse-util.scm"
            "lib/parse-addr.scm"
            "lib/replace.scm"
            "lib/repl.scm"
