@@ -22,7 +22,7 @@ custom commands through user-defined configuration files in the future.
 
 ## Installation
 
-If a correctly configured CHICKEN toolchain is available run:
+If a correctly configured CHICKEN 5.3 toolchain is available run:
 
 	$ chicken-install
 
