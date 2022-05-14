@@ -20,7 +20,7 @@
               (source "./lib/parse.sld")
               (source-dependencies
                 "./lib/parse/parse.scm"
-                "./lib/parse/parse-util.scm"
+                "./lib/parse/util.scm"
                 "./lib/parse/repl.scm"))
    (extension edward.replace
               (csc-options "-X" "r7rs" "-R" "r7rs")

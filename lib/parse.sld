@@ -41,5 +41,5 @@
   (export make-repl repl? repl-run repl-interactive repl-prompt?  repl-set-prompt!)
 
   (include "parse/parse.scm"
-           "parse/parse-util.scm"
+           "parse/util.scm"
            "parse/repl.scm"))
