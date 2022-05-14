@@ -13,16 +13,13 @@
 * make sure zero address is handled correctly everywhere
 * consider treating undo with empty undo stack as an error
 
-# Build Process
-
-* Improve compilation speed
-* Figure out why edward is slower when compiled statically with eggs
-* Figure out if the library/program distinction is actually useful
-	* Maybe possible to extend edward with custom commands etc.
-	  through the library but currently not supported
-
 # Miscellaneous
 
+* Consider using Declarations and (chicken type) to enable more optimizations
+	* https://wiki.call-cc.org/programming-for-performance
+	* https://wiki.call-cc.org/man/5/Declarations
+	* https://wiki.call-cc.org/man/5/Foreign%20type%20specifiers
+* Figure out why edward is slower when compiled statically with eggs (linkage static)
 * Integration tests: compare exit status
 * Use posix-regex multiline feature instead of matching lines individually
 * Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)

@@ -1,6 +1,10 @@
-(import (r7rs))
-(import (scheme base) (scheme process-context)
-        (edward) (srfi 37) (matchable))
+(import (scheme base)
+        (scheme process-context)
+
+        (srfi 37)
+
+        (edward ed)
+        (matchable))
 
 (define prompt "")
 (define silent? #f)

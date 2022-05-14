@@ -1,48 +1,63 @@
-;; TODO: For some reason integration tests take longer to run
-;; with release mode binaries (due to static linkage?!).
 ((author "Sören Tempel")
  (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
  (license "GPLv3")
+ (platform unix)
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
  (test-dependencies test)
+ (component-options
+   (linkage dynamic) ;; don't build static to reduce compile time
+   (csc-options "-d3" "-O3" "-X" "r7rs" "-R" "r7rs"))
  (components
-   (extension edward
-              (cond-expand
-                (release
-                  ;; Build both static and dynamic lib in release mode
-                  ;; (the default) to allow running the unit tests.
-                  (csc-options "-O2"))
-                (else
-                  (linkage dynamic)
-                  (csc-options "-d3")))
-
-              (source "edward.scm")
+   (extension edward.util
+              (source "./lib/util.sld")
               (source-dependencies
-                "edward.sld"
-                "./lib/util.scm"
-                "./lib/buffer.scm"
-                "./lib/parse.scm"
-                "./lib/parse-util.scm"
-                "./lib/parse-addr.scm"
-                "./lib/replace.scm"
-                "./lib/repl.scm"
-                "./lib/editor.scm"
-                "./lib/cmd.scm"))
-   (program bin/edward
-            (cond-expand
-              (release
-                (linkage static)
-                (csc-options "-O2"))
-              (else
-                (linkage dynamic)
-                (csc-options "-d3")))
+                "./lib/util.scm"))
+   (extension edward.parse
+              (component-dependencies edward.util)
 
-            ;; Link against libchicken and libc statically as
-            ;; well if `-feature fully-static` is passed.
-            (cond-expand
-              (fully-static
-                (link-options "-L" "-static"))
-              (else))
+              (source "./lib/parse.sld")
+              (source-dependencies
+                "./lib/parse/parse.scm"
+                "./lib/parse/util.scm"
+                "./lib/parse/repl.scm"))
+   (extension edward.replace
+              (component-dependencies edward.parse)
+
+              (source "./lib/replace.sld")
+              (source-dependencies
+                "./lib/replace.scm"))
+   (extension edward.buffer
+              (component-dependencies edward.util)
+
+              (source "./lib/buffer.sld")
+              (source-dependencies
+                "./lib/buffer/stack.scm"
+                "./lib/buffer/buffer.scm"))
+   (extension edward.ed.addr
+              (csc-options "-X" "r7rs" "-R" "r7rs")
+
+              (component-dependencies edward.parse)
+
+              (source "./lib/ed/addr.sld")
+              (source-dependencies
+                "./lib/ed/addr.scm"))
+   (extension edward.ed
+              (component-dependencies
+                edward.util
+                edward.parse
+                edward.replace
+                edward.buffer
+                edward.ed.addr)
+
+              (source "./lib/ed.sld")
+              (source-dependencies
+                "./lib/ed/editor.scm"
+                "./lib/ed/cmd.scm"))
+   (program bin/edward
+            ;; Uncomment to build a fully static version of edward.
+            ;; Also requires removing (linkage dynamic) in component-options above.
+            ;(linkage static)
+            ;(link-options "-L" "-static")
 
             (install-name "edward")
-            (component-dependencies edward))))
+            (component-dependencies edward.ed))))
