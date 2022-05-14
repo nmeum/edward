@@ -46,7 +46,7 @@
 
 (define (submatch subm bv n)
   (if (>= n (vector-length subm))
-    (string->utf8 (string-append "\\" (number->string n)))
+    (string->utf8 (number->string n)) ;; XXX: Handling for invalid backreferences
     (let ((match (vector-ref subm n)))
       (if match
         (bytevector-copy bv (car match) (cdr match))
