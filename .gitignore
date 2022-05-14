@@ -1,9 +1,9 @@
 bin/edward
-edward.build.sh
-edward.import.scm
-edward.import.so
-edward.install.sh
-edward.link
-edward.so
-edward.static.o
-edward.c
+edward*.build.sh
+edward*.import.scm
+edward*.import.so
+edward*.install.sh
+edward*.link
+edward*.so
+edward*.static.o
+edward*.c
