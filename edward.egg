@@ -3,6 +3,7 @@
 ((author "Sören Tempel")
  (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
  (license "GPLv3")
+ (platform unix)
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
  (test-dependencies test)
  (component-options
