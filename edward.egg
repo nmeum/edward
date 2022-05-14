@@ -18,12 +18,12 @@
 
               (component-dependencies
                 edward.util
-                edward.parse)
+                edward.parse
+                edward.buffer)
 
               (source "edward.scm")
               (source-dependencies
                 "edward.sld"
-                "./lib/buffer.scm"
                 "./lib/parse-addr.scm"
                 "./lib/replace.scm"
                 "./lib/repl.scm"

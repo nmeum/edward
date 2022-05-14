@@ -9,6 +9,7 @@
 
           (edward util)
           (edward parse)
+          (edward buffer)
 
           (srfi 1)
           (srfi 14)
@@ -37,8 +38,7 @@
   (export define-file-cmd define-print-cmd define-input-cmd
           define-edit-cmd)
 
-  (include "lib/buffer.scm"
-           "lib/parse-addr.scm"
+  (include "lib/parse-addr.scm"
            "lib/replace.scm"
            "lib/repl.scm"
            "lib/editor.scm"
