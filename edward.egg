@@ -35,16 +35,24 @@
               (source-dependencies
                 "./lib/buffer/stack.scm"
                 "./lib/buffer/buffer.scm"))
+   (extension edward.ed.addr
+              (csc-options "-X" "r7rs" "-R" "r7rs")
+
+              (component-dependencies edward.parse)
+
+              (source "./lib/ed/addr.sld")
+              (source-dependencies
+                "./lib/ed/addr.scm"))
    (extension edward.ed
               (component-dependencies
                 edward.util
                 edward.parse
                 edward.replace
-                edward.buffer)
+                edward.buffer
+                edward.ed.addr)
 
               (source "./lib/ed.sld")
               (source-dependencies
-                "./lib/ed/addr.scm"
                 "./lib/ed/editor.scm"
                 "./lib/ed/cmd.scm"))
    (program bin/edward

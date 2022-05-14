@@ -3,6 +3,7 @@
         posix-regex
 
         (edward ed)
+        (edward ed addr)
         (edward parse)
         (edward replace)
         (edward buffer))
