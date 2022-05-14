@@ -2,9 +2,14 @@
   (import (scheme base)
           (scheme char)
           (scheme file)
+          (scheme write)
 
           (srfi 1)
-          (srfi 14))
+          (srfi 14)
+
+          (edward util)
+
+          (chicken process signal))
 
   ;; parse.scm
   (export call-with-parse parse parse-fully parse-fold parse-failure
@@ -25,12 +30,6 @@
           parse-with-failure-reason
           make-parse-stream)
 
-  ;; XXX: Identifiers not exported by (chibi parse) but needed
-  ;; by lib/repl.scm.
-  (export parse-stream-buffer parse-stream-tail parse-stream-max-char
-          parse-stream-next-index parse-stream-next-source parse-stream-line
-          parse-stream-count-lines)
-
   ;; parse-util.scm
   (export parse-fail parse-bind parse-as-string parse-digits
           parse-default parse-ignore-optional parse-newline parse-blank
@@ -38,5 +37,9 @@
           parse-strip-blanks parse-blanks-seq parse-line
           parse-with-context)
 
+  ;; repl.scm
+  (export make-repl repl? repl-run repl-interactive repl-prompt?  repl-set-prompt!)
+
   (include "parse/parse.scm"
-           "parse/parse-util.scm"))
+           "parse/parse-util.scm"
+           "parse/repl.scm"))

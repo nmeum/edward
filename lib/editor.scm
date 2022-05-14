@@ -165,15 +165,21 @@
 
   (repl-run
     (text-editor-repl editor)
-    editor
+    parse-cmd
+    ;; Success continuation.
     (lambda (line res)
       (let ((cmd  (cdr res))
             (addr (car res)))
         (when (cmd-reversible? cmd)
           (editor-snapshot editor))
         (execute-command line cmd addr)))
+    ;; Failure continuation.
     (lambda (line reason)
-      (handle-error editor line reason)))
+      (handle-error editor line reason))
+    ;; Interrupt continuation.
+    (lambda ()
+      (newline)
+      (editor-error editor "Interrupt")))
 
   ;; XXX: POSIX requires to be the end-of-file character to be treated
   ;; like a quit command in command mode. For interactive usage, the
@@ -183,8 +189,11 @@
   (%exec-quit editor))
 
 (define (editor-interactive editor)
-  (let ((h (text-editor-repl editor)))
-    (repl-interactive h)))
+  (let ((repl (text-editor-repl editor)))
+    (repl-interactive repl
+      parse-interactive-cmd
+      (lambda (line reason)
+        (editor-raise "parsing of interactive command failed")))))
 
 ;; Returns the last executed shell command or raises an error if none.
 

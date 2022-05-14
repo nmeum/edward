@@ -1,6 +1,3 @@
-;; TODO: Make this more independend of lib/editor.scm
-;; That is, don't use editor-raise etc. directly.
-
 (define-record-type Read-Eval-Print-Loop
   (%make-repl prompt-str prompt? stream index)
   repl?
@@ -72,7 +69,7 @@
         (parse-stream-line s)
         (car (parse-stream-count-lines s (parse-stream-max-char s)))))))
 
-(define (repl-run repl editor sk fk)
+(define (repl-run repl f sk fk ik)
   (when (repl-prompt? repl)
     (display (repl-prompt-str repl))
     (flush-output-port))
@@ -85,8 +82,7 @@
               (set-signal-handler!
                 signal/int
                 (lambda (signum)
-                  (newline)
-                  (editor-error editor "Interrupt")
+                  (ik)
                   (repl-skip-chunks! repl)
                   (k #f)))
               (if (parse-stream-end?
@@ -94,15 +90,10 @@
                     (repl-index repl))
                 (k #t)
                 (begin
-                  (repl-parse repl parse-cmd sk fk)
+                  (repl-parse repl f sk fk)
                   (k #f)))))))
     (unless eof?
-      (repl-run repl editor sk fk))))
+      (repl-run repl f sk fk ik))))
 
-(define (repl-interactive repl)
-  (repl-parse
-    repl
-    parse-interactive-cmd
-    (lambda (line value) value)
-    (lambda (line reason)
-      (editor-raise "parsing of interactive command failed"))))
+(define (repl-interactive repl f fk)
+  (repl-parse repl f (lambda (line value) value) fk))
