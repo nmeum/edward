@@ -20,8 +20,6 @@
 * Figure out if the library/program distinction is actually useful
 	* Maybe possible to extend edward with custom commands etc.
 	  through the library but currently not supported
-* Fix build on OpenBSD
-	* matchable egg doesn't support OpenBSD
 
 # Miscellaneous
 
