@@ -54,5 +54,10 @@
                 "./lib/ed/editor.scm"
                 "./lib/ed/cmd.scm"))
    (program bin/edward
+            ;; Uncomment to build a fully static version of edward.
+            ;; Also requires removing (linkage dynamic) in component-options above.
+            ;(linkage static)
+            ;(link-options "-L" "-static")
+
             (install-name "edward")
             (component-dependencies edward.ed))))
