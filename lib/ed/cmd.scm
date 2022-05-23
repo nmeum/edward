@@ -404,7 +404,7 @@
 ; Change Command
 ;;
 
-;; XXX handling of address 0 is actually somewhat disputed:
+;; The change command does not support a zero address see:
 ;;
 ;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
 ;;   * https://austingroupbugs.net/view.php?id=1130

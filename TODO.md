@@ -10,7 +10,6 @@
 	* Implementing this might get easier with
 	  https://wiki.call-cc.org/unicode-transition if the
 	  transition adds an incremental UTF-8 decoder to CHICKEN
-* make sure zero address is handled correctly everywhere
 * consider treating undo with empty undo stack as an error
 
 # Miscellaneous

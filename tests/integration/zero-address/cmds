@@ -1,0 +1,12 @@
+0a
+foo
+bar
+.
+0r !echo foo
+0i
+test
+.
+w
+0c
+change
+.
