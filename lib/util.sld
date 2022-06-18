@@ -11,7 +11,7 @@
 
   (export inc dec id alist-values fprintln println empty-string?
           pad-string string->human-readable for-each-index sublist
-          string-split path-join user-home count-bytes lines->string
-          write-file port->lines)
+          path-join user-home count-bytes lines->string write-file
+          port->lines)
 
   (include "util.scm"))

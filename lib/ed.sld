@@ -14,6 +14,7 @@
           (chicken process)
           (chicken process signal)
           (chicken port)
+          (chicken string)
 
           (edward util)
           (edward parse)

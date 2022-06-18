@@ -111,21 +111,6 @@
     (let ((l (drop lst start)))
       (drop-right l (- (length lst) end)))))
 
-;; Return list of strings splitted at given delimiter character.
-
-;; XXX: This imlementation is probably less efficient than (chicken string).
-(define (string-split str delim)
-  (define (%string-split str delim)
-    (cdr (fold (lambda (idx pair)
-                 (if (char=? (string-ref str idx) delim)
-                   (cons
-                     (inc idx)
-                     (append (cdr pair) (list (substring str (car pair) idx))))
-                   pair))
-               '(0 . ()) (iota (string-length str)))))
-
-  (%string-split (string-append str (string delim)) delim))
-
 ;; Join a list of path elements using `/` as a path separator.
 
 (define (path-join . elems)

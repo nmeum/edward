@@ -454,7 +454,7 @@
          ;; Pair (list of replaced lines, line number of last replaced line)
          (re (fold-right (lambda (line lnum y)
                            (let* ((r (regex-replace bre rep line nth))
-                                  (n (string-split r #\newline)) ;; string → list
+                                  (n (string-split r "\n" #t)) ;; string → list
                                   (l (append n (car y))))
                              (if (or (equal? r line)        ;; not modified
                                      (not (zero? (cdr y)))) ;; not last
