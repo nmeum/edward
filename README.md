@@ -32,7 +32,7 @@ This will compile `edward` and add the binary to your `$PATH`.
 
 For development setups, one can build `edward` as follows:
 
-	$ export CHICKEN_REPOSITORY_PATH="${CHICKEN_REPOSITORY_PATH}:$(pwd)"
+	$ export CHICKEN_REPOSITORY_PATH="$(pwd):${CHICKEN_REPOSITORY_PATH}"
 	$ chicken-install -n
 
 This will create an executable binary in `./bin/edward`.
