@@ -174,6 +174,12 @@
       %parse-input-mode)
     second))
 
+;; Parse a delimiter for a regular expression. As per POSIX, any
+;; character other then <space> and <newline> can be a delimiter.
+
+(define parse-delim-char
+  (parse-char (char-set-complement (char-set #\space #\newline))))
+
 ;; Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
 ;; The given procedure is responsible for parsing the replacement, it is
 ;; passed the utilized delimiter as a single character function
@@ -183,9 +189,7 @@
 
 (define (parse-re-pair delim-proc)
   (parse-with-context
-    ;; Any character other then <space> and <newline> can be a delimiter.
-    (parse-char (char-set-complement (char-set #\space #\newline)))
-
+    parse-delim-char
     (lambda (delim)
       (parse-seq
         (parse-regex-lit* delim)
@@ -194,12 +198,9 @@
           (parse-bind #t parse-end-of-line)
           (parse-bind #f (parse-char delim)))))))
 
-;; TODO: Reduce code duplication with parse-re-pair
 (define parse-re
   (parse-with-context
-    ;; Any character other then <space> and <newline> can be a delimiter.
-    (parse-char (char-set-complement (char-set #\space #\newline)))
-
+    parse-delim-char
     (lambda (delim)
       (parse-regex-lit delim))))
 
