@@ -1,5 +1,9 @@
+(import (edward ed addr))
+
 (test-parse (list (addr->range '((current-line) ()))) parse-addrs ".")
 (test-parse (list (addr->range '((last-line) ())))    parse-addrs "$")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "parse nth line"
   (test-parse (list (addr->range '((nth-line . 42) ()))) parse-addrs "42")

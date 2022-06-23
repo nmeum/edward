@@ -1,3 +1,5 @@
+(import (edward ed))
+
 (define (test-parse-cmd desc expected input)
   (test desc expected
         (let* ((cmd-input (string-append input "\n"))
@@ -5,6 +7,8 @@
                (cmd-addr  (car cmd-pair))
                (cmd-args  (cmd-args (cdr cmd-pair))))
           (append (list cmd-addr) cmd-args))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "append command"
   (test-parse-cmd "no arguments"

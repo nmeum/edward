@@ -1,3 +1,5 @@
+(import posix-regex (edward replace))
+
 (define (test-re str pattern replacement . o)
   (regex-replace
     (make-regex pattern)

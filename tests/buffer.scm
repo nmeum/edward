@@ -1,9 +1,13 @@
+(import (edward buffer))
+
 (define (test-buffer name expected proc)
   (test name
         expected
         (let ((b (make-buffer)))
           (proc b)
           (buffer->list b))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "append"
   (test-buffer "append start"
