@@ -116,10 +116,10 @@
 (define (path-join . elems)
   (fold-right
     (lambda (elem path)
-      (if (null? path)
+      (if (empty-string? path)
         elem
         (string-append elem "/" path)))
-    '() elems))
+    "" elems))
 
 ;; Return path to home directory of current user.
 

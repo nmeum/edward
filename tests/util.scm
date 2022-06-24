@@ -10,3 +10,8 @@
 (test-group "lines->string"
   (test "empty lines" "" (lines->string '()))
   (test "multiple lines" "foo\nbar\n" (lines->string '("foo" "bar"))))
+
+(test-group "path-join"
+  (test "empty" "" (path-join))
+  (test "single" "foo" (path-join "foo"))
+  (test "multiple" "foo/bar/baz" (path-join "foo" "bar" "baz")))
