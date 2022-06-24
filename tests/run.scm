@@ -32,6 +32,7 @@
 (include-relative "parse-cmd.scm")
 (include-relative "replace.scm")
 (include-relative "buffer.scm")
+(include-relative "util.scm")
 
 ;; Exit with non-zero exit status if some test failed.
 (test-exit)
