@@ -67,6 +67,32 @@ provide a beginner-friendly introduction to the editor: *A Tutorial
 Introduction to the UNIX Text Editor* and *Advanced Editing on UNIX*
 both written by Brian W. Kernighan.
 
+## Defining Custom Commands
+
+Custom commands can be defined using the libraries provided by edward. On
+startup, edward loads `~/.edwardrc` thereby allowing the definition of
+custom commands in this file.
+
+For example, the `z` provided by BSD ed can be defined as follows in
+`~/.edwardrc`:
+
+	(import (edward ed)
+		(edward ed addr)
+		(chicken port))
+
+	(define (exec-scroll editor)
+	  (let*-values (((port) (current-output-port))
+			((rows _) (terminal-size port)))
+	    (let* ((start  (addr->line editor (make-addr '(current-line))))
+		   (end    (addr->line editor (make-addr (cons 'nth-line
+							       (min
+								 (editor-lines editor)
+								 (+ start rows)))))))
+	      (exec-print editor (cons start end)))))
+
+	(define-edit-cmd (scroll exec-scroll)
+	  (parse-cmd-char #\z))
+
 ## Portability
 
 The code was originally intended to be written in purely standard
