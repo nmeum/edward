@@ -12,6 +12,17 @@
 	  transition adds an incremental UTF-8 decoder to CHICKEN
 * consider treating undo with empty undo stack as an error
 
+# Support for custom commands
+
+* Move lib/ed/cmd.scm and lib/ed/editor.scm to separate libraries
+* Define a clean interface for lib/ed/editor.scm
+* Add additional sanity checks to register-command
+	* Don't allow defining same command name twice
+	* Don't allow defining same command character twice (difficult)
+* Load ~/.edwardrc in bin/edward.scm
+* Provide documentation and examples for custom commands
+* Consider adjusting edward ed macros to not modify the environment
+
 # Miscellaneous
 
 * Consider using Declarations and (chicken type) to enable more optimizations
