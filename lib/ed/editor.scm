@@ -118,10 +118,14 @@
 
 (define (make-text-editor filename prompt silent?)
   (let* ((h (make-repl prompt))
-         (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
+         (b (make-buffer))
+         (e (%make-text-editor filename h b 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
-      ;; XXX: Don't print `?` if file doesn't exist.
-      (exec-edit e filename))
+      (let ((in (read-from filename)))
+        (when in
+          (buffer-append! b 0 (car in))
+          (editor-goto! e (editor-lines e))
+          (editor-verbose e (cdr in)))))
     e))
 
 (define (handle-error editor line msg)
@@ -186,7 +190,8 @@
   ;; user would have to confirm this quit when the buffer was modified.
   ;; However, this is currently not possible with edward as we can't
   ;; read past eof with Scheme's read-char procedure.
-  (%exec-quit editor))
+  (when (text-editor-modified? editor)
+    (editor-error editor "Warning: buffer modified")))
 
 (define (editor-interactive editor)
   (let ((repl (text-editor-repl editor)))
