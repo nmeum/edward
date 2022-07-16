@@ -29,10 +29,10 @@
       (set! silent? #t)
       vals)))
 
-(define (parse-args flags)
+(define (parse-args args flags)
   (reverse
     (args-fold
-      (command-line)
+      args
       flags
       (lambda (o n x vals)
         (error "unrecognized option" n))
@@ -43,13 +43,21 @@
   (let ((editor (make-text-editor filename prompt silent?)))
     (editor-start editor)))
 
-(let* ((files (cdr (parse-args (list prompt-opt silent-opt)))))
-  (if prompt
-    (match files
-      ((file)
-       (run-editor file))
-      (()
-       (run-editor ""))
-      (_
-       (err "specify one file or no files")))
-    (err "missing prompt option argument")))
+(define (main args)
+  (let* ((flags (list prompt-opt silent-opt))
+         (files (cdr (parse-args args flags))))
+    (if prompt
+      (match files
+        ((file)
+         (run-editor file))
+        (()
+         (run-editor ""))
+        (_
+         (err "specify one file or no files")))
+      (err "missing prompt option argument"))))
+
+;; Unless sourced using csi(1), run the main procedure.
+(cond-expand
+  ((or chicken-script compiling)
+   (main (command-line)))
+  (else #t))
