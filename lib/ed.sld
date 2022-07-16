@@ -25,7 +25,7 @@
   (export make-text-editor editor-start)
 
   ;; XXX: Only exported for unit tests
-  (export parse-cmd cmd-args)
+  (export parse-cmd parse-cmd-char cmd-args)
 
   ;; XXX: Silence "indirect export of syntax binding" warnings
   (export define-edit-cmd  define-input-cmd define-print-cmd define-file-cmd)

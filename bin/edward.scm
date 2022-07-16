@@ -1,9 +1,12 @@
 (import (scheme base)
+        (scheme file)
+        (scheme load)
         (scheme process-context)
 
         (srfi 37)
 
         (edward ed)
+        (edward util)
         (matchable))
 
 (define prompt "")
@@ -39,9 +42,18 @@
       cons
       '())))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (run-editor filename)
-  (let ((editor (make-text-editor filename prompt silent?)))
-    (editor-start editor)))
+  (let ((edwardrc (path-join (user-home) ".edwardrc")))
+    (when (file-exists? edwardrc)
+      ;; XXX: Ideally we would to pass a custom environment here,
+      ;; unfortunately those create via the R7RS environment procedure
+      ;; are not mutable and edward command macros require a mutable
+      ;; environment.
+      (load edwardrc))
+    (let ((editor (make-text-editor filename prompt silent?)))
+      (editor-start editor))))
 
 (define (main args)
   (let* ((flags (list prompt-opt silent-opt))

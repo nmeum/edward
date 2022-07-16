@@ -165,7 +165,7 @@
 
   (repl-run
     (text-editor-repl editor)
-    parse-cmd
+    (parse-cmd)
     ;; Success continuation.
     (lambda (line res)
       (let ((cmd  (cdr res))
