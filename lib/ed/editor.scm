@@ -121,7 +121,10 @@
          (b (make-buffer))
          (e (%make-text-editor filename h b 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
-      (let ((in (read-from filename)))
+      (let ((in (with-io-error-handler
+                  filename
+                  (lambda ()
+                    (call-with-input-file filename port->lines)))))
         (when in
           (buffer-append! b 0 (car in))
           (editor-goto! e (editor-lines e))
