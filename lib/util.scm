@@ -160,6 +160,19 @@
               (write-string data port)))
           (k #t))))))
 
+;; Verbose exception handler for I/O error which just prints the error
+;; error message prefixed by the file name for which the error occured.
+
+(define (with-io-error-handler fn thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (with-exception-handler
+        (lambda (eobj)
+          (fprintln (current-error-port) fn ": "
+                    (error-object-message eobj))
+          (k #f))
+        thunk))))
+
 ;; Read from given port as a list of lines. Returns pair of retrieved
 ;; lines and total amount of bytes read from the port (including
 ;; newlines).
