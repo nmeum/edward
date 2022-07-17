@@ -292,7 +292,7 @@
 (define (exec-command-list-interactive editor match-proc lines regex)
   (define previous-command '())
   (define (get-interactive editor)
-    (let* ((cmd (editor-interactive editor))
+    (let* ((cmd (editor-interactive editor parse-interactive-cmd))
            (ret (match cmd
                   ('null-command #f)
                   ('repeat-previous

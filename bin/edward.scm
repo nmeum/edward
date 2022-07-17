@@ -3,7 +3,8 @@
 
         (srfi 37)
 
-        (edward ed)
+        (edward ed cmd)
+        (edward ed editor)
         (matchable))
 
 (define prompt "")
@@ -41,7 +42,7 @@
 
 (define (run-editor filename)
   (let ((editor (make-text-editor filename prompt silent?)))
-    (editor-start editor)))
+    (editor-start editor parse-cmd)))
 
 (define (main args)
   (let* ((flags (list prompt-opt silent-opt))

@@ -151,7 +151,7 @@
         (write-file (path-join (user-home) "ed.hup") data))))
   (exit))
 
-(define (editor-start editor)
+(define (editor-start editor cmd-parser)
   (define (execute-command line cmd addr)
     (call-with-current-continuation
       (lambda (k)
@@ -172,7 +172,7 @@
 
   (repl-run
     (text-editor-repl editor)
-    parse-cmd
+    cmd-parser
     ;; Success continuation.
     (lambda (line res)
       (let ((cmd  (cdr res))
@@ -196,10 +196,10 @@
   (when (text-editor-modified? editor)
     (editor-error editor "Warning: buffer modified")))
 
-(define (editor-interactive editor)
+(define (editor-interactive editor cmd-parser)
   (let ((repl (text-editor-repl editor)))
     (repl-interactive repl
-      parse-interactive-cmd
+      cmd-parser
       (lambda (line reason)
         (editor-raise "parsing of interactive command failed")))))
 
