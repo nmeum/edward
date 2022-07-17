@@ -348,16 +348,6 @@
       (values #t (string-copy fn 1))
       (values #f fn))))
 
-(define (with-io-error-handler fn thunk)
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          (fprintln (current-error-port) fn ": "
-                    (error-object-message eobj))
-          (k #f))
-        thunk))))
-
 ;; Write given data to given filename. If filename starts with `!` (i.e.
 ;; is a command according to filename-cmd?), write data to standard
 ;; input of given command string.
