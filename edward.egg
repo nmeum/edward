@@ -41,7 +41,7 @@
               (source "./lib/ed/addr.sld")
               (source-dependencies
                 "./lib/ed/addr.scm"))
-   (extension edward.ed
+   (extension edward.ed.editor
               (component-dependencies
                 edward.util
                 edward.parse
@@ -49,9 +49,20 @@
                 edward.buffer
                 edward.ed.addr)
 
-              (source "./lib/ed.sld")
+              (source "./lib/ed/editor.sld")
               (source-dependencies
-                "./lib/ed/editor.scm"
+                "./lib/ed/editor.scm"))
+   (extension edward.ed.cmd
+              (component-dependencies
+                edward.util
+                edward.parse
+                edward.replace
+                edward.buffer
+                edward.ed.addr
+                edward.ed.editor)
+
+              (source "./lib/ed/cmd.sld")
+              (source-dependencies
                 "./lib/ed/cmd.scm"))
    (program bin/edward
             ;; Uncomment to build a fully static version of edward.
@@ -60,4 +71,4 @@
             ;(link-options "-L" "-static")
 
             (install-name "edward")
-            (component-dependencies edward.ed))))
+            (component-dependencies edward.ed.editor))))

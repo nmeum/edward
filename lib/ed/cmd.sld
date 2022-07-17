@@ -1,8 +1,7 @@
-(define-library edward.ed
+(define-library edward.ed.cmd
   (import (scheme base)
           (scheme write)
           (scheme file)
-          (scheme case-lambda)
           (scheme process-context)
 
           (srfi 1)
@@ -12,7 +11,6 @@
           (posix-regex)
 
           (chicken process)
-          (chicken process signal)
           (chicken port)
           (chicken string)
 
@@ -20,15 +18,12 @@
           (edward parse)
           (edward replace)
           (edward buffer)
-          (edward ed addr))
+          (edward ed addr)
+          (edward ed editor))
 
-  (export make-text-editor editor-start)
-
-  ;; XXX: Only exported for unit tests
-  (export parse-cmd cmd-args)
+  (export parse-cmd)
 
   ;; XXX: Silence "indirect export of syntax binding" warnings
-  (export define-edit-cmd  define-input-cmd define-print-cmd define-file-cmd)
+  (export define-edit-cmd define-input-cmd define-print-cmd define-file-cmd)
 
-  (include "lib/ed/cmd.scm"
-           "lib/ed/editor.scm"))
+  (include "cmd.scm"))
