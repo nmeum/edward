@@ -64,6 +64,14 @@
               (source "./lib/ed/cmd.sld")
               (source-dependencies
                 "./lib/ed/cmd.scm"))
+   (extension edward.cli
+              (component-dependencies
+                edward.ed.cmd
+                edward.ed.editor)
+
+              (source "./lib/cli.sld")
+              (source-dependencies
+                "./lib/cli.scm"))
    (program bin/edward
             ;; Uncomment to build a fully static version of edward.
             ;; Also requires removing (linkage dynamic) in component-options above.
@@ -71,4 +79,4 @@
             ;(link-options "-L" "-static")
 
             (install-name "edward")
-            (component-dependencies edward.ed.editor))))
+            (component-dependencies edward.cli))))
