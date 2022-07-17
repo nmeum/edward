@@ -83,8 +83,8 @@ extension to the POSIX standard can be supplied separately. The library
 interface is still in early stages of development, not well documented,
 and subject to change.
 
-The library interface can be used by creating a custom CHICKEN Scheme
-program which imports the required `edward` libraries, defines custom
+The `edward` library can be used by creating a custom CHICKEN Scheme
+program which imports the required CHICKEN libraries, defines custom
 commands through provided hygienic macros, and executes `(edward-main)`
 to start the editor. For example, an `edward` variant which also
 provides the `z` command (included with many BSD implementations of
