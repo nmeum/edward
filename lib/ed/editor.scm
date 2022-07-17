@@ -22,7 +22,7 @@
   (proc cmd-proc)
   (args cmd-args))
 
-;; Retruns true if the given command is a command which is reversible
+;; Returns true if the given command is a command which is reversible
 ;; according to the definition of the undo command in POSIX. For the
 ;; undo command itself, #f is returned.
 
