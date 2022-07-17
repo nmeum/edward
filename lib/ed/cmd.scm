@@ -901,7 +901,7 @@
             (addr (first x)))
         (cons addr cmd)))))
 
-(define parse-cmd
+(define (parse-cmd)
   (%parse-cmd (get-command-parsers '())))
 
 (define parse-global-cmd
