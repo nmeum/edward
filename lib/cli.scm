@@ -32,7 +32,7 @@
       '())))
 
 (define (run-editor filename)
-  (let ((editor (make-text-editor filename prompt silent?)))
+  (let ((editor (make-text-editor exec-edit filename prompt silent?)))
     (editor-start editor parse-cmd)))
 
 (define (edward-main . args)

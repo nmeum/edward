@@ -116,19 +116,13 @@
   ;; Whether help mode is activated (H command).
   (help? text-editor-help? text-editor-help-set!))
 
-(define (make-text-editor filename prompt silent?)
+(define (make-text-editor edit-proc filename prompt silent?)
   (let* ((h (make-repl prompt))
          (b (make-buffer))
          (e (%make-text-editor filename h b 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
-      (let ((in (with-io-error-handler
-                  filename
-                  (lambda ()
-                    (call-with-input-file filename port->lines)))))
-        (when in
-          (buffer-append! b 0 (car in))
-          (editor-goto! e (editor-lines e))
-          (editor-verbose e (cdr in)))))
+      ;; XXX: Don't print `?` if file doesn't exist.
+      (edit-proc e filename))
     e))
 
 (define (handle-error editor line msg)
