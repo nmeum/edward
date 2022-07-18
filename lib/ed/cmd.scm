@@ -451,7 +451,7 @@
                                      (not (zero? (cdr y)))) ;; not last
                                (cons l (cdr y))
                                (cons l (+ lnum (dec (length n)))))))
-                         '((). 0) lst (line-numbers lines))))
+                         '((). 0) lst (editor-line-numbers lines))))
     (if (zero? (cdr re))
       ((subst-nomatch-handler) "no match")
       (begin
@@ -777,7 +777,7 @@
     (for-each
       (lambda (line number)
         (println number "\t" line))
-      lst (line-numbers lines))
+      lst (editor-line-numbers lines))
     (editor-goto! editor eline)))
 
 (define-print-cmd (number exec-number (make-range))
