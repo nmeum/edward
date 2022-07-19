@@ -292,7 +292,7 @@
 (define (exec-command-list-interactive editor match-proc lines regex)
   (define previous-command '())
   (define (get-interactive editor)
-    (let* ((cmd (editor-interactive editor))
+    (let* ((cmd (editor-interactive editor parse-interactive-cmd))
            (ret (match cmd
                   ('null-command #f)
                   ('repeat-previous
@@ -347,16 +347,6 @@
     (if fn-cmd?
       (values #t (string-copy fn 1))
       (values #f fn))))
-
-(define (with-io-error-handler fn thunk)
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          (fprintln (current-error-port) fn ": "
-                    (error-object-message eobj))
-          (k #f))
-        thunk))))
 
 ;; Write given data to given filename. If filename starts with `!` (i.e.
 ;; is a command according to filename-cmd?), write data to standard
@@ -461,7 +451,7 @@
                                      (not (zero? (cdr y)))) ;; not last
                                (cons l (cdr y))
                                (cons l (+ lnum (dec (length n)))))))
-                         '((). 0) lst (line-numbers lines))))
+                         '((). 0) lst (editor-line-numbers lines))))
     (if (zero? (cdr re))
       ((subst-nomatch-handler) "no match")
       (begin
@@ -787,7 +777,7 @@
     (for-each
       (lambda (line number)
         (println number "\t" line))
-      lst (line-numbers lines))
+      lst (editor-line-numbers lines))
     (editor-goto! editor eline)))
 
 (define-print-cmd (number exec-number (make-range))
@@ -911,7 +901,7 @@
             (addr (first x)))
         (cons addr cmd)))))
 
-(define parse-cmd
+(define (parse-cmd)
   (%parse-cmd (get-command-parsers '())))
 
 (define parse-global-cmd

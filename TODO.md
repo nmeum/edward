@@ -12,6 +12,18 @@
 	  transition adds an incremental UTF-8 decoder to CHICKEN
 * consider treating undo with empty undo stack as an error
 
+# Library Interface
+
+* Consider splitting `cmd.scm` into two libraries: (1) a library
+  providing procedures for defining commands and (2) a library which
+  provides an implementation of `ed(1)` commands mandated by POSIX.
+* Provide a friendly HTML documentation for the public API. Ideally
+  generated from source code comments, e.g. using `chibi-doc`?
+* Improve procedure names and provide better types for addresses, ranges, …
+* Add `(chicken type)` annotations for the public API to catch more
+  usage errors during compile-time instead of run-time.
+* Provide an `(edward)` meta-library which imports all sub-libraries.
+
 # Miscellaneous
 
 * Consider using Declarations and (chicken type) to enable more optimizations

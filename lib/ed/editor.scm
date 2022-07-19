@@ -116,12 +116,13 @@
   ;; Whether help mode is activated (H command).
   (help? text-editor-help? text-editor-help-set!))
 
-(define (make-text-editor filename prompt silent?)
+(define (make-text-editor edit-proc filename prompt silent?)
   (let* ((h (make-repl prompt))
-         (e (%make-text-editor filename h (make-buffer) 0 0 #f '() #f "" '() '() #f #f silent? #f)))
+         (b (make-buffer))
+         (e (%make-text-editor filename h b 0 0 #f '() #f "" '() '() #f #f silent? #f)))
     (unless (empty-string? filename)
       ;; XXX: Don't print `?` if file doesn't exist.
-      (exec-edit e filename))
+      (edit-proc e filename))
     e))
 
 (define (handle-error editor line msg)
@@ -144,7 +145,7 @@
         (write-file (path-join (user-home) "ed.hup") data))))
   (exit))
 
-(define (editor-start editor)
+(define (editor-start editor cmd-parser)
   (define (execute-command line cmd addr)
     (call-with-current-continuation
       (lambda (k)
@@ -165,7 +166,7 @@
 
   (repl-run
     (text-editor-repl editor)
-    parse-cmd
+    cmd-parser
     ;; Success continuation.
     (lambda (line res)
       (let ((cmd  (cdr res))
@@ -186,12 +187,13 @@
   ;; user would have to confirm this quit when the buffer was modified.
   ;; However, this is currently not possible with edward as we can't
   ;; read past eof with Scheme's read-char procedure.
-  (%exec-quit editor))
+  (when (text-editor-modified? editor)
+    (editor-error editor "Warning: buffer modified")))
 
-(define (editor-interactive editor)
+(define (editor-interactive editor cmd-parser)
   (let ((repl (text-editor-repl editor)))
     (repl-interactive repl
-      parse-interactive-cmd
+      cmd-parser
       (lambda (line reason)
         (editor-raise "parsing of interactive command failed")))))
 
@@ -403,6 +405,13 @@
 (define (editor-lines editor)
   (buffer-length (text-editor-buffer editor)))
 
+;; Return list of line numbers for given lines.
+
+(define (editor-line-numbers lines)
+  (let ((sline (car lines))
+        (eline (cdr lines)))
+    (iota (inc (- eline sline)) sline)))
+
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
@@ -506,10 +515,3 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
-
-;; Return list of line numbers for given lines.
-
-(define (line-numbers lines)
-  (let ((sline (car lines))
-        (eline (cdr lines)))
-    (iota (inc (- eline sline)) sline)))
