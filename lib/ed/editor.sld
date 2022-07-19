@@ -31,6 +31,6 @@
           editor-reset! editor-get-lnum editor-get-lines editor-in-range
           editor-snapshot editor-undo! editor-lines editor-append!
           editor-replace! editor-join! editor-remove! editor-move!
-          addr->line line-numbers range->lpair)
+          editor-line-numbers addr->line range->lpair)
 
   (include "editor.scm"))

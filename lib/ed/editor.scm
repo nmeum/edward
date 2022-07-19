@@ -405,6 +405,13 @@
 (define (editor-lines editor)
   (buffer-length (text-editor-buffer editor)))
 
+;; Return list of line numbers for given lines.
+
+(define (editor-line-numbers lines)
+  (let ((sline (car lines))
+        (eline (cdr lines)))
+    (iota (inc (- eline sline)) sline)))
+
 ;; Append the text at the current address, return line number
 ;; of last inserted line.
 
@@ -508,10 +515,3 @@
      (%addr->line e off (match-line 'backward e bre)))
     ((e (('relative . rel) off))
      (%addr->line e off (+ (text-editor-line e) rel)))))
-
-;; Return list of line numbers for given lines.
-
-(define (line-numbers lines)
-  (let ((sline (car lines))
-        (eline (cdr lines)))
-    (iota (inc (- eline sline)) sline)))
