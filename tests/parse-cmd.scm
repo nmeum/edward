@@ -1,9 +1,10 @@
-(import (edward ed))
+(import (edward ed cmd))
+(import (edward ed editor))
 
 (define (test-parse-cmd desc expected input)
   (test desc expected
         (let* ((cmd-input (string-append input "\n"))
-               (cmd-pair  (%test-parse parse-cmd cmd-input))
+               (cmd-pair  (%test-parse (parse-cmd) cmd-input))
                (cmd-addr  (car cmd-pair))
                (cmd-args  (cmd-args (cdr cmd-pair))))
           (append (list cmd-addr) cmd-args))))
@@ -42,7 +43,7 @@
       (list (addr->range (make-addr '(regex-backward . "foo") '(23 -42))))
       "foobar") "?foo? +23 -42 r foobar")
 
-  (test-parse-error "failed char pred" parse-cmd "rfoo"))
+  (test-parse-error "failed char pred" (parse-cmd) "rfoo"))
 
 (test-group "write command"
   (test-parse-cmd "no arguments"
@@ -57,7 +58,7 @@
               (make-addr '(current-line) '(10))))
       "foobar") ".,.+10w foobar")
 
-  (test-parse-error "failed char pred" parse-cmd "wfoo"))
+  (test-parse-error "failed char pred" (parse-cmd) "wfoo"))
 
 (test-group "shell command"
   (test-parse-cmd "no replacements"
@@ -117,6 +118,6 @@
           '())
      "42an\n.")
 
-  (test-parse-error "unknown command" parse-cmd "X")
-  (test-parse-error "failed char pred" parse-cmd "Qn")
-  (test-parse-error "failed char pred" parse-cmd "a n"))
+  (test-parse-error "unknown command" (parse-cmd) "X")
+  (test-parse-error "failed char pred" (parse-cmd) "Qn")
+  (test-parse-error "failed char pred" (parse-cmd) "a n"))
