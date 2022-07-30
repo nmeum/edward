@@ -171,9 +171,11 @@
     (lambda (line res)
       (let ((cmd  (cdr res))
             (addr (car res)))
-        (when (cmd-reversible? cmd)
-          (editor-snapshot editor))
-        (execute-command line cmd addr)))
+        (if (cmd-reversible? cmd)
+          (editor-with-undo editor
+            (lambda ()
+              (execute-command line cmd addr)))
+          (execute-command line cmd addr))))
     ;; Failure continuation.
     (lambda (line reason)
       (handle-error editor line reason))
@@ -373,18 +375,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Prepare execution of a new undoable operation.
+;; Execute the given thunk and make all buffer operations and editor
+;; state modifications performed in thunk undoable via editor-undo!.
 
-(define (editor-snapshot editor)
-  (text-editor-last-modified-set!
-    editor
-    (text-editor-modified? editor))
+(define (editor-with-undo editor thunk)
+  (let ((m? (text-editor-modified? editor))
+        (ll (text-editor-line editor)))
+    (buffer-with-undo (text-editor-buffer editor) thunk)
 
-  (text-editor-last-line-set!
-    editor
-    (text-editor-line editor))
-
-  (buffer-snapshot (text-editor-buffer editor)))
+    ;; buffer-with-undo succeeded → commit previous editor state.
+    (text-editor-last-modified-set! editor m?)
+    (text-editor-last-line-set! editor ll)))
 
 ;; Undo the last operation on the buffer.
 
