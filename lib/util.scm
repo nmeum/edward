@@ -146,19 +146,14 @@
 ;; is truncated.
 
 (define (write-file filename data)
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          (if (file-error? eobj)
-            (k #f)
-            (raise eobj)))
-        (lambda ()
-          ;; TODO: If file exists behavior is unspecified
-          (call-with-output-file filename
-            (lambda (port)
-              (write-string data port)))
-          (k #t))))))
+  (guard
+    (eobj
+      ((file-error? eobj) #f))
+    ;; TODO: If file exists behavior is unspecified
+    (call-with-output-file filename
+      (lambda (port)
+        (write-string data port)))
+    #t))
 
 ;; Read from given port as a list of lines. Returns pair of retrieved
 ;; lines and total amount of bytes read from the port (including
