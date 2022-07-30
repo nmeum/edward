@@ -9,13 +9,14 @@
 ;; are implemented on top of the primitive append and remove procedure.
 
 (define-record-type Line-Buffer
-  (%make-buffer lines undo-stack)
+  (%make-buffer lines undo? undo-stack)
   line-buffer?
   (lines buffer-lines buffer-lines-set!)
-  (undo-stack buffer-undo-stack))
+  (undo? buffer-undo? buffer-undo-set!)
+  (undo-stack buffer-undo-stack buffer-undo-stack-set!))
 
 (define (make-buffer)
-  (%make-buffer '() (make-stack)))
+  (%make-buffer '() #f (make-stack)))
 
 (define (buffer->list buffer)
   (buffer-lines buffer))
@@ -27,7 +28,8 @@
   (zero? (buffer-length buffer)))
 
 (define (buffer-register-undo buffer proc)
-  (stack-push (buffer-undo-stack buffer) proc))
+  (when (buffer-undo? buffer)
+    (stack-push (buffer-undo-stack buffer) proc)))
 
 (define (buffer-append! buffer line text)
   (let ((lines (buffer-lines buffer)))
@@ -63,19 +65,37 @@
                           sline
                           end))))))
 
-;; Create a snapshot of the current editor state. The editor can be
-;; reverted back to this snapshot using the buffer-undo! procedure.
+;; Execute the given thunk and make all buffer operations performed
+;; in thunk undoable via the buffer-undo! procedure.
 
-(define (buffer-snapshot buffer)
-  (stack-clear! (buffer-undo-stack buffer)))
+(define (buffer-with-undo buffer thunk)
+    (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
+    (buffer-undo-set! buffer #t)
 
-;; Revert back to the last snapshot.
+    (guard
+      (eobj
+        (else
+          (buffer-undo-set! buffer #f)
+          (raise eobj)))
+      (let ((r (thunk)))
+        (buffer-undo-set! buffer #f)
+        r)))
+
+;; Predicate to check if undo stack is empty, returns false if it is empty.
+
+(define (buffer-has-undo? buffer)
+  (not (stack-empty? (buffer-undo-stack buffer))))
+
+;; Revert last operation tracked by buffer-with-undo. The revert is
+;; itself always reversible via buffer-undo!.
 
 (define (buffer-undo! buffer)
   (define (%buffer-undo! buffer procs)
-    (for-each (lambda (proc)
-                (proc buffer))
-              procs))
+    (buffer-with-undo buffer
+      (lambda ()
+        (for-each (lambda (proc)
+                    (proc buffer))
+                  procs))))
 
   (let* ((stk (buffer-undo-stack buffer))
          (stksiz (stack-size stk)))

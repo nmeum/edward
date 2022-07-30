@@ -125,15 +125,18 @@
   (test-buffer "undo append"
                '()
                (lambda (b)
-                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-append! b 0 '("foo" "bar"))))
                  (buffer-undo! b)))
 
   (test-buffer "undo remove"
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-snapshot b)
-                 (buffer-remove! b 2 3)
+                 (buffer-with-undo b
+                   (lambda ()
+                    (buffer-remove! b 2 3)))
                  (buffer-undo! b)))
 
   (test-buffer "undo undo"
@@ -147,55 +150,92 @@
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-replace! b 1 2 '("first" "second"))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-replace! b 1 2 '("first" "second"))))
                  (buffer-undo! b)))
 
   (test-buffer "undo append last"
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-append! b 2 '("second line"))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-append! b 2 '("second line"))))
                  (buffer-undo! b)))
 
   (test-buffer "undo replace last"
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-replace! b 2 2 '("second line"))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-replace! b 2 2 '("second line"))))
                  (buffer-undo! b)))
 
   (test-buffer "undo replace undo"
                '("test" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-replace! b 1 1 '("test"))
-                 (buffer-undo! b)   ;; undo replace
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-replace! b 1 1 '("test"))
+                     (buffer-undo! b) ))  ;; undo replace
                  (buffer-undo! b))) ;; undo undo
 
   (test-buffer "undo replace nothing"
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-replace! b 0 0 '())
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-replace! b 0 0 '())))
                  (buffer-undo! b)))
 
   (test-buffer "undo join"
                '("foo" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar"))
-                 (buffer-snapshot b)
-                 (buffer-join! b 0 2)
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-join! b 0 2)))
+                 (buffer-undo! b)))
+
+  (test-buffer "undo multiple"
+               '("foo" "bar")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar"))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-append! b 0 '("1"))
+                     (buffer-append! b 0 '("2"))
+                     (buffer-replace! b 0 0 '("0"))))
                  (buffer-undo! b)))
 
  (test-buffer "undo move"
                '("foo" "bar" "baz")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "baz"))
-                 (buffer-snapshot b)
-                 (buffer-move! b 2 3 0)
-                 (buffer-undo! b))))
+                 (buffer-with-undo b
+                   (lambda ()
+                     (buffer-move! b 2 3 0)))
+                 (buffer-undo! b)))
+
+ (test "empty undo buffer"
+       #f
+       (let ((b (make-buffer)))
+         (buffer-has-undo? b)))
+
+ (test "operation without buffer-undo"
+       #f
+       (let ((b (make-buffer)))
+         (buffer-append! b 0 '("foo" "bar"))
+         (buffer-has-undo? b)))
+
+ (test "non-empty undo buffer"
+       #t
+       (let ((b (make-buffer)))
+         (buffer-with-undo b
+           (lambda ()
+             (buffer-append! b 0 '("foo" "bar" "baz"))))
+         (buffer-has-undo? b))))

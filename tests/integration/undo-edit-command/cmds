@@ -1,0 +1,13 @@
+1,$p
+.=
+a
+foo
+.
+.=
+1,$p
+.=
+E testdata/second
+.=
+1,$p
+.=
+u
