@@ -198,4 +198,15 @@
                  (buffer-append! b 0 '("foo" "bar" "baz"))
                  (buffer-snapshot b)
                  (buffer-move! b 2 3 0)
-                 (buffer-undo! b))))
+                 (buffer-undo! b)))
+
+ (test "empty undo buffer"
+       #f
+       (let ((b (make-buffer)))
+         (buffer-has-undo? b)))
+
+ (test "non-empty undo buffer"
+       #t
+       (let ((b (make-buffer)))
+         (buffer-append! b 0 '("foo" "bar"))
+         (buffer-has-undo? b))))

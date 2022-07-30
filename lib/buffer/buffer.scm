@@ -69,6 +69,11 @@
 (define (buffer-snapshot buffer)
   (stack-clear! (buffer-undo-stack buffer)))
 
+;; Predicate to check if undo stack is empty, returns false if it is empty.
+
+(define (buffer-has-undo? buffer)
+  (not (stack-empty? (buffer-undo-stack buffer))))
+
 ;; Revert back to the last snapshot.
 
 (define (buffer-undo! buffer)
