@@ -13,7 +13,7 @@
   line-buffer?
   (lines buffer-lines buffer-lines-set!)
   (undo? buffer-undo? buffer-undo-set!)
-  (undo-stack buffer-undo-stack))
+  (undo-stack buffer-undo-stack buffer-undo-stack-set!))
 
 (define (make-buffer)
   (%make-buffer '() #f (make-stack)))
@@ -69,20 +69,17 @@
 ;; in thunk undoable via the buffer-undo! procedure.
 
 (define (buffer-with-undo buffer thunk)
-  (stack-clear! (buffer-undo-stack buffer))
-  (buffer-undo-set! buffer #t)
+    (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
+    (buffer-undo-set! buffer #t)
 
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          ;; TODO: Restore previous undo stack.
+    (guard
+      (eobj
+        (else
           (buffer-undo-set! buffer #f)
-          (raise eobj))
-        (lambda ()
-          (let ((r (thunk)))
-            (buffer-undo-set! buffer #f)
-            (k r)))))))
+          (raise eobj)))
+      (let ((r (thunk)))
+        (buffer-undo-set! buffer #f)
+        r)))
 
 ;; Predicate to check if undo stack is empty, returns false if it is empty.
 

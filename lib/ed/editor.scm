@@ -155,7 +155,11 @@
               (k (handle-error editor line (editor-error-msg eobj)))
               (raise eobj)))
           (lambda ()
-            (editor-exec editor addr cmd)
+            (if (cmd-reversible? cmd)
+              (editor-with-undo editor
+                (lambda ()
+                  (editor-exec editor addr cmd)))
+              (editor-exec editor addr cmd))
             (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
 
   (signal-mask! signal/quit)
@@ -171,11 +175,7 @@
     (lambda (line res)
       (let ((cmd  (cdr res))
             (addr (car res)))
-        (if (cmd-reversible? cmd)
-          (editor-with-undo editor
-            (lambda ()
-              (execute-command line cmd addr)))
-          (execute-command line cmd addr))))
+        (execute-command line cmd addr)))
     ;; Failure continuation.
     (lambda (line reason)
       (handle-error editor line reason))
