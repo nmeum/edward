@@ -147,20 +147,16 @@
 
 (define (editor-start editor cmd-parser)
   (define (execute-command line cmd addr)
-    (call-with-current-continuation
-      (lambda (k)
-        (with-exception-handler
-          (lambda (eobj)
-            (if (editor-error? eobj)
-              (k (handle-error editor line (editor-error-msg eobj)))
-              (raise eobj)))
+    (guard
+      (eobj
+        ((editor-error? eobj)
+         (handle-error editor line (editor-error-msg eobj))))
+      (if (cmd-reversible? cmd)
+        (editor-with-undo editor
           (lambda ()
-            (if (cmd-reversible? cmd)
-              (editor-with-undo editor
-                (lambda ()
-                  (editor-exec editor addr cmd)))
-              (editor-exec editor addr cmd))
-            (text-editor-prevcmd-set! editor (cmd-symbol cmd)))))))
+            (editor-exec editor addr cmd)))
+        (editor-exec editor addr cmd))
+      (text-editor-prevcmd-set! editor (cmd-symbol cmd))))
 
   (signal-mask! signal/quit)
   (set-signal-handler!
