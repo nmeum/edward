@@ -390,6 +390,9 @@
 ;; Undo the last operation on the buffer.
 
 (define (editor-undo! editor)
+  (unless (buffer-has-undo? (text-editor-buffer editor))
+    (editor-raise "nothing to undo"))
+
   (text-editor-modified-set!
     editor
     (text-editor-last-modified? editor))
