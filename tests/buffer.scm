@@ -119,7 +119,26 @@
                '("foo" "123" "bar")
                (lambda (b)
                  (buffer-append! b 0 '("foo" "bar" "123"))
-                 (buffer-move! b 3 3 1))))
+                 (buffer-move! b 3 3 1)))
+
+  (test-buffer "move multiple after destination"
+               '("foo" "bar" "---" "t1" "t2" "end")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "t1" "t2" "bar" "---" "end"))
+                 (buffer-move! b 2 3 5)))
+
+  (test-buffer "move multiple before destination"
+               '("foo" "t1" "t2" "bar" "---" "end")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "---" "t1" "t2" "end"))
+                 (buffer-move! b 4 5 1)))
+
+  (test-buffer "move everything"
+               '("foo" "bar" "baz")
+               (lambda (b)
+                 (buffer-append! b 0 '("foo" "bar" "baz"))
+                 (buffer-move! b 1 3 0))))
+
 
 (test-group "undo command"
   (test-buffer "undo append"

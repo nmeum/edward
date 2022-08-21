@@ -122,11 +122,13 @@
       (list joined))))
 
 (define (buffer-move! buffer start end dest)
+  ;; Assumption: dest is always outside [start, end].
   (let* ((lines (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (move  (sublist lines sindex end)))
-    (buffer-remove! buffer start end)
-    (buffer-append!
-      buffer
-      (min dest (length (buffer-lines buffer)))
-      move)))
+         (move  (sublist lines sindex end))
+
+         (remove! (lambda () (buffer-remove! buffer start end)))
+         (append! (lambda () (buffer-append! buffer dest move))))
+    (if (> dest start)
+      (begin (append!) (remove!))
+      (begin (remove!) (append!)))))
