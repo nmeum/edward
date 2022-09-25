@@ -134,6 +134,15 @@ entirely possible to define multiple commands in this way. Refer to
 `lib/ed/cmd.scm` to see how the commands mandated by POSIX are
 implemented using this interface.
 
+## Other Implementations
+
+The existing GNU and BSD ed implementations are both derived from an
+implementation written by Andrew Moore in the early-to-mid 1990s. As
+such, they still share a lot of code and are potentially subject to the
+same bugs [\[1\]][ed history]. To the best of my knowledge, edward is
+the first (largely) POSIX compatible ed implementation which is not
+derived from Andrew's originail implementation.
+
 ## Portability
 
 The code was originally intended to be written in purely standard
@@ -177,3 +186,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [unix v7vol2a]: https://s3.amazonaws.com/plan9-bell-labs/7thEdMan/v7vol2a.pdf
 [hygienic macros]: https://doi.org/10.1145/319838.319859
 [language-oriented programming]: https://doi.org/10.1145/3127323
+[ed history]: https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00001.html
