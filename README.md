@@ -141,7 +141,15 @@ implementation written by Andrew Moore in the early-to-mid 1990s. As
 such, they still share a lot of code and are potentially subject to the
 same bugs [\[1\]][ed history]. To the best of my knowledge, edward is
 the first (largely) POSIX compatible ed implementation which is not
-derived from Andrew's originail implementation.
+derived from Andrew's original implementation. Therefore, the test suite
+provided by this implementation has lead to the discovery of various bugs
+in existing implementations:
+
+* https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00000.html
+* https://marc.info/?l=openbsd-tech&m=164286143103475
+* https://marc.info/?l=openbsd-tech&m=166410772923217
+* https://marc.info/?l=openbsd-tech&m=165324344706784
+* …
 
 ## Portability
 
