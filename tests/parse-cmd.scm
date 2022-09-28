@@ -1,5 +1,6 @@
-(import (edward ed cmd))
-(import (edward ed editor))
+(import (edward ed cmd)
+        (edward ed addr)
+        (edward ed editor))
 
 (define (test-parse-cmd desc expected input)
   (test desc expected
