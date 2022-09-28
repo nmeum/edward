@@ -340,6 +340,11 @@
 ;; This procedure expands a list of addresses into a single pair of
 ;; concrete line numbers. As such, this procedure is responsible for
 ;; both applying the omission rules and discarding addresses.
+;;
+;; For example the address list for "7,5," is evaluted as follows:
+;;
+;;  7,5, [discard] -> 5, [expand] -> 5,5
+;;
 (define (%addrlst->lpair editor lst)
   (range->lpair!
     editor
@@ -351,7 +356,7 @@
                 (let ((lpair (parameterize ((allow-invalid-ranges #t))
                                (range->lpair! editor (expand-addr stk)))))
                   (list
-                    (make-addr (cons 'nth-line (cdr lpair)))
+                    (make-addr (cons 'nth-line (cdr lpair))) ;; discard car
                     cur))
                 (append stk (list cur))))
             '() lst))))
