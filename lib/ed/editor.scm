@@ -341,27 +341,20 @@
 ;; concrete line numbers. As such, this procedure is responsible for
 ;; both applying the omission rules and discarding addresses.
 (define (%addrlst->lpair editor lst)
-  (car
-    (fold (lambda (cur prev)
-            (let ((lst (car prev))
-                  (stk (cdr prev)))
-              (cond
-                ((eof-object? cur)
-                 (cons
-                   (range->lpair! editor (expand-addr stk))
-                   '()))
-                ((and (address-separator? cur)
-                      (any address-separator? stk))
-                 ;; Intermediate range values can be invalid (e.g. "7,5,").
-                 (let ((lpair (parameterize ((allow-invalid-ranges #t))
-                                (range->lpair! editor (expand-addr stk)))))
-                   (cons
-                     lpair
-                     (list
-                       (make-addr (cons 'nth-line (cdr lpair)))
-                       cur))))
-                (else (cons lst (append stk (list cur)))))))
-          '(() . ()) (append lst (list (eof-object))))))
+  (range->lpair!
+    editor
+    (expand-addr
+      (fold (lambda (cur stk)
+              (if (and (address-separator? cur)
+                       (any address-separator? stk))
+                ;; Intermediate range values can be invalid (e.g. "7,5,").
+                (let ((lpair (parameterize ((allow-invalid-ranges #t))
+                               (range->lpair! editor (expand-addr stk)))))
+                  (list
+                    (make-addr (cons 'nth-line (cdr lpair)))
+                    cur))
+                (append stk (list cur))))
+            '() lst))))
 
 (define (addrlst->lpair editor lst)
   (let* ((cur (make-addr '(current-line)))
