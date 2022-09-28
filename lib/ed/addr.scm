@@ -201,26 +201,6 @@
 (define parse-separator
   (parse-char address-separator?))
 
-;; The ',' and ';' operators for addresses seem to be right-associative
-;; (i.e. the operations are grouped from the right). POSIX doesn't
-;; mandate this outright but the address table in the rationale sections
-;; assumes right-associative behavior. The table contains the example
-;; address `7,5,` which is supposed to be evaluated as `7,(5,)`
-;; ultimately yielding `5,5` instead of `(7,5),` which would yield
-;; `1,$`. The procedure below converts left-to-right parsed address
-;; ranges to ranges which enforce right-associative behavior.
-
-(define (lr->rl lst)
-  (fold-right
-    (lambda (cur prev-addrlst)
-      (let ((last-addr (car prev-addrlst)))
-        (if (address-separator? cur)
-          (if (find address-separator? last-addr)
-            (cons (list cur) prev-addrlst)
-            (cons (cons cur last-addr) (cdr prev-addrlst)))
-          (cons (cons cur last-addr) (cdr prev-addrlst)))))
-    '(()) (concatenate lst)))
-
 ;; This procedure expands a given parsed address according to the
 ;; omission rules mandated by the POSIX standard. The return value
 ;; will also be an address range.
@@ -243,28 +223,6 @@
      (make-range addr #\; addr))
     ((addr1 sep addr2)
      (make-range addr1 sep addr2))))
-
-;; Expand an entire address list.
-;;
-;; This procedure also correctly handles the case where an address
-;; is omitted between two seperators (e.g. ";;", ",,", ";," etc).
-;;
-;; See https://austingroupbugs.net/view.php?id=1582#c5829
-
-(define (expand-addrlst lst)
-  (car
-    (fold (lambda (%addr prev)
-            (let* ((lst  (car prev))
-                   (sec  (cdr prev)) ;; second addr from previous seperator expansion (if any)
-                   (addr (if (and sec (address-separator? (car %addr)))
-                           (cons sec %addr)
-                           %addr))
-                   (exp  (expand-addr addr)))
-              (cons
-                (append lst (list exp))
-                (and (address-separator? (car %addr))
-                     (third exp)))))
-          '(() . #f) (lr->rl lst))))
 
 ;; Parse an address chain consisting of multiple addresses separated by
 ;; <comma> or <semicolon> characters. Returns an address list which can
@@ -292,4 +250,4 @@
 (define parse-addrs
   (parse-map
     %parse-addrs
-    expand-addrlst))
+    concatenate))

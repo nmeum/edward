@@ -305,11 +305,17 @@
 (define (editor-goto! editor line)
   (text-editor-line-set! editor line))
 
+;; Intermediate range values can be invalid, e.g. "7,5,". This
+;; parameter can be set to disable sanity checks on range values.
+(define allow-invalid-ranges
+  (make-parameter #f))
+
 (define (range->lpair! editor range)
   (define (%range->lpair! editor start end)
     (let ((sline (addr->line editor start))
           (eline (addr->line editor end)))
-      (if (> sline eline)
+      (if (and (not (allow-invalid-ranges))
+               (> sline eline))
         (editor-raise "invalid range specification")
         (cons sline eline))))
 
@@ -331,12 +337,35 @@
     (editor-goto! editor old) ;; undo range->lpair! side-effect
     ret))
 
+;; This procedure expands a list of addresses into a single pair of
+;; concrete line numbers. As such, this procedure is responsible for
+;; both applying the omission rules and discarding addresses.
+;;
+;; For example the address list for "7,5," is evaluted as follows:
+;;
+;;  7,5, [discard] -> 5, [expand] -> 5,5
+;;
+(define (%addrlst->lpair editor lst)
+  (range->lpair!
+    editor
+    (expand-addr
+      (fold (lambda (cur stk)
+              (if (and (address-separator? cur)
+                       (any address-separator? stk))
+                ;; Intermediate range values can be invalid (e.g. "7,5,").
+                (let ((lpair (parameterize ((allow-invalid-ranges #t))
+                               (range->lpair! editor (expand-addr stk)))))
+                  (list
+                    (make-addr (cons 'nth-line (cdr lpair))) ;; discard car
+                    cur))
+                (append stk (list cur))))
+            '() lst))))
+
 (define (addrlst->lpair editor lst)
   (let* ((cur (make-addr '(current-line)))
          (old (addr->line editor cur))
-         (ret (fold (lambda (range _)
-                      (range->lpair! editor range)) '() lst)))
-    (editor-goto! editor old) ;; undo side-effect
+         (ret (%addrlst->lpair editor lst)))
+    (editor-goto! editor old) ;; undo range->lpair! side-effect
     ret))
 
 ;; Find current line number for a given line in the editor buffer. False

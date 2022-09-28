@@ -10,6 +10,6 @@
           (edward parse))
 
   (export make-addr make-range range? addr->range range->addr
-          parse-addrs parse-addr-with-off)
+          parse-addrs parse-addr-with-off expand-addr address-separator?)
 
   (include "addr.scm"))
