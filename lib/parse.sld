@@ -9,6 +9,7 @@
 
           (edward util)
 
+          (chicken file posix)
           (chicken process signal))
 
   ;; parse.scm

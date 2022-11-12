@@ -90,12 +90,26 @@
 
 (define (parse-stream-fill! source i)
   (let ((off (parse-stream-offset source))
-        (buf (parse-stream-buffer source)))
+        (buf (parse-stream-buffer source))
+        (src (parse-stream-port source)))
     (if (<= off i)
+      ;; Optionally, the parse-stream-port can refer to a POSIX
+      ;; file descriptor. In which case data will be accessed
+      ;; using the (file-read) procedure. This is required in
+      ;; order to read past EOF (required by ed(1)).
+      ;;
+      ;; TODO Currently a bit hacky, revisit after CHICKEN 6.
+      (if (port? src)
         (do ((off off (+ off 1)))
             ((> off i) (parse-stream-offset-set! source off))
-          (vector-set! buf off (read-char (parse-stream-port source))))
-        #f)))
+          (vector-set! buf off (read-char src)))
+        (do ((off off (+ off 1)))
+            ((> off i) (parse-stream-offset-set! source off))
+          (let ((out (file-read src 1)))
+            (if (zero? (cadr out))
+              (vector-set! buf off (eof-object))
+              (vector-set! buf off (string-ref (car out) 0))))))
+      #f)))
 
 ;;> Returns true iff \var{i} is the first character position in the
 ;;> parse stream \var{source}.
@@ -196,7 +210,10 @@
       (+ i 1)))
 
 (define (parse-stream-close source)
-  (close-input-port (parse-stream-port source)))
+  (let ((src (parse-stream-port source)))
+    (if (port? src)
+      (close-input-port (parse-stream-port source))
+      (file-close src))))
 
 (define (vector-substring vec start . o)
   (let* ((end (if (pair? o) (car o) (vector-length vec)))

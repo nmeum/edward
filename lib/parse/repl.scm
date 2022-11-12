@@ -15,7 +15,7 @@
     (%make-repl
       (if prompt? prompt "*")
       prompt?
-      (make-parse-stream "stdin" (current-input-port))
+      (make-parse-stream "stdin" fileno/stdin)
       0)))
 
 (define (repl-state-set! repl source index)
