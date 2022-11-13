@@ -76,24 +76,20 @@
 
   ;; Allow parsing itself (especially of input mode commands) to be
   ;; interrupted by SIGINT signals. See "Asynchronous Events" in ed(1).
-  (let ((eof?
-          (call-with-current-continuation
-            (lambda (k)
-              (set-signal-handler!
-                signal/int
-                (lambda (signum)
-                  (ik)
-                  (repl-skip-chunks! repl)
-                  (k #f)))
-              (if (parse-stream-end?
-                    (repl-stream repl)
-                    (repl-index repl))
-                (k #t)
-                (begin
-                  (repl-parse repl f sk fk)
-                  (k #f)))))))
-    (unless eof?
-      (repl-run repl f sk fk ik))))
+  (call-with-current-continuation
+    (lambda (k)
+      (set-signal-handler!
+        signal/int
+        (lambda (signum)
+          (ik)
+          (repl-skip-chunks! repl)
+          (k #f)))
+
+        (begin
+          (repl-parse repl f sk fk)
+          (k #f))))
+
+  (repl-run repl f sk fk ik))
 
 (define (repl-interactive repl f fk)
   (repl-parse repl f (lambda (line value) value) fk))

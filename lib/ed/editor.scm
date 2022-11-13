@@ -178,15 +178,7 @@
     ;; Interrupt continuation.
     (lambda ()
       (newline)
-      (editor-error editor "Interrupt")))
-
-  ;; XXX: POSIX requires to be the end-of-file character to be treated
-  ;; like a quit command in command mode. For interactive usage, the
-  ;; user would have to confirm this quit when the buffer was modified.
-  ;; However, this is currently not possible with edward as we can't
-  ;; read past eof with Scheme's read-char procedure.
-  (when (text-editor-modified? editor)
-    (editor-error editor "Warning: buffer modified")))
+      (editor-error editor "Interrupt"))))
 
 (define (editor-interactive editor cmd-parser)
   (let ((repl (text-editor-repl editor)))
