@@ -815,9 +815,14 @@
     (lambda ()
       (exec-quit editor))))
 
+(define-file-cmd (%quit %exec-quit)
+  (parse-cmd-char #\q))
+
+;; Special case: quit command via EOF.
+
 ;; Manually use register-command here to allow interpreting
 ;; EOF as a command without a terminating newline character.
-(register-command '%quit
+(register-command '%eof
   (parse-map
     (parse-or
       parse-end
@@ -825,6 +830,11 @@
         (parse-cmd-char #\q)
         (parse-ignore parse-newline)))
     (lambda (args)
+      ;; XXX: register-command uses '%eof as a command name
+      ;; but for the command itself we use '%quit as well.
+      ;; This allows confirming quit commands with EOF and
+      ;; vice versa. Furthermore we can filter out the EOF
+      ;; handling individually this way (e.g. for g cmd).
       (make-cmd '%quit '() %exec-quit '()))))
 
 ;;
@@ -914,7 +924,7 @@
 (define parse-global-cmd
   (%parse-cmd
     ;; Filter out cmds producing undefined behaviour in global command.
-    (get-command-parsers '(%quit global interactive global-unmatched
+    (get-command-parsers '(%eof global interactive global-unmatched
                            interactive-unmatched shell-escape))))
 
 (define parse-interactive-cmd
@@ -923,5 +933,5 @@
     (parse-bind 'repeat-previous (parse-string "&\n"))
     (%parse-cmd
       ;; Filter out cmds not supported in interactive mode (as per POSIX).
-      (get-command-parsers '(%quit append change insert global interactive
+      (get-command-parsers '(%eof append change insert global interactive
                              global-unmatched interactive-unmatched)))))
