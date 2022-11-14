@@ -1,18 +1,16 @@
 ## About
 
-This is a largely POSIX-compatible implementation of the standard Unix
-text editor [`ed(1)`][ed posix]. The editor is written entirely in
+This is a POSIX-compatible implementation of the standard Unix text
+editor [`ed(1)`][ed posix]. The implementation is written entirely in
 [R7RS][r7rs] [CHICKEN Scheme][chicken] and provides a Scheme library
 interface for extending the editor with custom commands.
 
 ## Status
 
-Regarding use of `edward` as an implementation of `ed(1)`, as defined in
-POSIX.1-2008, I am currently not aware of any POSIX conformance issues
-(at least for non-interactive usage). However, the library interface
-for extending `edward` is still very experimental and subject to change.
-
-Known bugs and limitations are documented in the `TODO.md` file.
+I am presently not aware of any POSIX.1-2008 conformance issues. The
+library interface, for extending `edward` with custom commands, is
+usable but still very experimental and subject to change. Refer to
+the `TODO.md` file for more information.
 
 ## Design
 
@@ -134,35 +132,14 @@ entirely possible to define multiple commands in this way. Refer to
 `lib/ed/cmd.scm` to see how the commands mandated by POSIX are
 implemented using this interface.
 
-## Other Implementations
+## History
 
 The existing GNU and BSD ed implementations are both derived from an
 implementation written by Andrew Moore in the early-to-mid 1990s. As
 such, they still share a lot of code and are potentially subject to the
 same bugs [\[1\]][ed history]. To the best of my knowledge, edward is
 the first (largely) POSIX compatible ed implementation which is not
-derived from Andrew's original implementation. Therefore, the test suite
-provided by this implementation has lead to the discovery of various bugs
-in existing implementations:
-
-* https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00000.html
-* https://marc.info/?l=openbsd-tech&m=164286143103475
-* https://marc.info/?l=openbsd-tech&m=166410772923217
-* https://marc.info/?l=openbsd-tech&m=165324344706784
-* …
-
-## Portability
-
-The code was originally intended to be written in purely standard
-conforming [R7RS Scheme][r7rs]. However, it turned out that
-implementing `ed(1)` properly requires access to several POSIX functions
-which are not standardized in R7RS or any [SRFI][srfi]. Initially, it
-was attempted to overcome this limitation via a custom Foreign Function
-Interface (FFI). Unfortunately, there is also no SRFI standardizing a
-Scheme FFI and as such it was difficult to support multiple
-implementations with the FFI. For this reason, this approach was
-eventually abandoned and the code now uses several CHICKEN extensions
-directly.
+derived from Andrew's original implementation.
 
 ## License
 
