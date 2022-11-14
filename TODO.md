@@ -1,16 +1,3 @@
-# POSIX Compatibility
-
-* align handling of end-of-file character with POSIX
-	* Scheme's read-char procedure does not allow
-	  reading past EOF but ed requires this
-	* Problem: Reading a full UTF8 character, not a
-	  byte with a POSIX API from CHICKEN is annoying
-	* Using fgetsws(3) might be possible but requires
-	  depending on SRFI 4 for u32vector to wrap wchar_t*
-	* Implementing this might get easier with
-	  https://wiki.call-cc.org/unicode-transition if the
-	  transition adds an incremental UTF-8 decoder to CHICKEN
-
 # Library Interface
 
 * Consider splitting `cmd.scm` into two libraries: (1) a library
