@@ -569,7 +569,11 @@
 (define parse-end
   (lambda (source index sk fk)
     (if (parse-stream-end? source index)
-        (sk #t source index fk)
+        (begin
+          (sk #t
+              (parse-stream-next-source source index)
+              (parse-stream-next-index source index)
+              fk))
       (fk source index "expected end"))))
 
 ;;> Returns true iff \var{source}, \var{index} indicate the beginning
