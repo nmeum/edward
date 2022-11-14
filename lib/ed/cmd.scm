@@ -914,7 +914,7 @@
 (define parse-global-cmd
   (%parse-cmd
     ;; Filter out cmds producing undefined behaviour in global command.
-    (get-command-parsers '(global interactive global-unmatched
+    (get-command-parsers '(%quit global interactive global-unmatched
                            interactive-unmatched shell-escape))))
 
 (define parse-interactive-cmd
@@ -923,5 +923,5 @@
     (parse-bind 'repeat-previous (parse-string "&\n"))
     (%parse-cmd
       ;; Filter out cmds not supported in interactive mode (as per POSIX).
-      (get-command-parsers '(append change insert global interactive
+      (get-command-parsers '(%quit append change insert global interactive
                              global-unmatched interactive-unmatched)))))
