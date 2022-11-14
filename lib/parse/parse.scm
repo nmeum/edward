@@ -103,12 +103,22 @@
         (do ((off off (+ off 1)))
             ((> off i) (parse-stream-offset-set! source off))
           (vector-set! buf off (read-char src)))
-        (do ((off off (+ off 1)))
-            ((> off i) (parse-stream-offset-set! source off))
-          (let ((out (file-read src 1)))
-            (if (zero? (cadr out))
+        (let* ((siz (inc (- i off)))
+               (str (make-string siz))
+               (num (cadr (file-read src siz str))))
+          (if (zero? num)
+            ;; When EOF was encountered, add one eof-object to
+            ;; the buffer, then read past the EOF through recursion.
+            (begin
               (vector-set! buf off (eof-object))
-              (vector-set! buf off (string-ref (car out) 0))))))
+              (parse-stream-offset-set! source (inc off))
+              (parse-stream-fill! source i))
+
+            ;; Copy data retrieved from file (via file-read) to buffer.
+            ;; XXX: Can't copy to vector buffer directly, unfortunately.
+            (do ((off off (+ off 1)))
+                ((> off i) (parse-stream-offset-set! source off))
+              (vector-set! buf off (string-ref str (- i off)))))))
       #f)))
 
 ;;> Returns true iff \var{i} is the first character position in the
