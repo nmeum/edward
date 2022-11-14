@@ -91,6 +91,8 @@
            (parse-blanks-seq BODY ...)
            (parse-optional parse-print-cmd)
            (parse-ignore parse-blanks)
+           (parse-ignore parse-newline)
+
            parse-input-mode
 
            ;; Allow input-cmds to be terminated with eof character as well.
@@ -154,7 +156,7 @@
 ;; Read input data in the input mode format. Returns a list of parsed
 ;; lines as strings which do not include the terminating newlines.
 
-(define %parse-input-mode
+(define parse-input-mode
   (parse-map
     (parse-seq
       (parse-repeat
@@ -166,13 +168,6 @@
         parse-end ;; required for global command
         (parse-string ".")))
     car))
-
-(define parse-input-mode
-  (parse-map
-    (parse-seq
-      parse-newline
-      %parse-input-mode)
-    second))
 
 ;; Parse a delimiter for a regular expression. As per POSIX, any
 ;; character other then <space> and <newline> can be a delimiter.
