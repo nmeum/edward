@@ -94,13 +94,12 @@
            (parse-ignore parse-newline)
 
            parse-input-mode
-
-           ;; Allow input-cmds to be terminated with eof character as well.
-           ;; Required for global commands since terminating '.' can be omitted.
            (parse-ignore
              (parse-or
                parse-end
-               (parse-seq parse-blanks parse-newline))))
+               (parse-seq
+                 (parse-string ".")
+                 (parse-seq parse-blanks parse-newline)))))
          (lambda (args)
            (cmd-with-print
              (quote NAME)
@@ -157,17 +156,11 @@
 ;; lines as strings which do not include the terminating newlines.
 
 (define parse-input-mode
-  (parse-map
-    (parse-seq
-      (parse-repeat
-        (parse-assert
-          parse-line
-          (lambda (line)
-            (not (equal? line ".")))))
-      (parse-or
-        parse-end ;; required for global command
-        (parse-string ".")))
-    car))
+  (parse-repeat
+    (parse-assert
+      parse-line
+      (lambda (line)
+        (not (equal? line "."))))))
 
 ;; Parse a delimiter for a regular expression. As per POSIX, any
 ;; character other then <space> and <newline> can be a delimiter.
