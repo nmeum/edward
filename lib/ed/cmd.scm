@@ -827,8 +827,17 @@
     (lambda ()
       (exec-quit editor))))
 
-(define-file-cmd (%quit %exec-quit)
-  (parse-cmd-char #\q))
+;; Manually use register-command here to allow interpreting
+;; EOF as a command without a terminating newline character.
+(register-command '%quit
+  (parse-map
+    (parse-or
+      parse-end
+      (parse-blanks-seq
+        (parse-cmd-char #\q)
+        (parse-ignore parse-newline)))
+    (lambda (args)
+      (make-cmd '%quit '() %exec-quit '()))))
 
 ;;
 ; Quit Without Checking Command
