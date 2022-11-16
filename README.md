@@ -138,8 +138,8 @@ The existing GNU and BSD ed implementations are both derived from an
 implementation written by Andrew Moore in the early-to-mid 1990s. As
 such, they still share a lot of code and are potentially subject to the
 same bugs [\[1\]][ed history]. To the best of my knowledge, edward is
-the first (largely) POSIX compatible ed implementation which is not
-derived from Andrew's original implementation.
+the first ed implementation which strives to be fully POSIX compatible
+but is not derived from Andrew's original implementation.
 
 ## License
 
