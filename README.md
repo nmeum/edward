@@ -40,7 +40,10 @@ For development setups, one can build `edward` as follows:
 	$ export CHICKEN_REPOSITORY_PATH="$(pwd):${CHICKEN_REPOSITORY_PATH}"
 	$ chicken-install -n
 
-This will create an executable binary in `./bin/edward`.
+This will create an executable binary in `./bin/edward`. Using the same
+commands, it also possible to create a fully statically-linked version
+of the binary. Refer to the comments in `edward.egg` for more
+information.
 
 ## Tests
 
