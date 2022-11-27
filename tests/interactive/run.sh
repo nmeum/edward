@@ -2,8 +2,12 @@
 
 cd "$(dirname "$0")"
 
+EDWARD="${EDWARD:-$(pwd)/../../bin/edward}"
+[ -x "${EDWARD}" ] || \
+	abort "Couldn't find edward executable '${EDWARD}'."
+
 session="ed-test"
-cmd="sh -c 'stty -echo && tmux wait-for -S term-setup; ed'"
+cmd="sh -c 'stty -echo && tmux wait-for -S term-setup; env CHICKEN_REPOSITORY_PATH="${CHICKEN_REPOSITORY_PATH}" ${EDWARD}'"
 
 read_cmd() {
 	[ $# -eq 0 ] || return 1
