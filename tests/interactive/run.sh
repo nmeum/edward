@@ -43,7 +43,7 @@ for test in *; do
 			output = ""
 		}
 	}
-	' | cmp "${test}/expected" - >/dev/null
+	' | cmp -s "${test}/expected" -
 
 	if [ $? -eq 0 ]; then
 		printf "OK\n"
