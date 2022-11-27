@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd "$(dirname "$0")"
+
 session="ed-test"
 cmd="sh -c 'stty -echo && tmux wait-for -S term-setup; ed'"
 

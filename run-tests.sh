@@ -16,3 +16,9 @@ chicken-install -n "$@" -test
 
 banner "Integration Tests"
 ./tests/integration/run.sh
+
+if [ -z "$TMUX" ] && command -v tmux 1>/dev/null 2>&1; then
+	echo
+	banner "Interactive Tests"
+	./tests/interactive/run.sh
+fi
