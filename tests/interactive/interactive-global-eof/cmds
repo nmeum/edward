@@ -1,0 +1,11 @@
+H
+a
+foo
+bar
+faz
+.
+G/^f/
+s/foo/test/
+<C-d>
+1,$p
+Q

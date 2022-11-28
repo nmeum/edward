@@ -1,0 +1,10 @@
+H
+a
+foo
+bar
+faz
+.
+V/^f/
+<C-d>
+1,$p
+Q
