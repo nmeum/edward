@@ -282,6 +282,7 @@
   (define (get-interactive editor)
     (let* ((cmd (editor-interactive editor parse-interactive-cmd))
            (ret (match cmd
+                  ('eof (editor-raise "unexpected end-of-file"))
                   ('null-command #f)
                   ('repeat-previous
                    (if (null? previous-command)
@@ -929,6 +930,7 @@
 
 (define parse-interactive-cmd
   (parse-or
+    (parse-bind 'eof parse-end)
     (parse-bind 'null-command parse-newline)
     (parse-bind 'repeat-previous (parse-string "&\n"))
     (%parse-cmd
