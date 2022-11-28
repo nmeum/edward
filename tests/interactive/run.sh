@@ -19,17 +19,17 @@ read_cmd() {
 }
 
 run_tmux() {
-	tmux new-session -d -s "${session}" "${cmd}" \;                 \
-		set-option -w remain-on-exit "on" \;                    \
-		set-option -w remain-on-exit-format "" \;               \
-		                                                        \
-		set-hook -w pane-died                                   \
-			"wait-for -S exit-channel" \;                   \
-		                                                        \
-		wait-for term-setup \;                                  \
-		send-keys -t "${session}" $(read_cmd) \;                \
-		                                                        \
-		wait-for exit-channel \;                                \
+	tmux new-session -d -s "${session}" "${cmd}" \;                   \
+		set-option -t "${session}" -w remain-on-exit "on" \;      \
+		set-option -t "${session}" -w remain-on-exit-format "" \; \
+		                                                          \
+		set-hook -w pane-died                                     \
+			"wait-for -S exit-channel" \;                     \
+		                                                          \
+		wait-for term-setup \;                                    \
+		send-keys -t "${session}" $(read_cmd) \;                  \
+		                                                          \
+		wait-for exit-channel \;                                  \
 		capture-pane -S - -E - -t "${session}" -p -C
 }
 
