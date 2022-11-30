@@ -56,6 +56,9 @@ Both unit and integration tests can be run using:
 
 	$ ./run-tests.sh
 
+Optionally, [tmux][tmux web] can be installed to also execute tests for
+edward's end-of-file handling in an interactive environment.
+
 ## Usage
 
 For interactive usage I can highly recommend using this software in
@@ -175,3 +178,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [hygienic macros]: https://doi.org/10.1145/319838.319859
 [language-oriented programming]: https://doi.org/10.1145/3127323
 [ed history]: https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00001.html
+[tmux web]: https://tmux.github.io
