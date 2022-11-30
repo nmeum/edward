@@ -108,7 +108,9 @@
       (parse-map
         (parse-seq
           (parse-token (lambda (x) (not (char=? x #\newline))))
-          parse-newline)
+          ;; XXX: parse-end-of-line does _not_ consume the end-of-file.
+          ;; This is crucial for parse-input-mode to work correctly.
+          (parse-or parse-newline parse-end-of-line))
         car))))
 
 ;; Feed the result of the parser ctx to a single argument procedure f.

@@ -27,3 +27,5 @@
   chicken-profile and figure identify (parsing) procedures which
   could be further optimized for performance
 * Improve parser error messages (mostly returns `failed char pred` currently)
+* Refactor parse-line in a way that it can consume end-of-file.
+  Requires refactoring of parse-input-mode.
