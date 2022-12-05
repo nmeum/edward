@@ -8,6 +8,7 @@
           (matchable)
 
           (edward ed cmd)
+          (edward ed posix)
           (edward ed editor))
 
   (export edward-main)
