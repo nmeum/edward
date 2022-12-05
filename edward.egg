@@ -57,17 +57,28 @@
               (component-dependencies
                 edward.util
                 edward.parse
-                edward.replace
-                edward.buffer
                 edward.ed.addr
                 edward.ed.editor)
 
               (source "./lib/ed/cmd.sld")
               (source-dependencies
                 "./lib/ed/cmd.scm"))
+   (extension edward.ed.posix
+              (component-dependencies
+                edward.util
+                edward.parse
+                edward.replace
+                edward.buffer
+                edward.ed.addr
+                edward.ed.editor)
+
+              (source "./lib/ed/posix.sld")
+              (source-dependencies
+                "./lib/ed/posix.scm"))
    (extension edward.cli
               (component-dependencies
                 edward.ed.cmd
+                edward.ed.posix
                 edward.ed.editor)
 
               (source "./lib/cli.sld")
