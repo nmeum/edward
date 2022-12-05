@@ -2,6 +2,6 @@ H
 a
 foo
 bar
-<baz C-d C-d>
+baz C-d C-d \
 1,$p
 Q

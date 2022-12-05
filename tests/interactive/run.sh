@@ -12,10 +12,9 @@ cmd="sh -c 'stty -echo && tmux wait-for -S term-setup; env CHICKEN_REPOSITORY_PA
 read_cmd() {
 	[ $# -eq 0 ] || return 1
 
-	# Treat lines enclosed by <> as special keys
-	# that do not need to be postfixed with Enter.
-	sed -e 's/\([^>]\)$/\1\nEnter/' \
-		-e 's/^<\(..*\)>$/\1/'
+	# Terminate all lines with an Enter key unless the line escapes
+	# the newline with a '\' which is useful for sending control keys.
+	sed -e 's/\([^\]\)$/\1\nEnter/' -e 's/\\$//'
 }
 
 run_tmux() {

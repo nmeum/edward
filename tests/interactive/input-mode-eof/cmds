@@ -1,6 +1,6 @@
 H
 a
 foo
-<C-d>
+C-d \
 1,$p
 Q

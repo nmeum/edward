@@ -6,6 +6,6 @@ faz
 .
 G/^f/
 s/foo/test/
-<C-d>
+C-d \
 1,$p
 Q

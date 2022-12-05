@@ -2,9 +2,9 @@ H
 a
 modified
 .
-<C-d>
+C-d \
 1,$p
-<C-d>
+C-d \
 1,$p
-<C-d>
-<C-d>
+C-d \
+C-d \

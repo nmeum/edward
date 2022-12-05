@@ -5,5 +5,5 @@ bar
 baz
 .
 1,$p
-<C-d>
-<C-d>
+C-d \
+C-d \

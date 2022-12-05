@@ -5,6 +5,6 @@ bar
 faz
 .
 V/^f/
-<C-d>
+C-d \
 1,$p
 Q
