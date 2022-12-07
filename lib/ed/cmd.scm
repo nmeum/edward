@@ -256,7 +256,7 @@
 ;; passed to the editor-exec-cmdlist procedure.
 
 (define (parse-command-list cmdstr)
-  (call-with-parse (parse-repeat+ parse-global-cmd)
+  (call-with-parse (parse-repeat+ (parse-global-cmd))
                    (string->parse-stream cmdstr)
                    0
                    (lambda (r s i fk)
@@ -293,7 +293,7 @@
 (define (exec-command-list-interactive editor match-proc lines regex)
   (define previous-command '())
   (define (get-interactive editor)
-    (let* ((cmd (editor-interactive editor parse-interactive-cmd))
+    (let* ((cmd (editor-interactive editor (parse-interactive-cmd)))
            (ret (match cmd
                   ('eof (editor-raise "unexpected end-of-file"))
                   ('null-command #f)
@@ -932,13 +932,13 @@
 (define (parse-cmd)
   (%parse-cmd (get-command-parsers '())))
 
-(define parse-global-cmd
+(define (parse-global-cmd)
   (%parse-cmd
     ;; Filter out cmds producing undefined behaviour in global command.
     (get-command-parsers '(%eof global interactive global-unmatched
                            interactive-unmatched shell-escape))))
 
-(define parse-interactive-cmd
+(define (parse-interactive-cmd)
   (parse-or
     (parse-bind 'eof parse-end)
     (parse-bind 'null-command parse-newline)
