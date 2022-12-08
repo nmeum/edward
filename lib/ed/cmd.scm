@@ -34,7 +34,7 @@
 ;; defined by the l, n, or p command.
 
 (define parse-print-cmd
-  (parse-lazy
+  (parse-lazy ;; must be lazy, otherwise print-commands is not populated.
     (parse-strip-blanks
       (parse-map
         (parse-alist print-commands)
