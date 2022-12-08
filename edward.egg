@@ -1,6 +1,6 @@
 ((author "Sören Tempel")
  (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
- (version "0.5.0")
+ (version "0.5.1")
  (license "GPLv3")
  (platform unix)
  (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
