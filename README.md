@@ -101,6 +101,7 @@ provides the `z` command (included with many BSD implementations of
 	        (edward parse)
 	        (edward ed cmd)
 	        (edward ed addr)
+	        (edward ed posix)
 	        (edward ed editor))
 	
 	;; Executor for the 'z' command.
