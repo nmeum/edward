@@ -135,7 +135,7 @@ Afterwards, drop the resulting `edward++` binary somewhere in your
 `$PATH` and invoke it as you normally would invoke `edward` and enjoy
 scrolling through text with the new `z` command. Of cause, it is
 entirely possible to define multiple commands in this way. Refer to
-`lib/ed/cmd.scm` to see how the commands mandated by POSIX are
+`lib/ed/posix.scm` to see how the commands mandated by POSIX are
 implemented using this interface.
 
 ## History
