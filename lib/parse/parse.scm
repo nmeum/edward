@@ -728,6 +728,27 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;> \section{Laziness}
+
+;;> A delayed combinator.  This is equivalent to the parser combinator
+;;> \var{f}, but is delayed so it can be more efficient if never used
+;;> and \var{f} is expensive to compute.  Moreover, it can allow
+;;> self-referentiality as in:
+;;>
+;;> \schemeblock{
+;;> (letrec* ((f (parse-lazy (parse-or (parse-seq g f) h))))
+;;>   ...)
+;;> }
+
+(define-syntax parse-lazy
+  (syntax-rules ()
+    ((parse-lazy f)
+     (let ((g (delay f)))
+       (lambda (source index sk fk)
+         ((force g) source index sk fk))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;> \section{Memoization}
 
 ;; debugging
