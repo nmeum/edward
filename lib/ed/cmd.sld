@@ -3,6 +3,7 @@
           (scheme write)
           (scheme file)
           (scheme process-context)
+          (scheme lazy)
 
           (srfi 1)
           (srfi 14)
