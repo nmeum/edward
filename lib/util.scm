@@ -52,23 +52,23 @@
         72)))
 
   (define (byte->human-readable byte)
-    (match byte
+    (case byte
       ;; Mapping according to Table 5-1 in POSIX-1.2008.
-      (#x5C "\\")
-      (#x07 "\\a")
-      (#x08 "\\b")
-      (#x0C "\\f")
-      (#x0D "\\r")
-      (#x09 "\\t")
-      (#x0B "\\v")
+      ((#x5C) "\\")
+      ((#x07) "\\a")
+      ((#x08) "\\b")
+      ((#x0C) "\\f")
+      ((#x0D) "\\r")
+      ((#x09) "\\t")
+      ((#x0B) "\\v")
 
       ;; End of each line shall be marked with a `$` character.
-      (#x0A "$\n")
+      ((#x0A) "$\n")
       ;; `$` character within the line should be escaped.
-      (#x24 "\\$")
+      ((#x24) "\\$")
 
       ;; Non-printable characters are represented in octal.
-      (_
+      (else
         (if (ascii-printable? byte)
           (string (integer->char byte))
           (string-append "\\" (pad-string (number->string byte 8) "0" 3))))))

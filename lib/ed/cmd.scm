@@ -294,14 +294,14 @@
   (define previous-command '())
   (define (get-interactive editor)
     (let* ((cmd (editor-interactive editor (parse-interactive-cmd)))
-           (ret (match cmd
-                  ('eof (editor-raise "unexpected end-of-file"))
-                  ('null-command #f)
-                  ('repeat-previous
+           (ret (case cmd
+                  ((eof) (editor-raise "unexpected end-of-file"))
+                  ((null-command) #f)
+                  ((repeat-previous)
                    (if (null? previous-command)
                      (editor-raise "no previous command")
                      previous-command))
-                  (_ cmd))))
+                  (else cmd))))
       (when ret
         (set! previous-command ret))
       ret))

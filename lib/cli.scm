@@ -40,11 +40,8 @@
          (argv  (if (null? args) (command-line) args))
          (files (cdr (parse-args argv flags))))
     (if prompt
-      (match files
-        ((file)
-         (run-editor file))
-        (()
-         (run-editor ""))
-        (_
-         (err "specify one file or no files")))
+      (case (length files)
+        ((1)  (run-editor (car files)))
+        ((0)  (run-editor ""))
+        (else (err "specify one file or no files")))
       (err "missing prompt option argument"))))

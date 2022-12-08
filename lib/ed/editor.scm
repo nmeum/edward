@@ -501,9 +501,9 @@
 (define (match-line direction editor bre)
   (let ((lines (buffer->list (text-editor-buffer editor)))
         (regex (editor-make-regex editor bre))
-        (cont-proc (match direction
-                          ('forward inc)
-                          ('backward dec))))
+        (cont-proc (case direction
+                          ((forward) inc)
+                          ((backward) dec))))
     (call-with-current-continuation
       (lambda (exit)
         (unless (zero? (editor-lines editor))

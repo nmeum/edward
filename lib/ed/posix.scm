@@ -472,10 +472,10 @@
 (define (exec-command editor cmd)
   (let ((cmdstr (fold-right (lambda (x ys)
                               (string-append
-                                (match x
-                                       ('current-file (editor-filename editor))
-                                       ('previous-command (editor-shell-cmd editor))
-                                       (_ x))
+                                (case x
+                                       ((current-file) (editor-filename editor))
+                                       ((previous-command) (editor-shell-cmd editor))
+                                       (else x))
                                 ys)) "" cmd)))
   (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
     (println cmdstr))

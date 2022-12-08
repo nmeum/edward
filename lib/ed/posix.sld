@@ -6,7 +6,6 @@
           (srfi 1)
           (srfi 14)
 
-          (matchable)
           (posix-regex)
 
           (chicken process)

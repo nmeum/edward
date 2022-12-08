@@ -6,7 +6,6 @@
 
           (srfi 1)
 
-          (matchable)
           (chicken port))
 
   (export inc dec id alist-values fprintln println empty-string?

@@ -5,8 +5,6 @@
 
           (srfi 37)
 
-          (matchable)
-
           (edward ed cmd)
           (edward ed posix)
           (edward ed editor))

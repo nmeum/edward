@@ -6,8 +6,6 @@
           (srfi 1)
           (srfi 14)
 
-          (matchable)
-
           (chicken process)
 
           (edward util)
