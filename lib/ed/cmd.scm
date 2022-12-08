@@ -1,3 +1,7 @@
+;; Command parsers are registered in the following alist through macros
+;; provided below. These macros use the register-command procedure.
+;; Parsers can be obtained from the alist using get-command-parsers.
+
 (define command-parsers '())
 
 (define (register-command name proc)
@@ -11,6 +15,18 @@
             (cons (cdr x) y)))
         '() command-parsers))
 
+;; Print commands (l, n, p) are additionally tracked in a seperated
+;; alist. This eases implementing commands which can be prefixed
+;; with a print command (see parse-print-cmd definition below).
+
+(define print-commands '())
+
+(define (register-print-command char proc)
+  (set! print-commands
+    (alist-cons char proc print-commands)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; According to POSIX.1-2008 it is invalid for more than one command to
 ;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
 ;; can be suffixed by the commands l, n, or p. In this case the suffixed
@@ -18,17 +34,12 @@
 ;; defined by the l, n, or p command.
 
 (define parse-print-cmd
-  (parse-strip-blanks
-    (parse-map
-      (parse-char (char-set #\l #\n #\p))
-      (lambda (x)
-        ;; Current line shall be written described below under the l, n, and p commands.
-        ;; XXX: Can't rely on command-parsers here as it hasn't been filled yet.
-        (let ((name 'print-suffix))
-          (match x
-            (#\l (make-cmd name (make-range) exec-list '()))
-            (#\n (make-cmd name (make-range) exec-number '()))
-            (#\p (make-cmd name (make-range) exec-print '()))))))))
+  (parse-lazy
+    (parse-strip-blanks
+      (parse-map
+        (parse-alist print-commands)
+        (lambda (proc)
+          (make-cmd 'print-suffix (make-range) proc '()))))))
 
 ;; Edward distinguishes four command types: (1) print commands, i.e. the
 ;; l, n, and p commands, which can be used as a suffix to (2) editor
@@ -71,16 +82,18 @@
 
 (define-syntax define-print-cmd
   (syntax-rules ()
-    ((define-print-cmd (NAME HANDLER ADDR) BODY ...)
-     (register-command (quote NAME)
-       (parse-map
-         (parse-seq
-           (parse-blanks-seq BODY ...)
-           (parse-ignore (parse-optional parse-print-cmd))
-           (parse-ignore parse-blanks)
-           (parse-ignore parse-newline))
-         (lambda (args)
-           (make-cmd (quote NAME) ADDR HANDLER (car args))))))))
+    ((define-print-cmd NAME HANDLER CHAR ADDR)
+     (begin
+       (register-print-command CHAR HANDLER)
+       (register-command (quote NAME)
+         (parse-map
+           (parse-seq
+             (parse-blanks-seq (parse-cmd-char CHAR))
+             (parse-ignore (parse-optional parse-print-cmd))
+             (parse-ignore parse-blanks)
+             (parse-ignore parse-newline))
+           (lambda (args)
+             (make-cmd (quote NAME) ADDR HANDLER (car args)))))))))
 
 (define-syntax define-input-cmd
   (syntax-rules ()
@@ -655,8 +668,7 @@
               lst)
     (editor-goto! editor end)))
 
-(define-print-cmd (list exec-list (make-range))
-  (parse-cmd-char #\l))
+(define-print-cmd list exec-list #\l (make-range))
 
 ;;
 ; Move Command
@@ -779,8 +791,7 @@
       lst (editor-line-numbers lines))
     (editor-goto! editor eline)))
 
-(define-print-cmd (number exec-number (make-range))
-  (parse-cmd-char #\n))
+(define-print-cmd number exec-number #\n (make-range))
 
 ;;
 ; Print Command
@@ -792,8 +803,7 @@
     (for-each println lst)
     (editor-goto! editor end)))
 
-(define-print-cmd (print exec-print (make-range))
-  (parse-cmd-char #\p))
+(define-print-cmd print exec-print #\p (make-range))
 
 ;;
 ; Prompt Command
