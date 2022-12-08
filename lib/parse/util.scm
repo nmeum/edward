@@ -53,6 +53,19 @@
       f)
     cadr))
 
+;; Parse an alist mapping chars to values which should be returned for each char.
+
+(define (parse-alist alist)
+  (apply
+    parse-or
+    (map
+      (lambda (x)
+        (parse-map
+          (parse-char (car x))
+          (lambda (_)
+            (cdr x))))
+      alist)))
+
 ;; Utility procedures for parsing BRE addresses.
 
 (define (%parse-regex-lit ch end)

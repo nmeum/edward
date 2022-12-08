@@ -35,7 +35,7 @@
   (export parse-fail parse-bind parse-as-string parse-digits
           parse-default parse-ignore-optional parse-newline parse-blank
           parse-blanks+ parse-blanks parse-between parse-esc
-          parse-strip-blanks parse-blanks-seq parse-line
+          parse-strip-blanks parse-blanks-seq parse-line parse-alist
           parse-with-context parse-regex-lit* parse-regex-lit)
 
   ;; repl.scm
