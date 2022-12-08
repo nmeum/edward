@@ -21,7 +21,7 @@
           parse-seq parse-and parse-or parse-not list->parse-seq
           parse-repeat parse-repeat+ parse-optional
           parse-map parse-map-substring parse-ignore parse-assert
-          parse-atomic parse-commit parse-memoize
+          parse-atomic parse-commit parse-lazy parse-memoize
           parse-char parse-not-char
           parse-string parse-token
           parse-beginning parse-end
@@ -35,7 +35,7 @@
   (export parse-fail parse-bind parse-as-string parse-digits
           parse-default parse-ignore-optional parse-newline parse-blank
           parse-blanks+ parse-blanks parse-between parse-esc
-          parse-strip-blanks parse-blanks-seq parse-line
+          parse-strip-blanks parse-blanks-seq parse-line parse-alist
           parse-with-context parse-regex-lit* parse-regex-lit)
 
   ;; repl.scm

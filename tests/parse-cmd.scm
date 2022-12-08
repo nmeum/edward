@@ -1,4 +1,5 @@
 (import (edward ed cmd)
+        (edward ed posix)
         (edward ed addr)
         (edward ed editor))
 

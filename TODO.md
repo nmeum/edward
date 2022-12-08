@@ -1,8 +1,5 @@
 # Library Interface
 
-* Consider splitting `cmd.scm` into two libraries: (1) a library
-  providing procedures for defining commands and (2) a library which
-  provides an implementation of `ed(1)` commands mandated by POSIX.
 * Provide a friendly HTML documentation for the public API. Ideally
   generated from source code comments, e.g. using `chibi-doc`?
 * Improve procedure names and provide better types for addresses, ranges, …
