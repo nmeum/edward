@@ -162,8 +162,12 @@
 ;; returned.
 
 (define (parse-cmd-char ch)
-  ;; TODO: Prefix failure reason with command char that failed to parse.
-  (parse-ignore (parse-commit (parse-char ch))))
+  (parse-ignore
+    ;; After we parsed the char there is no need to backtrack.
+    (parse-commit
+      (parse-char ch)
+      (lambda (s i r)
+        ((parse-stream-fk s) s i (string-append "failed to parse '" (string ch) "': " r))))))
 
 ;; Read input data in the input mode format. Returns a list of parsed
 ;; lines as strings which do not include the terminating newlines.
