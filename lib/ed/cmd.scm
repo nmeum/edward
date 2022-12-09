@@ -16,7 +16,7 @@
         '() command-parsers))
 
 ;; Print commands (l, n, p) are additionally tracked in a seperated
-;; alist. This eases implementing commands which can be prefixed
+;; alist. This eases implementing commands which can be suffixed
 ;; with a print command (see parse-print-cmd definition below).
 
 (define print-commands '())
