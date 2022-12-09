@@ -13,6 +13,9 @@
 	* https://wiki.call-cc.org/programming-for-performance
 	* https://wiki.call-cc.org/man/5/Declarations
 	* https://wiki.call-cc.org/man/5/Foreign%20type%20specifiers
+* In append/insert/… command: Verify that the address is valid before
+  entering insert mode. For example, when performing `2a` on an empty
+  file the append will only error out after all text has been entered.
 * Figure out why edward is slower when compiled statically with eggs (linkage static)
 * Integration tests: compare exit status
 * Use posix-regex multiline feature instead of matching lines individually
