@@ -442,11 +442,7 @@
 ;; EOF as a command without a terminating newline character.
 (register-command '%eof
   (parse-map
-    (parse-or
-      parse-end
-      (parse-blanks-seq
-        (parse-cmd-char #\q)
-        (parse-ignore parse-newline)))
+    parse-end
     (lambda (args)
       ;; XXX: register-command uses '%eof as a command name
       ;; but for the command itself we use '%quit as well.
