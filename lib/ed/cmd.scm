@@ -338,9 +338,9 @@
   (parse-map
     (parse-seq
       (parse-cmd-char ch)
-      (parse-default
-        (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
-        ""))
+      (parse-or
+        (parse-bind "" (parse-seq parse-blanks parse-end-of-line))
+        (parse-map (parse-seq parse-blanks+ parse-filename) cadr)))
     car))
 
 (define (filename-cmd? fn)
