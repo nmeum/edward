@@ -75,6 +75,14 @@
 
               (source "./lib/ed/posix.sld")
               (source-dependencies
+                ;; XXX: The posix component relies heavily on macros provided by
+                ;; the cmd component. Unfourtunately, CHICKEN does not correctly
+                ;; detect that via component-dependencies and as such we need a
+                ;; source dependency to ensure posix.scm is rebuld on macro changes.
+                ;;
+                ;; See https://bugs.call-cc.org/ticket/1684
+                "./lib/ed/cmd.scm"
+
                 "./lib/ed/posix.scm"))
    (extension edward.cli
               (component-dependencies
