@@ -45,7 +45,7 @@
       (addr->range (make-addr '(regex-backward . "foo") '(23 -42)))
       "foobar") "?foo? +23 -42 r foobar")
 
-  (test-parse-error "failed char pred" (parse-cmd) "rfoo"))
+  (test-parse-error "expected whitespaces" (parse-cmd) "rfoo"))
 
 (test-group "write command"
   (test-parse-cmd "no arguments"
@@ -60,7 +60,7 @@
         (make-addr '(current-line) '(10)))
       "foobar") ".,.+10w foobar")
 
-  (test-parse-error "failed char pred" (parse-cmd) "wfoo"))
+  (test-parse-error "expected whitespaces" (parse-cmd) "wfoo"))
 
 (test-group "shell command"
   (test-parse-cmd "no replacements"
@@ -121,5 +121,5 @@
      "42an\n.")
 
   (test-parse-error "unknown command" (parse-cmd) "X")
-  (test-parse-error "failed char pred" (parse-cmd) "Qn")
-  (test-parse-error "failed char pred" (parse-cmd) "a n"))
+  (test-parse-error "expected newline" (parse-cmd) "Qn")
+  (test-parse-error "expected newline" (parse-cmd) "a n"))
