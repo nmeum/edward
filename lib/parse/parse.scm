@@ -369,14 +369,6 @@
   (lambda (r s i fk)
     (f r s i (lambda (s i r) (fk s i reason)))))
 
-;;> Like parse-with-failure-reason but takes a procedure instead of a
-;;> string as an argument. The procedure receives the original failure
-;;> reason and can return a new one.
-
-(define (parse-with-failure-proc f proc)
-  (lambda (r s i fk)
-    (f r s i (lambda (s i r) (fk s i (proc r))))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;> \section{Basic Parsing Combinators}
@@ -563,15 +555,10 @@
 
 ;;> Parse with \var{f} once, keep the first result, and commit to the
 ;;> current parse path, discarding any prior backtracking options.
-;;> Since prior backtracking options are discarded, prior failure
-;;> continuations are also not used. By default, \scheme{#f} is
-;;> returned on failure, a custom failure continuation can be passed
-;;> as the second argument.
 
-(define (parse-commit f . o)
- (lambda (source index sk fk)
-   (let ((commit-fk (if (pair? o) (car o) (parse-stream-fk source))))
-      (f source index (lambda (res s i fk) (sk res s i commit-fk)) fk))))
+(define (parse-commit f)
+  (lambda (source index sk fk)
+    (f source index (lambda (res s i fk) (sk res s i (parse-stream-fk source))) fk)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -689,17 +676,11 @@
 (define (x->char-predicate x)
   (cond
    ((char? x)
-    (cons
-      (string-append "expected character '" (string x) "'")
-      (lambda (ch) (eqv? ch x))))
+    (lambda (ch) (eqv? ch x)))
    ((char-set? x)
-    (cons
-      (string-append "expected char set: '" (char-set->string x) "'")
-      (lambda (ch) (and (char? ch) (char-set-contains? x ch)))))
+    (lambda (ch) (and (char? ch) (char-set-contains? x ch))))
    ((procedure? x)
-    (cons
-      (string-append "expected predicate")
-      (lambda (ch) (and (char? ch) (x ch)))))
+    (lambda (ch) (and (char? ch) (x ch))))
    (else
     (error "don't know how to handle char predicate" x))))
 
@@ -707,16 +688,13 @@
 ;;> character, character set, or arbitrary procedure.
 
 (define (parse-char x)
-  (let ((p (x->char-predicate x)))
-    (parse-with-failure-reason
-      (parse-char-pred (cdr p))
-      (car p))))
+  (parse-char-pred (x->char-predicate x)))
 
 ;;> Parse a single char which does not match \var{x}, which can be a
 ;;> character, character set, or arbitrary procedure.
 
 (define (parse-not-char x)
-  (let ((pred (cdr (x->char-predicate x))))
+  (let ((pred (x->char-predicate x)))
     (parse-char-pred (lambda (ch) (not (pred ch))))))
 
 ;;> Parse the exact string \var{str}.

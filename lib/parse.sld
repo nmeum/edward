@@ -16,7 +16,7 @@
   (export call-with-parse parse parse-fully parse-fold parse-failure
           parse->list parse-fully->list
           file->parse-stream string->parse-stream parse-stream-substring
-          parse-stream-start? parse-stream-end? parse-stream-ref parse-stream-fk
+          parse-stream-start? parse-stream-end? parse-stream-ref
           parse-anything parse-nothing parse-epsilon
           parse-seq parse-and parse-or parse-not list->parse-seq
           parse-repeat parse-repeat+ parse-optional
