@@ -556,9 +556,13 @@
 ;;> Parse with \var{f} once, keep the first result, and commit to the
 ;;> current parse path, discarding any prior backtracking options.
 
-(define (parse-commit f)
+(define (parse-commit f . o)
   (lambda (source index sk fk)
-    (f source index (lambda (res s i fk) (sk res s i (parse-stream-fk source))) fk)))
+    (let ((commit-fk (parse-stream-fk source)))
+      (f source index
+         (lambda (res s i fk)
+           (sk res s i (lambda (s i r) (commit-fk s i (if (pair? o) ((car o) r) r)))))
+         fk))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -163,7 +163,13 @@
 
 (define (parse-cmd-char ch)
   ;; TODO: Prefix failure reason with command char that failed to parse.
-  (parse-ignore (parse-commit (parse-char ch))))
+  (parse-ignore
+    (parse-commit
+      (parse-char ch)
+      (lambda (reason)
+        (if (eqv? (string-ref reason 0) #\f)
+          reason
+          (string-append "failed to parse '" (string ch) "': " reason))))))
 
 ;; Read input data in the input mode format. Returns a list of parsed
 ;; lines as strings which do not include the terminating newlines.
