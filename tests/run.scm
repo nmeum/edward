@@ -16,13 +16,13 @@
 (define (test-parse expected parser input)
   (test expected (%test-parse parser input)))
 
-(define (test-parse-error expected parser input)
+(define (test-parse-error desc expected parser input)
   (let ((r (call-with-current-continuation
              (lambda (k)
                (with-exception-handler
                  (lambda (e) (k e))
                  (lambda ( ) (k (%test-parse parser input))))))))
-    (test expected
+    (test desc expected
       (if (error-object? r)
         (error-object-message r))))) ;; (not (error-object? r)) → undefined
 
