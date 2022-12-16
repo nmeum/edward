@@ -3,17 +3,20 @@
 (test-parse (addr->range '((current-line) ())) parse-addrs ".")
 (test-parse (addr->range '((last-line) ()))    parse-addrs "$")
 
+(define (test-addr-error expected input)
+  (test-parse-error expected parse-addrs input))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "parse nth line"
   (test-parse (addr->range '((nth-line . 42) ())) parse-addrs "42")
-  (test-parse-error "unknown address format" parse-addrs "4x2")
-  (test-parse-error "unknown address format" parse-addrs "42."))
+  (test-addr-error "unknown address format" "4x2")
+  (test-addr-error "unknown address format" "42."))
 
 (test-group "parse mark"
   (test-parse (addr->range '((marked-line . #\x) ())) parse-addrs "'x")
-  (test-parse-error "unknown address format" parse-addrs "'FOO")
-  (test-parse-error "unknown address format" parse-addrs "'F23"))
+  (test-addr-error "unknown address format" "'FOO")
+  (test-addr-error "unknown address format" "'F23"))
 
 (test-group "parse-forward-bre"
   (test-parse (addr->range '((regex-forward . "foo") ())) parse-addrs "/foo/")
