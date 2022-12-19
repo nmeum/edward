@@ -555,10 +555,20 @@
 
 ;;> Parse with \var{f} once, keep the first result, and commit to the
 ;;> current parse path, discarding any prior backtracking options.
+;;> Can optionally be passed a failure reason with which all resulting
+;;> failure messages will be prefixed.
 
-(define (parse-commit f)
-  (lambda (source index sk fk)
-    (f source index (lambda (res s i fk) (sk res s i (parse-stream-fk source))) fk)))
+(define (parse-commit f . o)
+  (let ((prefix (if (pair? o) (string-append (car o) ": ") "")))
+    (lambda (source index sk fk)
+      (let ((commit-fk (parse-stream-fk source)))
+        (f
+          source
+          index
+          (lambda (res s i fk)
+            (sk res s i (lambda (s i r)
+                          (commit-fk s i (string-append prefix r)))))
+          fk)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

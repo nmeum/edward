@@ -260,7 +260,7 @@
 
 (define-edit-cmd (mark exec-mark (make-addr '(current-line)))
   (parse-cmd-char #\k)
-  (parse-char char-set:lower-case))
+  parse-lowercase)
 
 ;;
 ; List Command

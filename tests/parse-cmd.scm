@@ -11,6 +11,9 @@
                (cmd-args  (cmd-args (cdr cmd-pair))))
           (append (list cmd-addr) cmd-args))))
 
+(define (test-cmd-error desc expected input)
+  (test-parse-error desc expected (parse-cmd) input))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-group "append command"
@@ -45,7 +48,7 @@
       (addr->range (make-addr '(regex-backward . "foo") '(23 -42)))
       "foobar") "?foo? +23 -42 r foobar")
 
-  (test-parse-error "failed char pred" (parse-cmd) "rfoo"))
+  (test-cmd-error "filename w/o whitespace" "expected newline" "rfoo"))
 
 (test-group "write command"
   (test-parse-cmd "no arguments"
@@ -60,7 +63,7 @@
         (make-addr '(current-line) '(10)))
       "foobar") ".,.+10w foobar")
 
-  (test-parse-error "failed char pred" (parse-cmd) "wfoo"))
+  (test-cmd-error "filename w/o whitespace" "expected newline" "wfoo"))
 
 (test-group "shell command"
   (test-parse-cmd "no replacements"
@@ -107,7 +110,9 @@
         (make-addr '(nth-line . 23))
         (make-addr '(nth-line . 42)))
       "test"
-      "p \np\n") "23,42g/test/p \\\np"))
+      "p \np\n") "23,42g/test/p \\\np")
+
+  (test-cmd-error "missing regex" "expected regex" "1,$gp"))
 
 (test-group "miscellaneous"
   (test-parse-cmd "parse command with trailing blanks"
@@ -120,6 +125,6 @@
           '())
      "42an\n.")
 
-  (test-parse-error "unknown command" (parse-cmd) "X")
-  (test-parse-error "failed char pred" (parse-cmd) "Qn")
-  (test-parse-error "failed char pred" (parse-cmd) "a n"))
+  (test-cmd-error "unknown command character" "unknown command" "X")
+  (test-cmd-error "quit command with argument" "expected newline" "Qn")
+  (test-cmd-error "append command with argument" "expected newline" "a n"))

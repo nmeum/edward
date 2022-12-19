@@ -27,5 +27,9 @@
   chicken-profile and figure identify (parsing) procedures which
   could be further optimized for performance
 * Improve parser error messages (mostly returns `failed char pred` currently)
+    * Consider prefixing parser errors with command parser name
+      (how should the `g` command be handled in this regard?)
+    * Consider adding column information to parser errors
+    * Add parse-with-failure-reason to more parser combinators
 * Refactor parse-line in a way that it can consume end-of-file.
   Requires refactoring of parse-input-mode.

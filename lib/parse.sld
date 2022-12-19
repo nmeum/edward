@@ -32,7 +32,7 @@
           make-parse-stream)
 
   ;; parse-util.scm
-  (export parse-fail parse-bind parse-as-string parse-digits
+  (export parse-fail parse-bind parse-as-string parse-digits parse-lowercase
           parse-default parse-ignore-optional parse-newline parse-blank
           parse-blanks+ parse-blanks parse-between parse-esc
           parse-strip-blanks parse-blanks-seq parse-line parse-alist

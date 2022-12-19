@@ -13,9 +13,16 @@
     list->string))
 
 (define parse-digits
-  (parse-map
-    (parse-token char-set:digit)
-    string->number))
+  (parse-with-failure-reason
+    (parse-map
+      (parse-token char-set:digit)
+      string->number)
+    "expected digits"))
+
+(define parse-lowercase
+  (parse-with-failure-reason
+    (parse-char char-set:lower-case)
+    "expected lowercase character"))
 
 (define (parse-default parser def)
   (parse-map
@@ -30,16 +37,20 @@
       (if x x ignored-value))))
 
 (define parse-newline
-  (parse-char #\newline))
+  (parse-with-failure-reason
+    (parse-char #\newline)
+    "expected newline"))
 
 (define parse-blank
-  (parse-char char-set:blank))
+  (parse-with-failure-reason
+    (parse-char char-set:blank)
+    "expected whitespace"))
 (define parse-blanks+
-  (parse-token char-set:blank))
+  (parse-with-failure-reason
+    (parse-token char-set:blank)
+    "expected whitespaces"))
 (define parse-blanks
-  (parse-or
-    parse-epsilon
-    parse-blanks+))
+  (parse-optional parse-blanks+))
 
 (define (parse-between lhs parser rhs)
   (parse-map
@@ -69,14 +80,16 @@
 ;; Utility procedures for parsing BRE addresses.
 
 (define (%parse-regex-lit ch end)
-  (parse-atomic
-    (parse-as-string
-      (parse-between
-        (parse-char ch)
-        (parse-repeat (parse-or
-                        (parse-esc (parse-char ch))
-                        (parse-char (char-set-complement (char-set ch #\newline)))))
-        end))))
+  (parse-with-failure-reason
+    (parse-atomic
+      (parse-as-string
+        (parse-between
+          (parse-char ch)
+          (parse-repeat (parse-or
+                          (parse-esc (parse-char ch))
+                          (parse-char (char-set-complement (char-set ch #\newline)))))
+          end)))
+    "expected regex"))
 
 (define (parse-regex-lit ch)
   (%parse-regex-lit
