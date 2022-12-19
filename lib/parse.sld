@@ -26,8 +26,6 @@
           parse-string parse-token
           parse-beginning parse-end
           parse-beginning-of-line parse-end-of-line
-          parse-beginning-of-word parse-end-of-word
-          parse-word parse-word+
           parse-with-failure-reason
           make-parse-stream)
 

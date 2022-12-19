@@ -616,59 +616,6 @@
         (sk #t source index fk)
         (fk source index "expected end of line"))))
 
-(define (char-word? ch)
-  (or (char-alphabetic? ch) (eqv? ch #\_)))
-
-;;> Returns true iff \var{source}, \var{index} indicate the beginning
-;;> of a word (or the entire stream).
-
-(define parse-beginning-of-word
-  (lambda (source index sk fk)
-    (let ((before (parse-stream-char-before source index)))
-      (if (and (or (not before) (not (char-word? before)))
-               (not (parse-stream-end? source index))
-               (char-word? (parse-stream-ref source index)))
-          (sk #t source index fk)
-          (fk source index "expected beginning of word")))))
-
-;;> Returns true iff \var{source}, \var{index} indicate the end of a
-;;> word (or the entire stream).
-
-(define parse-end-of-word
-  (lambda (source index sk fk)
-    (let ((before (parse-stream-char-before source index)))
-      (if (and before
-               (char-word? before)
-               (or (parse-stream-end? source index)
-                   (not (char-word? (parse-stream-ref source index)))))
-          (sk #t source index fk)
-          (fk source index "expected end of word")))))
-
-;;> Parse the combinator \var{word} (default a \scheme{parse-token} of
-;;> \scheme{char-alphabetic?} or underscores), ensuring it begins and
-;;> ends on a word boundary.
-
-(define (parse-word . o)
-  (let ((word (if (pair? o) (car o) (parse-token char-word?))))
-    (lambda (source index sk fk)
-      (parse-map
-       (parse-seq parse-beginning-of-word
-                  word
-                  parse-end-of-word)
-       cadr))))
-
-;;> As \scheme{parse-word}, but instead of an arbitrary word
-;;> combinator takes a character predicate \var{pred} (conjoined with
-;;> \scheme{char-alphabetic?} or underscore), and parses a sequence of
-;;> those characters with \scheme{parse-token}.  Returns the parsed
-;;> substring.
-
-(define (parse-word+ . o)
-  (let ((pred (if (pair? o)
-                  (lambda (ch) (and (char-word? ch) ((car o) ch)))
-                  char-word?)))
-    (parse-word (parse-token pred))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;> \section{Constant Parsers}
