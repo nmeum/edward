@@ -469,15 +469,15 @@
   (let ((cmdstr (fold-right (lambda (x ys)
                               (string-append
                                 (case x
-                                       ((current-file) (editor-filename editor))
-                                       ((previous-command) (editor-shell-cmd editor))
-                                       (else x))
+                                  ((current-file) (editor-filename editor))
+                                  ((previous-command) (editor-shell-cmd editor))
+                                  (else x))
                                 ys)) "" cmd)))
-  (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
-    (println cmdstr))
-  (system cmdstr)
-  (editor-verbose editor "!")
-  (text-editor-last-cmd-set! editor cmdstr)))
+    (unless (and (list? cmd) (every string? cmd)) ;; replacement performed
+      (println cmdstr))
+    (system cmdstr)
+    (editor-verbose editor "!")
+    (text-editor-last-cmd-set! editor cmdstr)))
 
 (define-file-cmd (shell-escape exec-command)
   (parse-cmd-char #\!)
