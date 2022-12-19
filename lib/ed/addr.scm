@@ -86,7 +86,9 @@
 (define parse-mark
   (parse-map
     (parse-seq
-      (parse-char #\')
+      (parse-commit
+        (parse-char #\')
+        "invalid mark")
       (parse-char char-set:lower-case))
     (lambda (lst)
       (cons 'marked-line (cadr lst)))))

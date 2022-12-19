@@ -15,8 +15,8 @@
 
 (test-group "parse mark"
   (test-parse (addr->range '((marked-line . #\x) ())) parse-addrs "'x")
-  (test-addr-error "multi-character mark" "unknown address format" "'FOO")
-  (test-addr-error "mark with digit" "unknown address format" "'F23"))
+  (test-addr-error "multi-character mark" "invalid mark: failed char pred" "'FOO")
+  (test-addr-error "mark with digit" "invalid mark: failed char pred" "'F23"))
 
 (test-group "parse-forward-bre"
   (test-parse (addr->range '((regex-forward . "foo") ())) parse-addrs "/foo/")
@@ -55,7 +55,8 @@
   (test-parse (addr->range '((marked-line . #\f) (23 42))) parse-addrs "'f 23    42")
   (test-parse (addr->range '((regex-forward . "foo") (-1 2 -3))) parse-addrs "/foo/ -1 2 -3")
   (test-parse (addr->range '((regex-backward . "bar") (+2342))) parse-addrs "?bar?+2342")
-  (test-parse (addr->range '((nth-line . 23) (-5 +5))) parse-addrs "23-5+5"))
+  (test-parse (addr->range '((nth-line . 23) (-5 +5))) parse-addrs "23-5+5")
+  (test-addr-error "offset with char" "unknown address format" "23+5-f"))
 
 (test-group "address ranges"
   (test-parse
