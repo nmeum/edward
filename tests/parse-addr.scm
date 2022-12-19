@@ -15,8 +15,8 @@
 
 (test-group "parse mark"
   (test-parse (addr->range '((marked-line . #\x) ())) parse-addrs "'x")
-  (test-addr-error "multi-character mark" "invalid mark: failed char pred" "'FOO")
-  (test-addr-error "mark with digit" "invalid mark: failed char pred" "'F23"))
+  (test-addr-error "multi-character mark" "invalid mark: expected lowercase character" "'FOO")
+  (test-addr-error "mark with digit" "invalid mark: expected lowercase character" "'F23"))
 
 (test-group "parse-forward-bre"
   (test-parse (addr->range '((regex-forward . "foo") ())) parse-addrs "/foo/")

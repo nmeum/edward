@@ -19,6 +19,11 @@
       string->number)
     "expected digits"))
 
+(define parse-lowercase
+  (parse-with-failure-reason
+    (parse-char char-set:lower-case)
+    "expected lowercase character"))
+
 (define (parse-default parser def)
   (parse-map
     (parse-optional parser)

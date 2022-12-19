@@ -89,7 +89,7 @@
       (parse-commit
         (parse-char #\')
         "invalid mark")
-      (parse-char char-set:lower-case))
+      parse-lowercase)
     (lambda (lst)
       (cons 'marked-line (cadr lst)))))
 
