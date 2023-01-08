@@ -61,21 +61,20 @@
          (rep (editor-restr editor (second triplet)))
          (print? (third triplet))
 
-         ;; Pair (list of replaced lines, line number of last replaced line)
-         (re (fold-right (lambda (line lnum y)
-                           (let* ((r (regex-replace bre rep line nth))
-                                  (n (string-split r "\n" #t)) ;; string → list
-                                  (l (append n (car y))))
-                             (if (or (equal? r line)        ;; not modified
-                                     (not (zero? (cdr y)))) ;; not last
-                               (cons l (cdr y))
-                               (cons l (+ lnum (dec (length n)))))))
-                         '((). 0) lst (editor-line-numbers lines))))
-    (if (zero? (cdr re))
+         ;; Replaces all lines in the selected range.
+         ;; Returns line of last replaced line or zero if no line was replaced.
+         (re (fold (lambda (line lnum y)
+                     (let* ((r (regex-replace bre rep line nth))
+                            (n (string-split r "\n" #t))) ;; string → list
+                       (if (equal? r line) ;; if not modified
+                         y
+                         (begin
+                           (editor-replace! editor (cons lnum lnum) n)
+                           (+ lnum (dec (length n)))))))
+                   0 lst (editor-line-numbers lines))))
+    (if (zero? re)
       ((subst-nomatch-handler) "no match")
-      (begin
-        (editor-replace! editor lines (car re))
-        (editor-goto! editor (cdr re))))
+      (editor-goto! editor re))
 
     ;; Special case handling of omitted regex delimiter in substitute
     ;; command. For the substitute command only the delimiter of the

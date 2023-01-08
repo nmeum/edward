@@ -1,0 +1,3 @@
+2kf
+1,$s/bar/the line containing the mark has been modified, the mark is now invalid/
+'fp
