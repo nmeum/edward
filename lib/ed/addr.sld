@@ -1,4 +1,4 @@
-(define-library edward.ed.addr
+(define-library (edward.ed.addr)
   (import (scheme base)
           (scheme case-lambda)
 

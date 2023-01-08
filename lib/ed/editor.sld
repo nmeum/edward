@@ -1,4 +1,4 @@
-(define-library edward.ed.editor
+(define-library (edward.ed.editor)
   (import (scheme base)
           (scheme file)
           (scheme case-lambda)

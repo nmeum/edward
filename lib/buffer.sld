@@ -1,4 +1,4 @@
-(define-library edward.buffer
+(define-library (edward.buffer)
   (import (scheme base)
 
           (srfi 1)

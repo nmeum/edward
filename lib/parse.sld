@@ -1,4 +1,4 @@
-(define-library edward.parse
+(define-library (edward.parse)
   (import (scheme base)
           (scheme char)
           (scheme file)

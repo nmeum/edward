@@ -1,4 +1,4 @@
-(define-library edward.ed.cmd
+(define-library (edward.ed.cmd)
   (import (scheme base)
           (scheme file)
           (scheme lazy)

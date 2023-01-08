@@ -1,4 +1,4 @@
-(define-library edward.cli
+(define-library (edward.cli)
   (import (scheme base)
           (scheme write)
           (scheme process-context)

@@ -1,4 +1,4 @@
-(define-library edward.replace
+(define-library (edward.replace)
   (import (scheme base)
           (scheme lazy)
 
