@@ -73,7 +73,7 @@
                (i (+ start e))         ;; next index in bv
                (r (delay (bytevector-append
                            (bytevector-copy v 0 s)
-                           (apply-replacement subm bv re)))))
+                           (apply-replacement subm v re)))))
           (if (eqv? n nth)
             (bytevector-append (force r) (bytevector-copy bv i))
             (bytevector-append

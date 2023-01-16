@@ -1,0 +1,5 @@
+trim :: T.Text -> T.Text
+trim = rtrim . ltrim
+  where
+    ltrim :: T.Text -> T.Text
+    ltrim = T.dropWhile isSpace
