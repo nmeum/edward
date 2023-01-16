@@ -57,7 +57,7 @@
     (fold (lambda (x y)
             (bytevector-append y
               (match x
-                (('restr . s) (string->utf8 s))
+                (('restr . s)   (string->utf8 s))
                 (('matched . _) (submatch subm bv 0))
                 (('backref . n) (submatch subm bv n)))))
           #u8() replacement))
@@ -66,11 +66,11 @@
     (let* ((v (bytevector-copy bv start))
            (subm (regex-exec regex v)))
       (if subm
-        (let* ((m (vector-ref subm 0))
-               (s (car m))
-               (e (cdr m))
+        (let* ((m (vector-ref subm 0)) ;; submatch for entire regex
+               (s (car m))             ;; start of submatch
+               (e (cdr m))             ;; end of submatch
 
-               (i (+ start e)) ;; next index in bv
+               (i (+ start e))         ;; next index in bv
                (r (delay (bytevector-append
                            (bytevector-copy v 0 s)
                            (apply-replacement subm bv re)))))
