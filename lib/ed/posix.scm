@@ -64,9 +64,9 @@
          ;; Replaces all lines in the selected range.
          ;; Returns line of last replaced line or zero if no line was replaced.
          (re (fold (lambda (line lnum y)
-                     (let* ((r (regex-replace bre rep line nth))
-                            (n (string-split r "\n" #t))) ;; string → list
-                       (if (equal? r line) ;; if not modified
+                     (let*-values (((r modified) (regex-replace bre rep line nth))
+                                   ((n) (string-split r "\n" #t))) ;; string → list
+                       (if (not modified)
                          y
                          (begin
                            (editor-replace! editor (cons lnum lnum) n)

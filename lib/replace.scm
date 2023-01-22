@@ -62,6 +62,8 @@
                 (('backref . n) (submatch subm bv n)))))
           #u8() replacement))
 
+  ;; TODO: Refactor this function and make it more readable.
+  ;; Also don't rely on (values …) truncation (not in R7RS).
   (define (%regex-replace* re start n)
     (let* ((v (bytevector-copy bv start))
            (subm (regex-exec regex v)))
@@ -74,20 +76,24 @@
                (r (delay (bytevector-append
                            (bytevector-copy v 0 s)
                            (apply-replacement subm v re)))))
-          (if (eqv? n nth)
-            (bytevector-append (force r) (bytevector-copy bv i))
-            (bytevector-append
-              (if (zero? nth) (force r) (bytevector-copy v 0 e))
-              (%regex-replace* re i (+ n 1)))))
-        v)))
+          (values
+            (if (eqv? n nth)
+              (bytevector-append (force r) (bytevector-copy bv i))
+              (bytevector-append
+                (if (zero? nth) (force r) (bytevector-copy v 0 e))
+                (%regex-replace* re i (+ n 1))))
+            #t))
+        (values v #f))))
 
   (%regex-replace* subst 0 1))
 
 ;; Replace nth occurrence of regex in str with subst. If nth is zero all
-;; occurrences are replaced.
+;; occurrences are replaced. Returns two results: The string after
+;; performing all replacement and a boolean indicating if any
+;; replacements where successfully performed.
 
 (define (regex-replace regex subst str nth)
   ;; regexec(3p) offsets are byte, not character offsets.
   ;; Thus, the string needs to be converted to a bytevector.
-  (utf8->string
-    (regex-replace* regex subst (string->utf8 str) nth)))
+  (let-values (((result modified) (regex-replace* regex subst (string->utf8 str) nth)))
+    (values (utf8->string result) modified)))
