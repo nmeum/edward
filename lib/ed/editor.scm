@@ -271,6 +271,8 @@
 ;; Reset all file-specific state in the editor.
 
 (define (editor-reset! editor)
+  (text-editor-line-set! editor 0)
+  (text-editor-last-line-set! editor 0)
   (text-editor-buffer-set! editor (make-buffer))
   (text-editor-marks-set! editor '()))
 
