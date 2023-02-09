@@ -33,3 +33,6 @@
     * Add parse-with-failure-reason to more parser combinators
 * Refactor parse-line in a way that it can consume end-of-file.
   Requires refactoring of parse-input-mode.
+* Allow input with spaces in interactive tests
+    * Probably requires rewriting the test runner in Python or something
+    * Would enable adding tests for edge cases like c0fe7d15700cc1ca03198c05d3762f7516f185fe
