@@ -7,28 +7,21 @@ EDWARD="${EDWARD:-$(pwd)/../../bin/edward}"
 	abort "Couldn't find edward executable '${EDWARD}'."
 
 session="ed-test"
-cmd="sh -c 'stty -echo && tmux wait-for -S term-setup; env CHICKEN_REPOSITORY_PATH="${CHICKEN_REPOSITORY_PATH}" ${EDWARD}'"
-
-read_cmd() {
-	[ $# -eq 0 ] || return 1
-
-	# Terminate all lines with an Enter key unless the line escapes
-	# the newline with a '\' which is useful for sending control keys.
-	sed -e 's/\([^\]\)$/\1\nEnter/' -e 's/\\$//'
-}
+cmd="sh -c 'tmux wait-for -S term-setup; env CHICKEN_REPOSITORY_PATH="${CHICKEN_REPOSITORY_PATH}" ${EDWARD}' && echo exit"
 
 run_tmux() {
-	tmux new-session -d -s "${session}" "${cmd}" \;                   \
-		set-option -t "${session}" -w remain-on-exit "on" \;      \
-		set-option -t "${session}" -w remain-on-exit-format "" \; \
-		                                                          \
-		set-hook -w pane-died                                     \
-			"wait-for -S exit-channel" \;                     \
-		                                                          \
-		wait-for term-setup \;                                    \
-		send-keys -t "${session}" $(read_cmd) \;                  \
-		                                                          \
-		wait-for exit-channel \;                                  \
+	tmux new-session -d -s "${session}" "${cmd}" \;                       \
+		set-option -t "${session}" -w remain-on-exit "on" \;          \
+		set-option -t "${session}" -w remain-on-exit-format "" \;     \
+		                                                              \
+		set-hook -w pane-died                                         \
+			"wait-for -S exit-channel" \;                         \
+		                                                              \
+		wait-for term-setup \;                                        \
+		run-shell -t "${session}" "$(pwd)/send.py ${session} ${1}" \; \
+		                                                              \
+		display-message -d 0 -t "${session}" "here" \;  \
+		wait-for exit-channel \;                                      \
 		capture-pane -S - -E - -t "${session}" -p -C
 }
 
@@ -39,7 +32,7 @@ for test in *; do
 	name="${test##*/}"
 	printf "Running test case '%s': " "${name}"
 
-	run_tmux < "${test}/cmds" | awk '
+	run_tmux "$(pwd)/${test}/cmds" | awk '
 	# Filter out all empty lines between the last non-empty line and EOF.
 	{
 		output = output $0
