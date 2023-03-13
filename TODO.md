@@ -17,9 +17,6 @@
   entering insert mode. For example, when performing `2a` on an empty
   file the append will only error out after all text has been entered.
 * Figure out why edward is slower when compiled statically with eggs (linkage static)
-* Integration tests: compare exit status
-* Use posix-regex multiline feature instead of matching lines individually
-* Make more use of parse-lazy and parse-memoize (see (chibi parse) documentation)
 * Use chicken locative instead of editor-get-lnum hack to deal with pointers to lines
 	* This requires the locative-index procedure (not available in CHiCKEN 5.3)
 	* See ef2d98332b4d453288dc98298c394d8af645c863 in chicken-core.git
