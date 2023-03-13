@@ -1,3 +1,10 @@
+;;>| Read–Eval–Print Loop
+;;>
+;;> REPL abstraction which provides a read-eval-print loop that
+;;> continously reads data from standard input and parses this
+;;> input data using provided parser combinators. The REPL
+;;> operates on a [parse stream](#section-parse-streams) internally.
+
 (define-record-type Read-Eval-Print-Loop
   (%make-repl prompt-str prompt? stream index)
   repl?
@@ -9,6 +16,8 @@
   (stream repl-stream repl-stream-set!)
   ;; Last index in parse stream.
   (index repl-index repl-index-set!))
+
+;;> Create an new REPL instance with the given input `prompt` string.
 
 (define (make-repl prompt)
   (let ((prompt? (not (empty-string? prompt))))
@@ -69,6 +78,16 @@
         (parse-stream-line s)
         (car (parse-stream-count-lines s (parse-stream-max-char s)))))))
 
+;;> Start the REPL given by `repl`, and continuously parse input using
+;;> the provided parser `f`. Successfully parsed input is passed to
+;;> the success continuation `sk`, which receives the line number and
+;;> parser result as procedure arguments. If the parser failed for the
+;;> current input, the failure continuation `fk` is invoked. This
+;;> continuation receives the line number and failure reason as
+;;> procedure arguments. Lastly, an interrupt continuation must
+;;> also be provided which is invoked on `SIGINT`. This continuation
+;;> is not passed any arguments.
+
 (define (repl-run repl f sk fk ik)
   (when (repl-prompt? repl)
     (display (repl-prompt-str repl))
@@ -90,6 +109,11 @@
           (k #f))))
 
   (repl-run repl f sk fk ik))
+
+;;> Run a parser interactively within the REPL. That is, deviate from
+;;> the standard REPL parser and instead parse the next input line
+;;> with the given parser `f`. On success, returns the result of `f`
+;;> otherwise invokes the provided failure continuation `fk`.
 
 (define (repl-interactive repl f fk)
   (repl-parse repl f (lambda (line value) value) fk))

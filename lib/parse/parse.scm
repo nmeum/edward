@@ -2,8 +2,8 @@
 ;; Copyright (c) 2013 Alex Shinn.  All rights reserved.
 ;; BSD-style license: http://synthcode.com/license.txt
 
-;;> \section{Parse Streams}
-
+;;>| Parse Streams
+;;>
 ;;> Parse streams are an abstraction to treat ports as proper streams
 ;;> so that we can backtrack from previous states.  A single
 ;;> Parse-Stream record represents a single buffered chunk of text.
@@ -46,8 +46,8 @@
 ;; holding many memoized values in memory.
 (define default-buffer-size 256)
 
-;;> Create a parse stream open on the given \var{filename}, with a
-;;> possibly already opened \var{port}.
+;;> Create a parse stream open on the given `filename`, with a
+;;> possibly already opened `port`.
 
 (define (make-parse-stream filename . o)
   (let ((port (if (pair? o) (car o) (open-input-file filename)))
@@ -55,12 +55,12 @@
     (%make-parse-stream
      filename port (make-vector len #f) (make-vector len '()) 0 #f 0 0 #f #f)))
 
-;;> Open \var{filename} and create a parse stream on it.
+;;> Open `filename` and create a parse stream on it.
 
 (define (file->parse-stream filename)
   (make-parse-stream filename (open-input-file filename)))
 
-;;> Create a parse stream on a string \var{str}.
+;;> Create a parse stream on a string `str`.
 
 (define (string->parse-stream str)
   (make-parse-stream #f (open-input-string str)))
@@ -121,20 +121,20 @@
               (vector-set! buf off (string-ref str (- i off)))))))
       #f)))
 
-;;> Returns true iff \var{i} is the first character position in the
-;;> parse stream \var{source}.
+;;> Returns true iff `i` is the first character position in the
+;;> parse stream `source`.
 
 (define (parse-stream-start? source i)
   (and (zero? i) (not (parse-stream-prev-char source))))
 
-;;> Returns true iff \var{i} is the last character position in the
-;;> parse stream \var{source}.
+;;> Returns true iff `i` is the last character position in the
+;;> parse stream `source`.
 
 (define (parse-stream-end? source i)
   (eof-object? (parse-stream-ref source i)))
 
-;;> Returns the character in parse stream \var{source} indexed by
-;;> \var{i}.
+;;> Returns the character in parse stream `source` indexed by
+;;> `i`.
 
 (define (parse-stream-ref source i)
   (parse-stream-fill! source i)
@@ -243,8 +243,8 @@
       (parse-stream-in-tail? s0 s1)))
 
 ;;> Returns a string composed of the characters starting at parse
-;;> stream \var{s0} index \var{i0} (inclusive), and ending at \var{s1}
-;;> index \var{i1} (exclusive).
+;;> stream `s0` index `i0` (inclusive), and ending at `s1`
+;;> index `i1` (exclusive).
 
 (define (parse-stream-substring s0 i0 s1 i1)
   (cond
@@ -280,7 +280,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;> \section{Parser Interface}
+;;>| Parser Interface
+;;>
+;;> Procedures for operating on a created parse stream.
 
 ;;> Combinator to indicate failure.
 
@@ -288,13 +290,13 @@
   (let ((line+col (parse-stream-debug-info s i)))
     (error "incomplete parse at" (append line+col (list reason)))))
 
-;;> Call the parser combinator \var{f} on the parse stream
-;;> \var{source}, starting at index \var{index}, passing the result to
-;;> the given success continuation \var{sk}, which should be a
-;;> procedure of the form \scheme{(result source index fail)}.  The
+;;> Call the parser combinator `f` on the parse stream
+;;> `source`, starting at index `index`, passing the result to
+;;> the given success continuation `sk`, which should be a
+;;> procedure of the form `(result source index fail)`.  The
 ;;> optional failure continuation should be a procedure of the form
-;;> \scheme{(source index reason)}, and defaults to just returning
-;;> \scheme{#f}.
+;;> `(source index reason)`, and defaults to just returning
+;;> `#f`.
 
 (define (call-with-parse f source index sk . o)
   (let ((s (if (string? source) (string->parse-stream source) source))
@@ -302,16 +304,16 @@
     (parse-stream-fk-set! s fk)
     (f s index sk fk)))
 
-;;> Call the parser combinator \var{f} on the parse stream
-;;> \var{source}, at index \var{index}, and return the result, or
-;;> \scheme{#f} if parsing fails.
+;;> Call the parser combinator `f` on the parse stream
+;;> `source`, at index `index`, and return the result, or
+;;> `#f` if parsing fails.
 
 (define (parse f source . o)
   (let ((index (if (pair? o) (car o) 0)))
     (call-with-parse f source index (lambda (r s i fk) r))))
 
-;;> Call the parser combinator \var{f} on the parse stream
-;;> \var{source}, at index \var{index}.  If the entire source is not
+;;> Call the parser combinator `f` on the parse stream
+;;> `source`, at index `index`.  If the entire source is not
 ;;> parsed, raises an error, otherwise returns the result.
 
 (define (parse-fully f source . o)
@@ -324,11 +326,11 @@
      parse-failure)))
 
 ;;> The fundamental parse iterator.  Repeatedly applies the parser
-;;> combinator \var{f} to \var{source}, starting at \var{index}, as
+;;> combinator `f` to `source`, starting at `index`, as
 ;;> long as a valid parse is found.  On each successful parse applies
-;;> the procedure \var{kons} to the parse result and the previous
-;;> \var{kons} result, beginning with \var{knil}.  If no parses
-;;> succeed returns \var{knil}.
+;;> the procedure `kons` to the parse result and the previous
+;;> `kons` result, beginning with `knil`.  If no parses
+;;> succeed returns `knil`.
 
 (define (parse-fold f kons knil source . o)
   (let lp ((p (if (string? source) (string->parse-stream source) source))
@@ -336,15 +338,15 @@
            (acc knil))
     (f p index (lambda (r s i fk) (lp s i (kons r acc))) (lambda (s i r) acc))))
 
-;;> Parse as many of the parser combinator \var{f} from the parse
-;;> stream \var{source}, starting at \var{index}, as possible, and
+;;> Parse as many of the parser combinator `f` from the parse
+;;> stream `source`, starting at `index`, as possible, and
 ;;> return the result as a list.
 
 (define (parse->list f source . o)
   (let ((index (if (pair? o) (car o) 0)))
     (reverse (parse-fold f cons '() source index))))
 
-;;> As \scheme{parse->list} but requires the entire source be parsed
+;;> As `parse->list` but requires the entire source be parsed
 ;;> with no left over characters, signalling an error otherwise.
 
 (define (parse-fully->list f source . o)
@@ -356,12 +358,12 @@
          (if (eof-object? r) (reverse acc) (lp s i (cons r acc))))
        (lambda (s i reason) (error "incomplete parse")))))
 
-;;> Return a new parser combinator with the same behavior as \var{f},
-;;> but on failure replaces the reason with \var{reason}.  This can be
+;;> Return a new parser combinator with the same behavior as `f`,
+;;> but on failure replaces the reason with `reason`.  This can be
 ;;> useful to provide more descriptive parse failure reasons when
-;;> chaining combinators.  For example, \scheme{parse-string} just
+;;> chaining combinators.  For example, `parse-string` just
 ;;> expects to parse a single fixed string.  If it were defined in
-;;> terms of \scheme{parse-char}, failure would indicate some char
+;;> terms of `parse-char`, failure would indicate some char
 ;;> failed to match, but it's more useful to describe the whole string
 ;;> we were expecting to see.
 
@@ -371,7 +373,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;> \section{Basic Parsing Combinators}
+;;>| Basic Parsing Combinators
+;;>
+;;> Combinators to construct new parsers.
 
 ;;> Parse nothing successfully.
 
@@ -411,16 +415,16 @@
                           ))))
             (f source index sk fk2))))))
 
-;;> The conjunction combinator.  If both \var{f} and \var{g} parse
+;;> The conjunction combinator.  If both `f` and `g` parse
 ;;> successfully starting at the same source and index, returns the
-;;> result of \var{g}.  Otherwise fails.
+;;> result of `g`.  Otherwise fails.
 
 (define (parse-and f g)
   (lambda (source index sk fk)
     (f source index (lambda (r s i fk) (g source index sk fk)) fk)))
 
-;;> The negation combinator.  If \var{f} succeeds, fails, otherwise
-;;> succeeds with \var{#t}.
+;;> The negation combinator.  If `f` succeeds, fails, otherwise
+;;> succeeds with `#t`.
 
 (define (parse-not f)
   (lambda (source index sk fk)
@@ -466,14 +470,14 @@
 (define (parse-seq . o)
   (parse-seq-list o))
 
-;;> Convert the list of parser combinators \var{ls} to a
-;;> \scheme{parse-seq} sequence.
+;;> Convert the list of parser combinators `ls` to a
+;;> `parse-seq` sequence.
 
 (define (list->parse-seq ls)
   (if (null? (cdr ls)) (car ls) (parse-seq-list ls)))
 
-;;> The optional combinator.  Parse the combinator \var{f} (in
-;;> sequence with any additional combinator args \var{o}), and return
+;;> The optional combinator.  Parse the combinator `f` (in
+;;> sequence with any additional combinator args `o`), and return
 ;;> the result, or parse nothing successully on failure.
 
 (define (parse-optional f . o)
@@ -484,9 +488,9 @@
 
 (define ignored-value (list 'ignore))
 
-;;> The repetition combinator.  Parse \var{f} repeatedly and return a
-;;> list of the results.  \var{lo} is the minimum number of parses
-;;> (deafult 0) to be considered a successful parse, and \var{hi} is
+;;> The repetition combinator.  Parse `f` repeatedly and return a
+;;> list of the results.  `lo` is the minimum number of parses
+;;> (deafult 0) to be considered a successful parse, and `hi` is
 ;;> the maximum number (default infinite) before stopping.
 
 (define (parse-repeat f . o)
@@ -504,19 +508,19 @@
                  (lambda (r s i fk) (repeat s i fk (+ j 1) (cons r res)))
                  fk)))))))
 
-;;> Parse \var{f} one or more times.
+;;> Parse `f` one or more times.
 
 (define (parse-repeat+ f)
   (parse-repeat f 1))
 
-;;> Parse \var{f} and apply the procedure \var{proc} to the result on success.
+;;> Parse `f` and apply the procedure `proc` to the result on success.
 
 (define (parse-map f proc)
   (lambda (source index sk fk)
     (f source index (lambda (res s i fk) (sk (proc res) s i fk)) fk)))
 
-;;> Parse \var{f} and apply the procedure \var{proc} to the substring
-;;> of the parsed data.  \var{proc} defaults to the identity.
+;;> Parse `f` and apply the procedure `proc` to the substring
+;;> of the parsed data.  `proc` defaults to the identity.
 
 (define (parse-map-substring f . o)
   (let ((proc (if (pair? o) (car o) (lambda (res) res))))
@@ -527,15 +531,15 @@
            (sk (proc (parse-stream-substring source index s i)) s i fk))
          fk))))
 
-;;> Parses the same streams as \var{f} but ignores the result on
-;;> success.  Inside a \scheme{parse-seq} the result will not be
+;;> Parses the same streams as `f` but ignores the result on
+;;> success.  Inside a `parse-seq` the result will not be
 ;;> included in the list of results.  Useful for discarding
 ;;> boiler-plate without the need for post-processing results.
 
 (define (parse-ignore f)
   (parse-map f (lambda (res) ignored-value)))
 
-;;> Parse with \var{f} and further require \var{check?} to return true
+;;> Parse with `f` and further require `check?` to return true
 ;;> when applied to the result.
 
 (define (parse-assert f check?)
@@ -546,14 +550,14 @@
          (if (check? res) (sk res s i fk) (fk s i "assertion failed")))
        fk)))
 
-;;> Parse with \var{f} once and keep the first result, not allowing
-;;> further backtracking within \var{f}.
+;;> Parse with `f` once and keep the first result, not allowing
+;;> further backtracking within `f`.
 
 (define (parse-atomic f)
   (lambda (source index sk fk)
     (f source index (lambda (res s i fk2) (sk res s i fk)) fk)))
 
-;;> Parse with \var{f} once, keep the first result, and commit to the
+;;> Parse with `f` once, keep the first result, and commit to the
 ;;> current parse path, discarding any prior backtracking options.
 ;;> Can optionally be passed a failure reason with which all resulting
 ;;> failure messages will be prefixed.
@@ -572,10 +576,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;> \section{Boundary Checks}
+;;>| Boundary Checks
+;;>
+;;> Procedures for performing boundary checks within a parser combinator.
 
-;;> Returns true iff \var{index} is the first index of the first parse
-;;> stream \var{source}.
+;;> Returns true iff `index` is the first index of the first parse
+;;> stream `source`.
 
 (define parse-beginning
   (lambda (source index sk fk)
@@ -583,8 +589,8 @@
         (sk #t source index fk)
         (fk source index "expected beginning"))))
 
-;;> Returns true iff \var{index} is the last index of the last parse
-;;> stream \var{source}.
+;;> Returns true iff `index` is the last index of the last parse
+;;> stream `source`.
 
 (define parse-end
   (lambda (source index sk fk)
@@ -596,7 +602,7 @@
               fk))
       (fk source index "expected end"))))
 
-;;> Returns true iff \var{source}, \var{index} indicate the beginning
+;;> Returns true iff `source`, `index` indicate the beginning
 ;;> of a line (or the entire stream).
 
 (define parse-beginning-of-line
@@ -606,7 +612,7 @@
           (sk #t source index fk)
           (fk source index "expected beginning of line")))))
 
-;;> Returns true iff \var{source}, \var{index} indicate the end of a
+;;> Returns true iff `source`, `index` indicate the end of a
 ;;> line (or the entire stream).
 
 (define parse-end-of-line
@@ -618,7 +624,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;> \section{Constant Parsers}
+;;>| Constant Parsers
+;;>
+;;> Underlying combinators which parse a constant input and, contrary to
+;;> the parsers documented above, cannot be passed parser combinators as
+;;> procedure arguments.
 
 (define (parse-char-pred pred)
   (lambda (source index sk fk)
@@ -641,20 +651,20 @@
    (else
     (error "don't know how to handle char predicate" x))))
 
-;;> Parse a single char which matches \var{x}, which can be a
+;;> Parse a single char which matches `x`, which can be a
 ;;> character, character set, or arbitrary procedure.
 
 (define (parse-char x)
   (parse-char-pred (x->char-predicate x)))
 
-;;> Parse a single char which does not match \var{x}, which can be a
+;;> Parse a single char which does not match `x`, which can be a
 ;;> character, character set, or arbitrary procedure.
 
 (define (parse-not-char x)
   (let ((pred (x->char-predicate x)))
     (parse-char-pred (lambda (ch) (not (pred ch))))))
 
-;;> Parse the exact string \var{str}.
+;;> Parse the exact string `str`.
 
 (define (parse-string str)
   (parse-map (parse-with-failure-reason
@@ -662,8 +672,8 @@
               (string-append "expected '" str "'"))
              list->string))
 
-;;> Parse a sequence of characters matching \var{x} as with
-;;> \scheme{parse-char}, and return the resulting substring.
+;;> Parse a sequence of characters matching `x` as with
+;;> `parse-char`, and return the resulting substring.
 
 (define (parse-token x)
   ;; (parse-map (parse-repeat+ (parse-char x)) list->string)
@@ -685,17 +695,20 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;> \section{Laziness}
+;;>| Laziness and Memoization
+;;>
+;;> [Lazy evaluation][wikipedia lazy] of parser combinators and [memoization][wikipedia memoization].
+;;>
+;;> [wikipedia lazy]: https://en.wikipedia.org/wiki/Lazy_evaluation
+;;> [wikipedia memoization]: https://en.wikipedia.org/wiki/Memoization
 
 ;;> A delayed combinator.  This is equivalent to the parser combinator
-;;> \var{f}, but is delayed so it can be more efficient if never used
-;;> and \var{f} is expensive to compute.  Moreover, it can allow
+;;> `f`, but is delayed so it can be more efficient if never used
+;;> and `f` is expensive to compute.  Moreover, it can allow
 ;;> self-referentiality as in:
 ;;>
-;;> \schemeblock{
-;;> (letrec* ((f (parse-lazy (parse-or (parse-seq g f) h))))
-;;>   ...)
-;;> }
+;;>    (letrec* ((f (parse-lazy (parse-or (parse-seq g f) h))))
+;;>      ...)
 
 (define-syntax parse-lazy
   (syntax-rules ()
@@ -704,9 +717,7 @@
        (lambda (source index sk fk)
          ((force g) source index sk fk))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;> \section{Memoization}
+;; Utility definitions for memoization.
 
 ;; debugging
 (define *procedures* '())
@@ -717,8 +728,8 @@
 
 (define memoized-failure (list 'failure))
 
-;;> Parse the same strings as \var{f}, but memoize the result at each
-;;> source and index to avoid exponential backtracking.  \var{name} is
+;;> Parse the same strings as `f`, but memoize the result at each
+;;> source and index to avoid exponential backtracking.  `name` is
 ;;> provided for debugging only.
 
 (define (parse-memoize name f)
