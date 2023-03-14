@@ -1,3 +1,13 @@
+;;> Library for defining custom ed editor commands through provided
+;;> macros. For each command, a parser and an executor needs to be defined.
+;;> The parser is defined using edward [parser combinators][edward editor],
+;;> the executor receives the return value of these combinators as
+;;> procedure arguments and modifies the [editor state][edward editor]
+;;> accordingly.
+;;>
+;;> [edward parse]: edward.parse.html
+;;> [edward editor]: edward.ed.editor.html
+
 (define-library (edward.ed.cmd)
   (import (scheme base)
           (scheme file)
