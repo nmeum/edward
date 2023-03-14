@@ -35,6 +35,11 @@
   (let ((editor (make-text-editor exec-edit filename prompt silent?)))
     (editor-start editor (parse-cmd))))
 
+;;> Entry point of the edward text editor. This function parses the
+;;> provided command line arguments `args` and starts the
+;;> read-eval-print loop. This command should therefore only be called
+;;> after registering all editor commands.
+
 (define (edward-main . args)
   (let* ((flags (list prompt-opt silent-opt))
          (argv  (if (null? args) (command-line) args))
