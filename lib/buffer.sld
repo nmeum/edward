@@ -1,3 +1,13 @@
+;;> A text buffer for line-based data with [undo support][undo section].
+;;> Operations on the buffer address lines, the first line starts at
+;;> index 1. The special index 0 can be used with the [append command][append command]
+;;> to insert text before the first line. For other commands, index 0 is
+;;> equivalent to index 1. Targeting a line outside the current buffer
+;;> bounds causes an error to be raised.
+;;>
+;;> [undo section]: #section-undo-stack
+;;> [append command]: #buffer-append!
+
 (define-library (edward.buffer)
   (import (scheme base)
 
