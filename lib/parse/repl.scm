@@ -5,18 +5,6 @@
 ;;> input data using provided parser combinators. The REPL
 ;;> operates on a [parse stream](#section-parse-streams) internally.
 
-(define-record-type Read-Eval-Print-Loop
-  (%make-repl prompt-str prompt? stream index)
-  repl?
-  ;; Prompt string used for input prompt.
-  (prompt-str repl-prompt-str)
-  ;; Whether the prompt should be shown or hidden.
-  (prompt? repl-prompt? repl-set-prompt!)
-  ;; Parse stream used for the parser combinator.
-  (stream repl-stream repl-stream-set!)
-  ;; Last index in parse stream.
-  (index repl-index repl-index-set!))
-
 ;;> Create an new REPL instance with the given input `prompt` string.
 
 (define (make-repl prompt)
@@ -30,6 +18,25 @@
 (define (repl-state-set! repl source index)
   (repl-stream-set! repl source)
   (repl-index-set! repl index))
+
+;;> Record type representing the REPL.
+(define-record-type Read-Eval-Print-Loop
+  (%make-repl prompt-str prompt? stream index)
+  ;;> Predicate which returns true if the given object was created using [make-repl](#make-repl).
+  repl?
+  ;; Prompt string used for input prompt.
+  (prompt-str repl-prompt-str)
+  ;; Whether the prompt should be shown or hidden.
+  (prompt?
+    ;;> Predicate which returns true if the prompt should be shown.
+    repl-prompt?
+
+    ;;> Change prompt visibility, a truth value means the prompt is shown.
+    repl-set-prompt!)
+  ;; Parse stream used for the parser combinator.
+  (stream repl-stream repl-stream-set!)
+  ;; Last index in parse stream.
+  (index repl-index repl-index-set!))
 
 ;; Skip all buffered chunks, i.e. next read will block.
 
