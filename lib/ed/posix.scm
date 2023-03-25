@@ -1,6 +1,6 @@
-;;
-; Append Comand
-;;
+;;;;
+;;> Append command.
+;;;;
 
 (define (exec-append editor line data)
   (editor-goto!
@@ -10,11 +10,11 @@
 (define-input-cmd (append exec-append (make-addr '(current-line)))
   (parse-cmd-char #\a))
 
-;;
-; Change Command
-;;
+;;;;
+;;> Change command.
+;;;;
 
-;; The change command does not support a zero address see:
+;; The change command does not support a zero address see:.
 ;;
 ;;   * https://lists.gnu.org/archive/html/bug-ed/2016-04/msg00009.html
 ;;   * https://austingroupbugs.net/view.php?id=1130
@@ -27,9 +27,9 @@
 (define-input-cmd (change exec-change (make-range))
   (parse-cmd-char #\c))
 
-;;
-; Read Command
-;;
+;;;;
+;;> Read command.
+;;;;
 
 (define (exec-read editor line filename)
   (let* ((f  (editor-filename editor filename))
@@ -51,9 +51,9 @@
 (define-file-cmd (read exec-read (make-addr '(last-line)))
   (parse-file-cmd #\r))
 
-;;
-; Substitute Command
-;;
+;;;;
+;;> Substitute command.
+;;;;
 
 (define (exec-subst editor lines triplet nth)
   (let* ((lst (editor-get-lines editor lines))
@@ -105,9 +105,9 @@
       parse-digits)
     1))
 
-;;
-; Delete Command
-;;
+;;;;
+;;> Delete command.
+;;;;
 
 (define (exec-delete editor lines)
   (let ((saddr (car lines)))
@@ -119,9 +119,9 @@
 (define-edit-cmd (delete exec-delete (make-range))
   (parse-cmd-char #\d))
 
-;;
-; Edit Command
-;;
+;;;;
+;;> Edit command.
+;;;;
 
 (define (%exec-edit editor filename)
   (call-when-confirmed editor '%edit
@@ -131,9 +131,9 @@
 (define-file-cmd (%edit %exec-edit)
   (parse-file-cmd #\e))
 
-;;
-; Edit Without Checking Command
-;;
+;;;;
+;;> Edit without checking command.
+;;;;
 
 (define (exec-edit editor filename)
   (editor-reset! editor)
@@ -152,9 +152,9 @@
 (define-file-cmd (edit exec-edit)
   (parse-file-cmd #\E))
 
-;;
-; Filename Command
-;;
+;;;;
+;;> Filename command.
+;;;;
 
 (define (exec-filename editor filename)
   (if (filename-cmd? filename) ;; XXX: Could be handled in parser
@@ -167,9 +167,9 @@
 (define-file-cmd (filename exec-filename)
   (parse-file-cmd #\f))
 
-;;
-; Global Command
-;;
+;;;;
+;;> Global command.
+;;;;
 
 (define (exec-global editor lines regex cmdstr)
   (exec-command-list editor regex-match? lines regex cmdstr))
@@ -182,9 +182,9 @@
   parse-re
   unwrap-command-list)
 
-;;
-; Interactive Global Command
-;;
+;;;;
+;;> Interactive global command.
+;;;;
 
 (define (exec-interactive editor lines regex)
   (exec-command-list-interactive editor regex-match? lines regex))
@@ -196,9 +196,9 @@
   (parse-cmd-char #\G)
   parse-re)
 
-;;
-; Help Command
-;;
+;;;;
+;;> Help command.
+;;;;
 
 (define (exec-help editor)
   (let ((msg (text-editor-error editor)))
@@ -208,9 +208,9 @@
 (define-edit-cmd (help exec-help)
   (parse-cmd-char #\h))
 
-;;
-; Help-Mode Command
-;;
+;;;;
+;;> Help-mode command.
+;;;;
 
 (define (exec-help-mode editor)
   (let ((prev-help? (text-editor-help? editor)))
@@ -221,9 +221,9 @@
 (define-edit-cmd (help-mode exec-help-mode)
   (parse-cmd-char #\H))
 
-;;
-; Insert Command
-;;
+;;;;
+;;> Insert command.
+;;;;
 
 (define (exec-insert editor line data)
   (let* ((sline (max (dec line) 0)))
@@ -234,9 +234,9 @@
 (define-input-cmd (insert exec-insert (make-addr '(current-line)))
   (parse-cmd-char #\i))
 
-;;
-; Join Command
-;;
+;;;;
+;;> Join command.
+;;;;
 
 (define (exec-join editor lines)
   (let ((start (car lines))
@@ -250,9 +250,9 @@
                                    (make-addr '(current-line) '(1))))
   (parse-cmd-char #\j))
 
-;;
-; Mark Command
-;;
+;;;;
+;;> Mark command.
+;;;;
 
 (define (exec-mark editor line mark)
   (editor-mark-line editor line mark))
@@ -261,9 +261,9 @@
   (parse-cmd-char #\k)
   parse-lowercase)
 
-;;
-; List Command
-;;
+;;;;
+;;> List command.
+;;;;
 
 (define (exec-list editor lines)
   (let ((lst (editor-get-lines editor lines))
@@ -276,9 +276,9 @@
 
 (define-print-cmd list exec-list #\l (make-range))
 
-;;
-; Move Command
-;;
+;;;;
+;;> Move command.
+;;;;
 
 (define (exec-move editor lines addr)
   (let ((dest-line (addr->line editor addr)))
@@ -290,9 +290,9 @@
   (parse-cmd-char #\m)
   parse-addr-with-off)
 
-;;
-; Copy Command
-;;
+;;;;
+;;> Copy command.
+;;;;
 
 (define (exec-copy editor lines addr)
   (let ((dest-line (addr->line editor addr)))
@@ -308,9 +308,9 @@
   (parse-cmd-char #\t)
   parse-addr-with-off)
 
-;;
-; Undo Command
-;;
+;;;;
+;;> Undo command.
+;;;;
 
 (define (exec-undo editor)
   (editor-undo! editor))
@@ -318,9 +318,9 @@
 (define-file-cmd (undo exec-undo)
   (parse-cmd-char #\u))
 
-;;
-; Global Non-Matched Command
-;;
+;;;;
+;;> Global non-matched command.
+;;;;
 
 (define (exec-global-unmatched editor lines regex cmdstr)
   (exec-command-list editor (lambda (bre line)
@@ -335,9 +335,9 @@
   parse-re
   unwrap-command-list)
 
-;;
-; Interactive Global Not-Matched Command
-;;
+;;;;
+;;> Interactive global not-matched command.
+;;;;
 
 (define (exec-interactive-unmatched editor lines regex)
   (exec-command-list-interactive editor (lambda (bre line)
@@ -351,9 +351,9 @@
   (parse-cmd-char #\V)
   parse-re)
 
-;;
-; Write Command
-;;
+;;;;
+;;> Write command.
+;;;;
 
 (define (exec-write editor lines filename)
   (let ((fn (editor-filename editor filename))
@@ -374,9 +374,9 @@
                           (make-addr '(last-line))))
   (parse-file-cmd #\w))
 
-;;
-; Line Number Command
-;;
+;;;;
+;;> Line number command.
+;;;;
 
 (define (exec-line-number editor addr)
   (println (text-editor-line editor)))
@@ -384,9 +384,9 @@
 (define-edit-cmd (line-number exec-line-number (make-addr '(last-line)))
   (parse-cmd-char #\=))
 
-;;
-; Number Command
-;;
+;;;;
+;;> Number command.
+;;;;
 
 (define (exec-number editor lines)
   (let ((lst (editor-get-lines editor lines))
@@ -399,9 +399,9 @@
 
 (define-print-cmd number exec-number #\n (make-range))
 
-;;
-; Print Command
-;;
+;;;;
+;;> Print command.
+;;;;
 
 (define (exec-print editor lines)
   (let ((lst (editor-get-lines editor lines))
@@ -411,9 +411,9 @@
 
 (define-print-cmd print exec-print #\p (make-range))
 
-;;
-; Prompt Command
-;;
+;;;;
+;;> Prompt command.
+;;;;
 
 (define (exec-prompt editor)
   (let* ((repl (text-editor-repl editor))
@@ -423,9 +423,9 @@
 (define-edit-cmd (prompt exec-prompt)
   (parse-cmd-char #\P))
 
-;;
-; Quit Command
-;;
+;;;;
+;;> Quit command.
+;;;;
 
 (define (%exec-quit editor)
   (call-when-confirmed editor '%quit
@@ -444,15 +444,15 @@
     parse-end
     (lambda (args)
       ;; XXX: register-command uses '%eof as a command name
-      ;; but for the command itself we use '%quit as well.
+      ;; but for the command itself we use '%quit as well
       ;; This allows confirming quit commands with EOF and
       ;; vice versa. Furthermore we can filter out the EOF
       ;; handling individually this way (e.g. for g cmd).
       (make-cmd '%quit '() %exec-quit '()))))
 
-;;
-; Quit Without Checking Command
-;;
+;;;;
+;;> Quit without checking command.
+;;;;
 
 (define (exec-quit editor)
   (exit))
@@ -460,9 +460,9 @@
 (define-file-cmd (quit exec-quit)
   (parse-cmd-char #\Q))
 
-;;
-; Shell Escape Command
-;;
+;;;;
+;;> Shell escape command.
+;;;;
 
 (define (exec-command editor cmd)
   (let ((cmdstr (fold-right (lambda (x ys)
@@ -495,9 +495,9 @@
                   (parse-not-char (char-set #\% #\newline)))))))))
     concatenate))
 
-;;
-; Null Command
-;;
+;;;;
+;;> Null command.
+;;;;
 
 (define (exec-null editor line)
   (if (zero? line)

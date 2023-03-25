@@ -10,6 +10,7 @@ SCMDOC_FLAGS = -s style.css
 SCMDOC_FILES = edward.ed.editor.html \
 	edward.ed.cmd.html \
 	edward.ed.addr.html \
+	edward.ed.posix.html \
 	edward.cli.html \
 	edward.util.html \
 	edward.parse.html \
