@@ -328,7 +328,7 @@
 ;;> Predicate which returns true if the given `line` is within
 ;;> the range specified by `lines`.
 
-(define (editor-in-range editor lines line)
+(define (editor-in-range? editor lines line)
   (let ((sline (car lines))
         (eline (cdr lines)))
     (and (>= line sline) (< line eline))))

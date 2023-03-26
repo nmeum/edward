@@ -282,7 +282,7 @@
 
 (define (exec-move editor lines addr)
   (let ((dest-line (addr->line editor addr)))
-    (if (editor-in-range editor lines dest-line)
+    (if (editor-in-range? editor lines dest-line)
       (editor-raise "invalid move destination")
       (editor-goto! editor (editor-move! editor lines dest-line)))))
 
@@ -296,7 +296,7 @@
 
 (define (exec-copy editor lines addr)
   (let ((dest-line (addr->line editor addr)))
-    (if (editor-in-range editor lines dest-line)
+    (if (editor-in-range? editor lines dest-line)
       (editor-raise "invalid copy destination")
       (let ((data (editor-get-lines editor lines))
             (target (addr->line editor addr)))
