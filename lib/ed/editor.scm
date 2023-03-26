@@ -1,120 +1,12 @@
-;; Editor-Error is a custom object raised to indicate a non-fatal
-;; error condition handled according to the ed(1) POSIX specification.
+;;>| Text Editor Object
+;;>
+;;> Object for storing, inspecting, and modifying the editor state.
 
-(define-record-type Editor-Error
-  (make-editor-error msg)
-  editor-error?
-  (msg editor-error-msg))
-
-(define (editor-raise msg)
-  (raise (make-editor-error msg)))
-
-;; Editor-Command represents an ed(1) command as defined in
-;; POSIX.1-2008. The command is identified by a unique symbol
-;; and procedure which receives an editor object and the given
-;; arguments as procedure arguments.
-
-(define-record-type Editor-Command
-  (make-cmd symbol default-addr proc args)
-  editor-cmd?
-  (default-addr cmd-default-addr)
-  (symbol cmd-symbol)
-  (proc cmd-proc)
-  (args cmd-args))
-
-;; Returns true if the given command is a command which is reversible
-;; according to the definition of the undo command in POSIX. For the
-;; undo command itself, #f is returned.
-
-(define (cmd-reversible? cmd)
-  (member (cmd-symbol cmd)
-          '(append change delete global insert join move
-            read substitute copy global-unmatched interactive
-            interactive-unmatched)))
-
-;; Execute given command using given editor state.
-
-(define (editor-xexec editor line-addr cmd)
-  (let ((default-addr (cmd-default-addr cmd)))
-    (when (and (null? default-addr) line-addr)
-      (editor-raise "unexpected address"))
-    (when (and (range? default-addr) (zero? (car line-addr)))
-      (editor-raise "ranges cannot start at address zero"))
-
-    (apply (cmd-proc cmd)
-           editor
-           (if (null? (cmd-default-addr cmd)) ;; doesn't expect address
-             (cmd-args cmd)
-             (append (list line-addr) (cmd-args cmd))))))
-
-(define (editor-exec editor addrlst cmd)
-  ;; XXX: Special handling for write command with empty buffer.
-  ;; Without this, it would be impossible to use write with
-  ;; an empty buffer since the default address is invalid then.
-  ;;
-  ;; TODO: Find a better way to deal with this edge case.
-  (if (and (eqv? (cmd-symbol cmd) 'write)
-           (not addrlst)
-           (buffer-empty? (text-editor-buffer editor)))
-      (editor-xexec editor '(1 . 1) cmd)
-      (let* ((default-addr (cmd-default-addr cmd))
-             ;; Convert addrlst to line pair (if any given) or
-             ;; use default address and convert that (if any).
-             (line-pair (if addrlst
-                          (addrlst->lpair editor addrlst)
-                          (and (not (null? default-addr))
-                               (range->lpair editor (addr->range default-addr)))))
-             ;; Convert given address (if any) to a single line
-             ;; or a line pair (depending on default address).
-             (line-addr (if (or (not line-pair) (range? default-addr))
-                          line-pair
-                          (car line-pair))))
-          (editor-xexec editor line-addr cmd))))
-
-;; Execute a list of commands using given editor state.
-
-(define (editor-exec-cmdlist editor cmd-pairs)
-  (for-each (lambda (cmd-pair)
-              (editor-exec editor (car cmd-pair) (cdr cmd-pair)))
-            cmd-pairs))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define-record-type Text-Editor
-  (%make-text-editor filename input buffer line last-line error marks state re
-                     lcmd replace modified? last-modified? silent? help?)
-  text-editor?
-  ;; Name of the file currently being edited.
-  (filename text-editor-filename text-editor-filename-set!)
-  ;; Input repl for this text editor.
-  (input text-editor-repl)
-  ;; List of strings representing all lines in the file.
-  (buffer text-editor-buffer text-editor-buffer-set!)
-  ;; Current line in the buffer.
-  (line text-editor-line text-editor-line-set!)
-  ;; Previous line in the buffer.
-  (last-line text-editor-last-line text-editor-last-line-set!)
-  ;; Last error message encountered (for h and H command).
-  (error text-editor-error text-editor-error-set!)
-  ;; Assoc lists of marks for this editor.
-  ;; XXX: Since data is never deleted from an assoc list this leaks memory.
-  (marks text-editor-marks text-editor-marks-set!)
-  ;; Symbol with previous repl name executed by the editor or #f if none.
-  (state text-editor-prevcmd text-editor-prevcmd-set!)
-  ;; String representing last encountered RE.
-  (re text-editor-re text-editor-re-set!)
-  ;; Last command executed by the shell escape editor command or '() if none.
-  (lcmd text-editor-last-cmd text-editor-last-cmd-set!)
-  ;; Last used replacement for the substitute command or '() if none.
-  (replace text-editor-last-replace text-editor-last-replace-set!)
-  ;; Whether the editor has been modified since the last write.
-  (modified? text-editor-modified? text-editor-modified-set!)
-  ;; Whether the editor has been modified before the last command was executed.
-  (last-modified? text-editor-last-modified?  text-editor-last-modified-set!)
-  ;; Whether the editor is in silent mode (ed -s option).
-  (silent? text-editor-silent?)
-  ;; Whether help mode is activated (H command).
-  (help? text-editor-help? text-editor-help-set!))
+;;> Create a new text editor object on a given (potentially) empty
+;;> `filename` string. If non-empty, an `edit-proc` needs to be provided
+;;> which implements the `E` command to initially read the file.
+;;> Furthermore, a `prompt` string must be provided and it must be
+;;> indicated whether the editor should start in `silent?` mode.
 
 (define (make-text-editor edit-proc filename prompt silent?)
   (let* ((h (make-repl prompt))
@@ -124,6 +16,75 @@
       ;; XXX: Don't print `?` if file doesn't exist.
       (edit-proc e filename))
     e))
+
+;;> Record type encapsulating the text editor state.
+
+(define-record-type Text-Editor
+  (%make-text-editor filename input buffer line last-line error marks state re
+                     lcmd replace modified? last-modified? silent? help?)
+  ;;> Predicate which returns true if the given object was created using [make-text-editor](#make-text-editor).
+  text-editor?
+  ;; Name of the file currently being edited.
+  (filename
+    ;;> Returns the name of the file that is currently being edited.
+    text-editor-filename
+
+    ;;> Change the file that is currently being edited.
+    text-editor-filename-set!)
+  ;; Input repl for this text editor.
+  (input text-editor-repl)
+  ;; List of strings representing all lines in the file.
+  (buffer text-editor-buffer text-editor-buffer-set!)
+  ;; Current line in the buffer.
+  (line
+    ;;> Returns the current line in the internal editor buffer.
+    text-editor-line
+    text-editor-line-set!)
+  ;; Previous line in the buffer.
+  (last-line text-editor-last-line text-editor-last-line-set!)
+  ;; Last error message encountered (for h and H command).
+  (error
+    ;;> Returns a string representing the last encountered error message.
+    text-editor-error
+    text-editor-error-set!)
+  ;; Assoc lists of marks for this editor.
+  ;; XXX: Since data is never deleted from an assoc list this leaks memory.
+  (marks text-editor-marks text-editor-marks-set!)
+  ;; Symbol with previous cmd name executed by the editor or #f if none.
+  (state
+    ;;> Returns the symbol of the command previously executed by
+    ;;> the editor, on `#f` if no previous command was executed.
+    text-editor-prevcmd
+    text-editor-prevcmd-set!)
+  ;; String representing last encountered RE.
+  (re text-editor-re text-editor-re-set!)
+  ;; Last command executed by the shell escape editor command or '() if none.
+  (lcmd
+    text-editor-last-cmd
+    ;;> Update the last shell command executed via the shell escape editor command.
+    text-editor-last-cmd-set!)
+  ;; Last used replacement for the substitute command or '() if none.
+  (replace text-editor-last-replace text-editor-last-replace-set!)
+  ;; Whether the editor has been modified since the last write.
+  (modified?
+    ;;> Predicate which returns true if the current file has been
+    ;;> modified since the last write to a file (i.e. has unwritten data).
+    text-editor-modified?
+
+    ;;> Modify the modified state of the current file.
+    ;;> Set this to `#t` if the file has been modified.
+    text-editor-modified-set!)
+  ;; Whether the editor has been modified before the last command was executed.
+  (last-modified? text-editor-last-modified?  text-editor-last-modified-set!)
+  ;; Whether the editor is in silent mode (ed -s option).
+  (silent? text-editor-silent?)
+  ;; Whether help mode is activated.
+  (help?
+    ;;> Predicate which returns true if help mode is activated (`H` command).
+    text-editor-help?
+
+    ;;> Enable help mode by passing a truth value to this procedure.
+    text-editor-help-set!))
 
 (define (handle-error editor line msg)
   (let* ((in (text-editor-repl editor))
@@ -144,6 +105,15 @@
       (unless success?
         (write-file (path-join (user-home) "ed.hup") data))))
   (exit))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Editor Interface
+;;>
+;;> High-level text editor interfaces.
+
+;;> Start the read-eval-print loop (REPL) of the editor. Within the
+;;> REPL, command parsing is performed using the given `cmd-parser`.
 
 (define (editor-start editor cmd-parser)
   (define (execute-command line cmd addr)
@@ -180,6 +150,9 @@
       (newline)
       (editor-error editor "Interrupt"))))
 
+;;> Run an interactive command within the text editor.
+;;> The command is parsed using the provided `cmd-parser`.
+
 (define (editor-interactive editor cmd-parser)
   (let ((repl (text-editor-repl editor)))
     (repl-interactive repl
@@ -187,7 +160,7 @@
       (lambda (line reason)
         (editor-raise "parsing of interactive command failed")))))
 
-;; Returns the last executed shell command or raises an error if none.
+;;> Returns the last executed shell command or raises an error if none.
 
 (define (editor-shell-cmd editor)
   (let ((lcmd (text-editor-last-cmd editor)))
@@ -195,9 +168,12 @@
       (editor-raise "no previous command")
       lcmd)))
 
-;; Build a new regex object and handle regex syntax errors as editor
-;; errors. If the provided pattern is empty, the last used pattern is
-;; re-used, if there is no last-used pattern an editor error is raised.
+;;> Build a new [regex][posix-regex regex] object and handle regex syntax
+;;> errors as editor errors. If the provided pattern is empty, the last
+;;> used pattern is re-used, if there is no last-used pattern an editor
+;;> error is raised.
+;;>
+;;> [posix-regex regex]: https://wiki.call-cc.org/eggref/5/posix-regex#make-regex
 
 (define (editor-make-regex editor pattern)
   (define (editor-pattern editor pattern)
@@ -222,6 +198,13 @@
       regex
       (editor-raise regex))))
 
+;;> Access a replacement string in the editor context. If
+;;> the provided replacement string `subst` is `'previous-replace`
+;;> then the previously used replacment string is returned or an
+;;> editor error is raised if there is no previous replacement string.
+;;> Otherwise, (if `subst` is a string) then the previous replacement
+;;> is updated and `subst` is returned.
+
 (define (editor-restr editor subst)
   (if (equal? subst 'previous-replace)
     (let ((last-subst (text-editor-last-replace editor)))
@@ -232,8 +215,8 @@
       (text-editor-last-replace-set! editor subst)
       subst)))
 
-;; Return the currently configured filename, if no default is given it
-;; is an error if no filename is configured for the given editor.
+;;> Return the currently configured filename, if no default is given it
+;;> is an error if no filename is configured for the given editor.
 
 (define editor-filename
   (case-lambda
@@ -249,14 +232,14 @@
       (editor-raise "no file name specified")
       fn)))
 
-;; Print objs, but only if the editor is not in silent mode.
+;;> Print `objs`, but only if the editor is not in silent mode.
 
 (define (editor-verbose editor . objs)
   (unless (text-editor-silent? editor)
     (apply println objs)))
 
-;; Print `?` followed by msg (if the editor is in help mode).
-;; Also set the current editor error accordingly (if any).
+;;> Print `?` followed by `msg` (if the editor is in help mode).
+;;> Also set the current editor error accordingly (if any).
 
 (define (editor-error editor msg)
   (text-editor-error-set! editor msg)
@@ -268,13 +251,15 @@
   (unless (terminal-port? (current-input-port))
     (exit #f)))
 
-;; Reset all file-specific state in the editor.
+;;> Reset all file-specific state of the editor.
 
 (define (editor-reset! editor)
   (text-editor-line-set! editor 0)
   (text-editor-last-line-set! editor 0)
   (text-editor-buffer-set! editor (make-buffer))
   (text-editor-marks-set! editor '()))
+
+;;> Create an editor mark named `mark` which refers to the given `line`.
 
 (define (editor-mark-line editor line mark)
   (let ((lines (editor-get-lines editor (cons line line))))
@@ -293,8 +278,8 @@
           (editor-raise (string-append "invalid mark: " (string mark)))))
       (editor-raise (string-append "unknown mark: " (string mark))))))
 
-;; Move editor cursor to specified line. Line 1 is the first line,
-;; specifying 0 as a line moves the cursor **before** the first line.
+;;> Move editor cursor to specified line. Line 1 is the first line,
+;;> specifying 0 as a line moves the cursor *before* the first line.
 
 (define (editor-goto! editor line)
   (text-editor-line-set! editor line))
@@ -304,66 +289,8 @@
 (define allow-invalid-ranges
   (make-parameter #f))
 
-(define (range->lpair! editor range)
-  (define (%range->lpair! editor start end)
-    (let ((sline (addr->line editor start))
-          (eline (addr->line editor end)))
-      (if (and (not (allow-invalid-ranges))
-               (> sline eline))
-        (editor-raise "invalid range specification")
-        (cons sline eline))))
-
-  ;; In the case of a <semicolon> separator, the current line ('.') shall
-  ;; be set to the first address, and only then will the second address be
-  ;; calculated. This feature can be used to determine the starting line
-  ;; for forwards and backwards searches.
-  (match range
-    ((fst #\; snd)
-      (editor-goto! editor (addr->line editor fst)) ;; side-effect
-      (%range->lpair! editor (make-addr '(current-line)) snd))
-    ((fst #\, snd)
-     (%range->lpair! editor fst snd))))
-
-(define (range->lpair editor range)
-  (let* ((cur (make-addr '(current-line)))
-         (old (addr->line editor cur))
-         (ret (range->lpair! editor range)))
-    (editor-goto! editor old) ;; undo range->lpair! side-effect
-    ret))
-
-;; This procedure expands a list of addresses into a single pair of
-;; concrete line numbers. As such, this procedure is responsible for
-;; both applying the omission rules and discarding addresses.
-;;
-;; For example the address list for "7,5," is evaluted as follows:
-;;
-;;  7,5, [discard] -> 5, [expand] -> 5,5
-;;
-(define (%addrlst->lpair editor lst)
-  (range->lpair!
-    editor
-    (expand-addr
-      (fold (lambda (cur stk)
-              (if (and (address-separator? cur)
-                       (any address-separator? stk))
-                ;; Intermediate range values can be invalid (e.g. "7,5,").
-                (let ((lpair (parameterize ((allow-invalid-ranges #t))
-                               (range->lpair! editor (expand-addr stk)))))
-                  (list
-                    (make-addr (cons 'nth-line (cdr lpair))) ;; discard car
-                    cur))
-                (append stk (list cur))))
-            '() lst))))
-
-(define (addrlst->lpair editor lst)
-  (let* ((cur (make-addr '(current-line)))
-         (old (addr->line editor cur))
-         (ret (%addrlst->lpair editor lst)))
-    (editor-goto! editor old) ;; undo range->lpair! side-effect
-    ret))
-
-;; Find current line number for a given line in the editor buffer. False
-;; is returned if the line does not exist in the editor buffer.
+;;> Find current line number for a given line in the editor buffer. False
+;;> is returned if the line does not exist in the editor buffer.
 ;;
 ;; XXX: This implementation assumes that eq? performs pointer comparision,
 ;; which is the case with CHICKEN but technically this is undefinied behaviour.
@@ -379,6 +306,9 @@
         (iota (editor-lines editor) 1))
       #f)))
 
+;;> Return the content of the editor text buffer as a list of lines
+;;> for the specified line pair `lines`.
+
 (define (editor-get-lines editor lines)
   (if (buffer-empty? (text-editor-buffer editor))
     '()
@@ -387,12 +317,25 @@
           (lst   (buffer->list (text-editor-buffer editor))))
       (sublist lst (max (dec sline) 0) eline))))
 
+;;> Predicate which returns true if the given `line` is within
+;;> the range specified by `lines`.
+
 (define (editor-in-range editor lines line)
   (let ((sline (car lines))
         (eline (cdr lines)))
     (and (>= line sline) (< line eline))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Editor Operations
+;;>
+;;> Procedure which modify the editor text buffer. Provided operations
+;;> are wrappers around operations of the internal text editor
+;;> [line buffer][edward buffer] and additionally take care of updating
+;;> the editor state (e.g. the [modified state][text-editor-modified?]).
+;;>
+;;> [text-editor-modified?]: #text-editor-modified?
+;;> [edward buffer]: edward.buffer.html
 
 ;; Execute the given thunk and make all buffer operations and editor
 ;; state modifications performed in thunk undoable via editor-undo!.
@@ -406,7 +349,7 @@
     (text-editor-last-modified-set! editor m?)
     (text-editor-last-line-set! editor ll)))
 
-;; Undo the last operation on the buffer.
+;;> Undo the last operation on the buffer.
 
 (define (editor-undo! editor)
   (unless (buffer-has-undo? (text-editor-buffer editor))
@@ -423,20 +366,20 @@
     (text-editor-last-line-set! editor cur-line))
   (buffer-undo! (text-editor-buffer editor)))
 
-;; Returns amount of lines in the buffer.
+;;> Returns amount of lines in the buffer.
 
 (define (editor-lines editor)
   (buffer-length (text-editor-buffer editor)))
 
-;; Return list of line numbers for given lines.
+;;> Returns list of line numbers for given lines.
 
 (define (editor-line-numbers lines)
   (let ((sline (car lines))
         (eline (cdr lines)))
     (iota (inc (- eline sline)) sline)))
 
-;; Append the text at the current address, return line number
-;; of last inserted line.
+;;> Append the text at the current address.
+;;> Returns line number of last inserted line.
 
 (define (editor-append! editor line text)
   (unless (null? text)
@@ -446,8 +389,8 @@
     (buffer-append! buf line text)
     (+ line (length text))))
 
-;; Replace text of given lines with given data. Return line number of
-;; last inserted line.
+;;> Replace text of given lines with given data.
+;;> Returns line number of last inserted line.
 
 (define (editor-replace! editor lines data)
   (text-editor-modified-set! editor #t)
@@ -457,7 +400,7 @@
     (buffer-replace! buffer sline eline data)
     (+ (max 0 (dec sline)) (length data))))
 
-;; Join given lines to single line. Return value is undefined.
+;;> Join given lines to single line. Return value is undefined.
 
 (define (editor-join! editor lines)
   (text-editor-modified-set! editor #t)
@@ -466,7 +409,7 @@
         (buffer (text-editor-buffer editor)))
     (buffer-join! buffer sline eline)))
 
-;; Remove given lines Return value is undefined.
+;;> Remove given lines. Return value is undefined.
 
 (define (editor-remove! editor lines)
   (text-editor-modified-set! editor #t)
@@ -475,8 +418,8 @@
         (buffer (text-editor-buffer editor)))
     (buffer-remove! buffer sline eline)))
 
-;; Move given lines to given address. Returns the address of the
-;; last inserted line.
+;;> Move given `lines` to given destination `dest-line`.
+;;> Returns the address of the last inserted line.
 
 (define (editor-move! editor lines dest-line)
   (text-editor-modified-set! editor #t)
@@ -489,6 +432,42 @@
       (+ dest-line (inc (- eline sline))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Address Translation
+;;>
+;;> Procedures for performing address translation. That is, procedures
+;;> which convert an [edward ed addr][edward ed addr] to a line number
+;;> (or a pair of line numbers) based on the current editor state. For
+;;> example, the ed address `.` would be convert to the current line
+;;> number (as tracked in the [editor object][section text-editor]).
+;;> The resulting address can the be passed to an
+;;> [editor operation][section operations].
+;;>
+;;>
+;;> [edward ed addr]: edward.ed.addr.html
+;;> [section text-editor]: #section-text-editor-object
+;;> [section operations]: #section-editor-operations
+
+;;> Convert a single address to a single line number. This is a procedure
+;;> which must be passed the text editor object and an edward ed address as
+;;> procedure arguments.
+
+(define addr->line
+  (match-lambda*
+    ((e ('(current-line) off))
+     (%addr->line e off (text-editor-line e)))
+    ((e ('(last-line) off))
+     (%addr->line e off (editor-lines e)))
+    ((e (('nth-line . line) off))
+     (%addr->line e off line))
+    ((e (('marked-line . mark) off))
+     (%addr->line e off (editor-get-mark e mark)))
+    ((e (('regex-forward . bre) off))
+     (%addr->line e off (match-line 'forward e bre)))
+    ((e (('regex-backward . bre) off))
+     (%addr->line e off (match-line 'backward e bre)))
+    ((e (('relative . rel) off))
+     (%addr->line e off (+ (text-editor-line e) rel)))))
 
 (define (%addr->line editor off line)
   (let* ((total-off (apply + off))
@@ -522,19 +501,172 @@
                     (editor-lines editor))))
         (editor-raise "no match")))))
 
-(define addr->line
-  (match-lambda*
-    ((e ('(current-line) off))
-     (%addr->line e off (text-editor-line e)))
-    ((e ('(last-line) off))
-     (%addr->line e off (editor-lines e)))
-    ((e (('nth-line . line) off))
-     (%addr->line e off line))
-    ((e (('marked-line . mark) off))
-     (%addr->line e off (editor-get-mark e mark)))
-    ((e (('regex-forward . bre) off))
-     (%addr->line e off (match-line 'forward e bre)))
-    ((e (('regex-backward . bre) off))
-     (%addr->line e off (match-line 'backward e bre)))
-    ((e (('relative . rel) off))
-     (%addr->line e off (+ (text-editor-line e) rel)))))
+;;> Convert a `range` address to a line pair. This procedure does
+;;> not modify the current editor addresses, even for address range
+;;> like `5;6`.
+
+(define (range->lpair editor range)
+  (let* ((cur (make-addr '(current-line)))
+         (old (addr->line editor cur))
+         (ret (range->lpair! editor range)))
+    (editor-goto! editor old) ;; undo range->lpair! side-effect
+    ret))
+
+(define (range->lpair! editor range)
+  (define (%range->lpair! editor start end)
+    (let ((sline (addr->line editor start))
+          (eline (addr->line editor end)))
+      (if (and (not (allow-invalid-ranges))
+               (> sline eline))
+        (editor-raise "invalid range specification")
+        (cons sline eline))))
+
+  ;; In the case of a <semicolon> separator, the current line ('.') shall
+  ;; be set to the first address, and only then will the second address be
+  ;; calculated. This feature can be used to determine the starting line
+  ;; for forwards and backwards searches.
+  (match range
+    ((fst #\; snd)
+      (editor-goto! editor (addr->line editor fst)) ;; side-effect
+      (%range->lpair! editor (make-addr '(current-line)) snd))
+    ((fst #\, snd)
+     (%range->lpair! editor fst snd))))
+
+;; This procedure expands a list of addresses into a single pair of
+;; concrete line numbers. As such, this procedure is responsible for
+;; both applying the omission rules and discarding addresses.
+;;
+;; For example the address list for "7,5," is evaluted as follows:
+;;
+;;  7,5, [discard] -> 5, [expand] -> 5,5
+;;
+(define (%addrlst->lpair editor lst)
+  (range->lpair!
+    editor
+    (expand-addr
+      (fold (lambda (cur stk)
+              (if (and (address-separator? cur)
+                       (any address-separator? stk))
+                ;; Intermediate range values can be invalid (e.g. "7,5,").
+                (let ((lpair (parameterize ((allow-invalid-ranges #t))
+                               (range->lpair! editor (expand-addr stk)))))
+                  (list
+                    (make-addr (cons 'nth-line (cdr lpair))) ;; discard car
+                    cur))
+                (append stk (list cur))))
+            '() lst))))
+
+(define (addrlst->lpair editor lst)
+  (let* ((cur (make-addr '(current-line)))
+         (old (addr->line editor cur))
+         (ret (%addrlst->lpair editor lst)))
+    (editor-goto! editor old) ;; undo range->lpair! side-effect
+    ret))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Command Execution
+;;>
+;;> Based on defined [editor operations][section operations], it is
+;;> possible to define custom editor commands which combine multiple
+;;> operations. These commands can then be executed by the users via
+;;> the REPL spawned by [editor-start][editor-start].
+;;>
+;;> The procedures documented here provide a low-level interface for
+;;> defining custom editor commands. However, it is highly discouraged
+;;> to use this interface directly. Instead, editor commands should be
+;;> defined through the macros provided by [edward ed cmd][edward ed cmd].
+;;>
+;;> [editor-start]: #editor-start
+;;> [section operations]: #section-editor-operations
+;;> [edward ed cmd]: edward.ed.cmd.html
+
+;; Editor-Error is a custom object raised to indicate a non-fatal
+;; error condition handled according to the ed(1) POSIX specification.
+
+(define-record-type Editor-Error
+  (make-editor-error msg)
+  editor-error?
+  (msg editor-error-msg))
+
+;;> Raise a text editor error with the given `msg`. This error is
+;;> caught by the editor error handler and causes the `msg` to be
+;;> printed as an ed text editor error.
+
+(define (editor-raise msg)
+  (raise (make-editor-error msg)))
+
+;;> Record type representing editor commands as defined in POSIX.1-2008.
+
+(define-record-type Editor-Command
+  ;;> Create a new editor command. The command is identified by a unique
+  ;;> `symbol` and procedure `proc` which receives an editor object and
+  ;;> the given `args` as procedure arguments.
+  (make-cmd symbol default-addr proc args)
+  editor-cmd?
+  (default-addr cmd-default-addr)
+  (symbol cmd-symbol)
+  (proc cmd-proc)
+  (args
+    ;;> Retrive additional arguments defined for this command.
+    ;;> The returned list value does not include the editor object.
+    cmd-args))
+
+;; Returns true if the given command is a command which is reversible
+;; according to the definition of the undo command in POSIX. For the
+;; undo command itself, #f is returned.
+
+(define (cmd-reversible? cmd)
+  (member (cmd-symbol cmd)
+          '(append change delete global insert join move
+            read substitute copy global-unmatched interactive
+            interactive-unmatched)))
+
+;;> Execute given `cmd` using given `editor` state on a fixed `line-addr`.
+
+(define (editor-xexec editor line-addr cmd)
+  (let ((default-addr (cmd-default-addr cmd)))
+    (when (and (null? default-addr) line-addr)
+      (editor-raise "unexpected address"))
+    (when (and (range? default-addr) (zero? (car line-addr)))
+      (editor-raise "ranges cannot start at address zero"))
+
+    (apply (cmd-proc cmd)
+           editor
+           (if (null? (cmd-default-addr cmd)) ;; doesn't expect address
+             (cmd-args cmd)
+             (append (list line-addr) (cmd-args cmd))))))
+
+;;> Execute an editor command `cmd` on the addresses specified by
+;;> `addrlst` using the provided `editor` state.
+
+(define (editor-exec editor addrlst cmd)
+  ;; XXX: Special handling for write command with empty buffer.
+  ;; Without this, it would be impossible to use write with
+  ;; an empty buffer since the default address is invalid then.
+  ;;
+  ;; TODO: Find a better way to deal with this edge case.
+  (if (and (eqv? (cmd-symbol cmd) 'write)
+           (not addrlst)
+           (buffer-empty? (text-editor-buffer editor)))
+      (editor-xexec editor '(1 . 1) cmd)
+      (let* ((default-addr (cmd-default-addr cmd))
+             ;; Convert addrlst to line pair (if any given) or
+             ;; use default address and convert that (if any).
+             (line-pair (if addrlst
+                          (addrlst->lpair editor addrlst)
+                          (and (not (null? default-addr))
+                               (range->lpair editor (addr->range default-addr)))))
+             ;; Convert given address (if any) to a single line
+             ;; or a line pair (depending on default address).
+             (line-addr (if (or (not line-pair) (range? default-addr))
+                          line-pair
+                          (car line-pair))))
+          (editor-xexec editor line-addr cmd))))
+
+;;> Execute a list of commands using given editor state.
+
+(define (editor-exec-cmdlist editor cmd-pairs)
+  (for-each (lambda (cmd-pair)
+              (editor-exec editor (car cmd-pair) (cdr cmd-pair)))
+            cmd-pairs))

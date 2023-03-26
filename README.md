@@ -139,6 +139,15 @@ entirely possible to define multiple commands in this way. Refer to
 `lib/ed/posix.scm` to see how the commands mandated by POSIX are
 implemented using this interface.
 
+## API Documentation
+
+The API of the library interface is documented using Scheme source code
+comments. An HTML documentation can be generated from these comments
+using the [scmdoc][scmdoc github] utility. More information on that
+is provided in `doc/README.md`.
+
+The API documentation is available via: https://files.8pit.net/edward/doc/
+
 ## History
 
 The existing GNU and BSD ed implementations are both derived from an
@@ -180,3 +189,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [language-oriented programming]: https://doi.org/10.1145/3127323
 [ed history]: https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00001.html
 [tmux web]: https://tmux.github.io
+[scmdoc github]: https://github.com/nmeum/scmdoc

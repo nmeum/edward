@@ -1,20 +1,15 @@
-;; The edward address parsing code distinguishes single addresses
-;; and ranges. The latter consisting of a start and end address as well
-;; as a address separator (as defined in POSIX). The parse-addr
-;; procedure returns a list of address ranges. The editor implementation
-;; is capable of converting this list to a pair of line numbers using
-;; the addrlst->lpair procedure. Command implementations expecting a
-;; range address receive this pair, commands which only expect a single
-;; address only receive the first element of the pair as an argument.
+;;>| Address Constructors
+;;>
+;;> Procedures which create single address and range values.
 
-;; Create a single address with an optional offset.
+;;> Create a single address with an optional offset.
 
 (define make-addr
   (case-lambda
     ((addr) (list addr '()))
     ((addr off) (list addr off))))
 
-;; Create an address range consisting of two addresses.
+;;> Create an address range consisting of two addresses.
 
 (define make-range
   (case-lambda
@@ -23,27 +18,40 @@
     ((start end) (list start #\, end))
     ((start sep end) (list start sep end))))
 
-;; Returns true if the parsed address is a range.
+;;> Predicate which returns true if the parsed address is a range.
 
 (define (range? obj)
   (and (list? obj)
        (eqv? (length obj) 3)))
 
-;; Convert the given address to a range.
+;;> Convert the given address to a range.
 
 (define (addr->range addr)
   (if (range? addr)
     addr
     (make-range addr)))
 
-;; Convert the given range to an address.
+;;> Convert the given range to an address.
 
 (define (range->addr addr)
   (if (range? addr)
     (last addr)
     addr))
 
+;;> Predicate which returns true if the given `obj` constitutes an address separator.
+
+(define (address-separator? obj)
+  (or
+    (eq? obj #\,)
+    (eq? obj #\;)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Parser Combinators
+;;>
+;;> Edward [parser combinators][edward parse] for parsing ed addresses.
+;;>
+;;> [edward parse]: edward.parse.html
 
 ;; From POSIX.1-2008:
 ;;
@@ -150,7 +158,7 @@
     (lambda (num)
       (cons 'relative num))))
 
-;; Utility procedure for parsing addresses without offset.
+;;> Utility procedure for parsing addresses without offset.
 
 (define parse-addr
   (parse-or
@@ -162,11 +170,19 @@
     parse-backward-bre
     parse-relative))
 
-;; Addresses can be followed by zero or more address offsets, optionally
-;; <blank>-separated. Offsets are a decimal number optionally prefixed
-;; by <plus-sign> or <hyphen-minus> character. A <plus-sign> or
-;; <hyphen-minus> character not followed by a decimal number shall be
-;; interpreted as +1/-1.
+;;> Addresses can be followed by zero or more address offsets, optionally
+;;> separated by blanks. Offsets are a decimal number optionally prefixed by
+;;> `+` or `-` character. A `+` or `-` character not followed by a
+;;> decimal number shall be interpreted as `+1`/`-1`. This procedure is
+;;> responsible for parsing an address with an optional offset.
+
+(define parse-addr-with-off
+  (parse-or
+    (parse-atomic
+      (parse-seq
+        parse-addr
+        %parse-addr-with-off))
+    (parse-fail "unknown address format")))
 
 (define %parse-addr-with-off
   (parse-repeat
@@ -178,14 +194,6 @@
           parse-digits))
       car)))
 
-(define parse-addr-with-off
-  (parse-or
-    (parse-atomic
-      (parse-seq
-        parse-addr
-        %parse-addr-with-off))
-    (parse-fail "unknown address format")))
-
 ;; From POSIX-1.2008:
 ;;
 ;;   Addresses shall be separated from each other by a <comma> (',') or
@@ -195,17 +203,17 @@
 ;; on either side of the separation character. Consult the standard for
 ;; more information.
 
-(define (address-separator? obj)
-  (or
-    (eq? obj #\,)
-    (eq? obj #\;)))
-
 (define parse-separator
   (parse-char address-separator?))
 
-;; This procedure expands a given parsed address according to the
-;; omission rules mandated by the POSIX standard. The return value
-;; will also be an address range.
+;;> This procedure expands a given parsed address according to the
+;;> [omission rules][ed addresses] mandated by the POSIX standard. The
+;;> procedure receives an address parsed by [parse-addrs][parse-addrs]
+;;> as an input value and returns an [address-range][make-addr].
+;;>
+;;> [parse-addrs]: #parse-addrs
+;;> [make-addr]: #make-addr
+;;> [ed addresses]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_02
 
 (define expand-addr
   (match-lambda
@@ -226,9 +234,16 @@
     ((addr1 sep addr2)
      (make-range addr1 sep addr2))))
 
-;; Parse an address chain consisting of multiple addresses separated by
-;; <comma> or <semicolon> characters. Returns an address list which can
-;; be converted to a line pair using the addrlst->lpair procedure.
+;;> Parse an address chain consisting of multiple addresses separated by
+;;> `,` or `;`. Returns an address list which can be converted to a line
+;;> pair using the [addrlst->lpair][addrlst->lpair] procedure.
+;;>
+;;> [addrlst->lpair]: edward.ed.editor.html#addrlst->lpair
+
+(define parse-addrs
+  (parse-map
+    %parse-addrs
+    concatenate))
 
 (define %parse-addrs
   (parse-or
@@ -248,8 +263,3 @@
       parse-addr-with-off
       (lambda (addr)
         (list (make-range addr))))))
-
-(define parse-addrs
-  (parse-map
-    %parse-addrs
-    concatenate))

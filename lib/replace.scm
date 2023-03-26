@@ -1,3 +1,9 @@
+;;>| Replacement Parser
+;;>
+;;> Edward [parser combinators][edward parse] for parsing replacement strings.
+;;>
+;;> [edward parse]: edward.parse.html
+
 (define parse-backref
   (parse-map
     (parse-seq
@@ -28,6 +34,18 @@
     (lambda (str)
       (cons 'restr str))))
 
+;;> Parse a replacement string within text enclosed with the delimiter
+;;> `delim`. While the combinator does not parse the enclosed character
+;;> it ensure that this `delim` character is escaped (using a `\`)
+;;> within the replacement.
+;;>
+;;> Refer to the documentation of the [ed substitute][ed substitute]
+;;> command for more information on special character support within
+;;> the replacement. All of these special characters can also be
+;;> escaped.
+;;>
+;;> [ed substitute]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_25
+
 (define (parse-replace delim)
   (parse-map
     (parse-repeat
@@ -43,6 +61,10 @@
         lst))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Replacement Procedures
+;;>
+;;> Procedures for performing replacements using a parsed replacement string.
 
 (define (submatch subm bv n)
   (if (>= n (vector-length subm))
@@ -87,10 +109,15 @@
 
   (%regex-replace* subst 0 1))
 
-;; Replace nth occurrence of regex in str with subst. If nth is zero all
-;; occurrences are replaced. Returns two results: The string after
-;; performing all replacement and a boolean indicating if any
-;; replacements where successfully performed.
+;;> Replace `nth` occurrence of `regex` in `str` with `subst`. If `nth`
+;;> is zero all occurrences are replaced. Returns two results: The string
+;;> after performing all replacement and a boolean indicating if any
+;;> replacements where successfully performed.  The `regex` must be
+;;> created using [make-regex][make-regex] while the replacement string
+;;> `subst` must be parsed using [parse-replace][parse-replace].
+;;>
+;;> [make-regex]: https://wiki.call-cc.org/eggref/5/posix-regex#make-regex
+;;> [parse-replace]: #parse-replace
 
 (define (regex-replace regex subst str nth)
   ;; regexec(3p) offsets are byte, not character offsets.

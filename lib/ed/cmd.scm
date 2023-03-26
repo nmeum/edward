@@ -1,8 +1,19 @@
+;;>| Command Interface
+;;>
+;;> Procedures for registering new editor commands.
+
 ;; Command parsers are registered in the following alist through macros
 ;; provided below. These macros use the register-command procedure.
 ;; Parsers can be obtained from the alist using get-command-parsers.
 
 (define command-parsers '())
+
+;;> This procedure can be used to register a new editor command. It
+;;> receives a unique command `name` and an executor procedure `proc` as
+;;> an argument. The amount of parameters passed to `proc` depends on the
+;;> associated parser combinator. Avoid calling this procedure directly
+;;> and instead use the high-level interface provided by the command
+;;> definition macros [described below](#section-defining-commands).
 
 (define (register-command name proc)
   (set! command-parsers
@@ -27,6 +38,26 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;>| Defining Commands
+;;>
+;;> Abstractions for defining new editor commands. Conceptually, edward
+;;> distinguishes the following four command types:
+;;>
+;;> 1. **Print commands**, e.g. the `p` command. These can be used as
+;;>    suffixes to editor commands.
+;;> 2. **Edit commands**, i.e. commands which modify the text editor
+;;>    buffer in some way (e.g. `d`).
+;;> 3. **File commands**, which perform I/O operations and cannot be
+;;>    suffixed with a print command.
+;;> 4. **Input-mode commands**. Like editor commands but read additional
+;;>    data from input mode.
+;;>
+;;> Command are defined using the macros below, as part of this
+;;> definition each command is assigned to one of the aforementioned
+;;> types. Additionally, an executor is specified for each command, the
+;;> parser created by the macro returns the executor and the arguments
+;;> which are supposed to be passed to the executor on a successful parse.
+
 ;; According to POSIX.1-2008 it is invalid for more than one command to
 ;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
 ;; can be suffixed by the commands l, n, or p. In this case the suffixed
@@ -41,19 +72,7 @@
         (lambda (proc)
           (make-cmd 'print-suffix (make-range) proc '()))))))
 
-;; Edward distinguishes four command types: (1) print commands, i.e. the
-;; l, n, and p commands, which can be used as a suffix to (2) editor
-;; commands and (3) file-cmd (the e, E, f, q, Q, r, w, and !commands
-;; which cannot be suffixed with a print command). Lastly, an input-cmd
-;; command type is available which is a variant of the edit-cmd type and
-;; allows defining commands which read additional inputs using the ed(1)
-;; input mode.
-;;
-;; Command parsers are defined using the macro below, as part of this
-;; definition each command is assigned to one of the aforedmentioned
-;; types Additionally, a handler is specified for each command, the
-;; parser created by the macro returns the handler and the arguments
-;; passed to the command on a succesfull parse.
+;; Define a new command which can be suffixed by a print command.
 
 (define (cmd-with-print symbol def-addr handler cmd-args print-cmd)
   (make-cmd
@@ -67,18 +86,13 @@
         (editor-exec editor #f print-cmd)))
     cmd-args))
 
-(define-syntax define-file-cmd
-  (syntax-rules ()
-    ((define-file-cmd (NAME HANDLER ADDR) BODY ...)
-     (register-command (quote NAME)
-       (parse-map
-         (parse-blanks-seq
-           BODY ...
-           (parse-ignore parse-newline))
-         (lambda (args)
-           (make-cmd (quote NAME) ADDR HANDLER args)))))
-    ((define-file-cmd (NAME HANDLER) BODY ...)
-     (define-file-cmd (NAME HANDLER '()) BODY ...))))
+;;> Define a new **print command**. Print commands can only consist of
+;;> a single character and cannot receive any additional arguments.
+;;> For this reason, this macro expects a unique command `name`, a
+;;> executor procedure `proc`, the command character `cmd-char`, and
+;;> a default address value `addr`.
+;;>
+;;>    (define-print-cmd name proc cmd-char addr)
 
 (define-syntax define-print-cmd
   (syntax-rules ()
@@ -94,6 +108,54 @@
              (parse-ignore parse-newline))
            (lambda (args)
              (make-cmd (quote NAME) ADDR HANDLER (car args)))))))))
+
+;;> Define a new **edit command**. Contrary to **print commands**, these
+;;> commands can receive arbitrary additional arguments and hence require
+;;> a parser definition. The parser is defined using edward
+;;> [parser combinators][edward parse] as part of the definition `body`.
+;;> Additionally, the definition also requires a unique command name,
+;;> an executor procedure `proc` and a default `addr` value.
+;;>
+;;>    (define-edit-cmd (name proc addr) body ...)
+;;>
+;;> [edward parse]: edward.parse.html
+
+(define-syntax define-edit-cmd
+  (syntax-rules ()
+    ((define-edit-cmd (NAME HANDLER ADDR) BODY ...)
+     (register-command (quote NAME)
+       (parse-map
+         (parse-seq
+           (parse-blanks-seq BODY ...)
+           (parse-optional parse-print-cmd)
+           (parse-ignore parse-blanks)
+           (parse-ignore parse-newline))
+         (lambda (args)
+           (cmd-with-print (quote NAME) ADDR HANDLER
+                           (first args) (second args))))))
+    ((define-edit-cmd (NAME HANDLER) BODY ...)
+     (define-edit-cmd (NAME HANDLER '()) BODY ...))))
+
+;;> Define a new **file command**.
+;;>
+;;>    (define-file-cmd (name proc addr) body ...)
+
+(define-syntax define-file-cmd
+  (syntax-rules ()
+    ((define-file-cmd (NAME HANDLER ADDR) BODY ...)
+     (register-command (quote NAME)
+       (parse-map
+         (parse-blanks-seq
+           BODY ...
+           (parse-ignore parse-newline))
+         (lambda (args)
+           (make-cmd (quote NAME) ADDR HANDLER args)))))
+    ((define-file-cmd (NAME HANDLER) BODY ...)
+     (define-file-cmd (NAME HANDLER '()) BODY ...))))
+
+;;> Define a new **input command**.
+;;>
+;;>    (define-input-cmd (name proc addr) body ...)
 
 (define-syntax define-input-cmd
   (syntax-rules ()
@@ -121,52 +183,22 @@
              (append (first args) (list (third args)))
              (second args))))))))
 
-(define-syntax define-edit-cmd
-  (syntax-rules ()
-    ((define-edit-cmd (NAME HANDLER ADDR) BODY ...)
-     (register-command (quote NAME)
-       (parse-map
-         (parse-seq
-           (parse-blanks-seq BODY ...)
-           (parse-optional parse-print-cmd)
-           (parse-ignore parse-blanks)
-           (parse-ignore parse-newline))
-         (lambda (args)
-           (cmd-with-print (quote NAME) ADDR HANDLER
-                           (first args) (second args))))))
-    ((define-edit-cmd (NAME HANDLER) BODY ...)
-     (define-edit-cmd (NAME HANDLER '()) BODY ...))))
-
-;; If changes have been made to the current buffer since the last write
-;; of the buffer to a file, then ed should warn the user before the
-;; buffer is destroyed. Warnings must be confirmed by repeating the
-;; command which destroys the buffer.
-;;
-;; This procedure expects an editor record, the symbol of the command
-;; to be repeated and a thunk executed if the command was confirmed or
-;; no confirmation is necessary (i.e. buffer was not modified).
-
-(define (call-when-confirmed editor cmd-sym thunk)
-  (if (or
-        (eqv? (text-editor-prevcmd editor) cmd-sym)
-        (not (text-editor-modified? editor)))
-    (thunk)
-    ;; Can't use editor-raise here as the prevcmd in the
-    ;; editor record is not updated then (see editor-start).
-    (editor-error editor "Warning: buffer modified")))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Parse a command character within a parse-blanks-seq / parse-seq. This
-;; character is ignored in the parse-blanks-seq and as such not
-;; returned.
+;;>| Parser Combinators
+;;>
+;;> Utility parser combinators that are useful for defining editor command parsers.
+
+;;> Parse a command character within a parse-blanks-seq / parse-seq. This
+;;> character is ignored in the parse-blanks-seq and as such not
+;;> returned.
 
 (define (parse-cmd-char ch)
   ;; TODO: Prefix failure reason with command char that failed to parse.
   (parse-ignore (parse-commit (parse-char ch))))
 
-;; Read input data in the input mode format. Returns a list of parsed
-;; lines as strings which do not include the terminating newlines.
+;;> Read input data in the input mode format. Returns a list of parsed
+;;> lines as strings which do not include the terminating newlines.
 
 (define parse-input-mode
   (parse-repeat
@@ -181,12 +213,14 @@
 (define parse-delim-char
   (parse-char (char-set-complement (char-set #\space #\newline))))
 
-;; Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
-;; The given procedure is responsible for parsing the replacement, it is
-;; passed the utilized delimiter as a single character function
-;; argument.
-;;
-;; Returns triplet (RE, replacement, print?).
+;;> Parse RE pair for the substitute command (e.g. `/RE/replacement/`).
+;;> The given procedure is responsible for parsing the replacement, it is
+;;> passed the utilized delimiter as a single character function
+;;> argument.
+;;>
+;;> Returns triplet `(RE, replacement, print?)` where `print?` indicates
+;;> if the closing delimiter was emitted, i.e. if the resulting string
+;;> should be printed after the replacement was performed.
 
 (define (parse-re-pair delim-proc)
   (parse-with-context
@@ -199,20 +233,13 @@
           (parse-bind #t parse-end-of-line)
           (parse-bind #f (parse-char delim)))))))
 
+;;> Parses a regular expression enclosed by two matching delimiter characters.
+
 (define parse-re
   (parse-with-context
     parse-delim-char
     (lambda (delim)
       (parse-regex-lit delim))))
-
-;; Parameterizable handler for substution cases where no addressed
-;; line matched the desired substitution. Can be overwritten using
-;; parameterize.
-
-(define subst-nomatch-handler
-  (make-parameter
-    (lambda (msg)
-      (editor-raise msg))))
 
 ;; Read lines of a command list and perform unescaping of newlines.
 ;; Returns a string which can then be further processed using
@@ -235,6 +262,14 @@
     (lambda (str)
       (string-append str "\n"))))
 
+;;> Parse a command list, as passed to the `g` and `v` command.
+
+(define unwrap-command-list
+  (parse-or
+    ;; empty command list is equivalent to the p command
+    (parse-bind "p\n" parse-end-of-line)
+    unwrap-command-list+))
+
 (define unwrap-command-list+
   (parse-map
     (parse-seq
@@ -244,12 +279,6 @@
       (string-append
         (apply string-append (first lst))
         (second lst)))))
-
-(define unwrap-command-list
-  (parse-or
-    ;; empty command list is equivalent to the p command
-    (parse-bind "p\n" parse-end-of-line)
-    unwrap-command-list+))
 
 ;; Returns list of editor command from a command list string as created
 ;; by the unwrap-command-list procedure. The list can afterwards be
@@ -264,6 +293,68 @@
                        r
                        (fk s i "incomplete command list parse")))
                    (lambda (s i reason) (editor-raise reason))))
+
+;;> Parses a filename which is then read/written by ed. A file name is
+;;> either a path to a file or a shell command as passed to the ed
+;;> shell escape command. The latter is recognized by a `!` character
+;;> prefix.
+
+(define parse-filename
+  (parse-atomic
+    (parse-or
+      (parse-map
+        (parse-seq
+          (parse-string "!")
+          (parse-token (lambda (x) (not (char=? x #\newline)))))
+        (lambda (lst) (apply string-append lst)))
+      (parse-token char-set:graphic))))
+
+;;> Parses a command character followed by an optional file parameter.
+;;> The parameters *must* be separated by one or more <blank>
+;;> characters.
+
+(define (parse-file-cmd ch)
+  (parse-map
+    (parse-seq
+      (parse-cmd-char ch)
+      (parse-default
+        (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
+        ""))
+    car))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Executor Utilities
+;;>
+;;> Utility procedures for common command executor operations.
+
+;;> If changes have been made to the current buffer since the last write
+;;> of the buffer to a file, then ed should warn the user before the
+;;> buffer is destroyed. Warnings must be confirmed by repeating the
+;;> command which destroys the buffer.
+;;>
+;;> This procedure expects an editor record, the symbol of the command
+;;> to be repeated and a thunk executed if the command was confirmed or
+;;> no confirmation is necessary (i.e. buffer was not modified).
+
+(define (call-when-confirmed editor cmd-sym thunk)
+  (if (or
+        (eqv? (text-editor-prevcmd editor) cmd-sym)
+        (not (text-editor-modified? editor)))
+    (thunk)
+    ;; Can't use editor-raise here as the prevcmd in the
+    ;; editor record is not updated then (see editor-start).
+    (editor-error editor "Warning: buffer modified")))
+
+;;> Parameterizable handler for substitution cases where no addressed
+;;> line matched the desired substitution. Can be overwritten using
+;;> parameterize. By default, an error is raised if no substitution
+;;> was performed.
+
+(define subst-nomatch-handler
+  (make-parameter
+    (lambda (msg)
+      (editor-raise msg))))
 
 ;; Execute line-proc for each matched line for a global command.
 
@@ -281,7 +372,9 @@
                         (line-proc lnum line))))))
               (editor-get-lines editor lines))))
 
-;; Execute a command list, parsed using unwrap-command-list, for the g and v command.
+;;> Execute a command list, parsed using
+;;> [unwrap-command-list](#unwrap-command-list), for the `g` and `v`
+;;> command.
 
 (define (exec-command-list editor match-proc lines regex cmdstr)
   (let ((cmds (parse-command-list cmdstr)))
@@ -289,6 +382,9 @@
                        (lambda (lnum line)
                          (editor-goto! editor lnum)
                          (editor-exec-cmdlist editor cmds)))))
+
+;;> Like [exec-command-list](#exec-command-list) but intended to be used
+;;> for interactive commands, i.e. `G` and `V`.
 
 (define (exec-command-list-interactive editor match-proc lines regex)
   (define previous-command '())
@@ -314,30 +410,8 @@
                            (editor-goto! editor lnum)
                            (editor-exec editor (car cmd-pair) (cdr cmd-pair)))))))
 
-;; Parses a filename which is then read/written by ed.
-
-(define parse-filename
-  (parse-atomic
-    (parse-or
-      (parse-map
-        (parse-seq
-          (parse-string "!")
-          (parse-token (lambda (x) (not (char=? x #\newline)))))
-        (lambda (lst) (apply string-append lst)))
-      (parse-token char-set:graphic))))
-
-;; Parses a command character followed by an optional file parameter.
-;; The compontests **must** be separated by one or more <blank>
-;; characters.
-
-(define (parse-file-cmd ch)
-  (parse-map
-    (parse-seq
-      (parse-cmd-char ch)
-      (parse-default
-        (parse-map (parse-seq parse-blanks+ parse-filename) cadr)
-        ""))
-    car))
+;;> Predicate which returns true if the given string `fn` is a file name
+;;> and not a shell command.
 
 (define (filename-cmd? fn)
   (and
@@ -350,6 +424,12 @@
       (values #t (string-copy fn 1))
       (values #f fn))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| IO Utilities
+;;>
+;;> Utility procedures for common input/output operations within editor commands.
+
 (define (with-io-error-handler fn thunk)
   (call-with-current-continuation
     (lambda (k)
@@ -360,9 +440,9 @@
           (k #f))
         thunk))))
 
-;; Write given data to given filename. If filename starts with `!` (i.e.
-;; is a command according to filename-cmd?), write data to standard
-;; input of given command string.
+;;> Write given data to given filename. If filename starts with `!` (i.e.
+;;> is a command according to [filename-cmd?](#filename-cmd?)), write data
+;;> to standard input of given command string.
 
 (define (write-to filename data)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
@@ -373,13 +453,13 @@
             (call-with-output-pipe fn proc)
             (call-with-output-file fn proc)))))))
 
-;; Read data from given filename as a list of lines. If filename start
-;; with `!` (i.e. is a command), read data from the standard output of
-;; the given command.
-;;
-;; If an error occurs returns false and prints an error message to the
-;; current-error-port. Otherwise, returns a pair of retrieved lines and
-;; amount of total bytes received.
+;;> Read data from given filename as a list of lines. If filename start
+;;> with `!` (i.e. is a command), read data from the standard output of
+;;> the given command.
+;;>
+;;> If an error occurs returns false and prints an error message to the
+;;> current-error-port. Otherwise, returns a pair of retrieved lines and
+;;> amount of total bytes received.
 
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
@@ -390,6 +470,10 @@
           (call-with-input-file fn port->lines))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Command Parsing
+;;>
+;;> Procedures to invoke parsers for defined editor commands.
 
 ;; Parse any of the commands listed above and strip any trailing blanks
 ;; as the command letter can be preceded by zero or more <blank>
@@ -410,6 +494,8 @@
       (let ((cmd (last x))
             (addr (first x)))
         (cons addr cmd)))))
+
+;;> Parse a single, arbitrary command.
 
 (define (parse-cmd)
   (%parse-cmd (get-command-parsers '())))

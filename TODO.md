@@ -1,7 +1,5 @@
 # Library Interface
 
-* Provide a friendly HTML documentation for the public API. Ideally
-  generated from source code comments, e.g. using `chibi-doc`?
 * Improve procedure names and provide better types for addresses, ranges, …
 * Add `(chicken type)` annotations for the public API to catch more
   usage errors during compile-time instead of run-time.
