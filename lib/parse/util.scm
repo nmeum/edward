@@ -131,22 +131,22 @@
           end)))
     "expected regex"))
 
+;;> Parse a regex literal which is enclosed by the character `ch`.
+
+(define (parse-regex-lit ch)
+  (%parse-regex-lit
+    ch
+    (parse-char ch)))
+
 ;;> Parse a regex literal which starts with character `ch` and is
 ;;> terminated by the same character or the end of line.
 
-(define (parse-regex-lit ch)
+(define (parse-regex-lit* ch)
   (%parse-regex-lit
     ch
     (parse-or
       (parse-char ch)
       parse-end-of-line)))
-
-;;> Parse a regex literal which is enclosed by the character `ch`.
-
-(define (parse-regex-lit* ch)
-  (%parse-regex-lit
-    ch
-    (parse-char ch)))
 
 ;;> Invoke given parser and strip trailing blanks (if any).
 

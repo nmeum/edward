@@ -112,7 +112,7 @@
 
 (define parse-forward-bre
   (parse-map
-    (parse-regex-lit #\/)
+    (parse-regex-lit* #\/)
     (lambda (str)
       (cons 'regex-forward str))))
 
@@ -127,7 +127,7 @@
 
 (define parse-backward-bre
   (parse-map
-    (parse-regex-lit #\?)
+    (parse-regex-lit* #\?)
     (lambda (str)
       (cons 'regex-backward str))))
 

@@ -227,7 +227,7 @@
     parse-delim-char
     (lambda (delim)
       (parse-seq
-        (parse-regex-lit* delim)
+        (parse-regex-lit delim)
         (delim-proc delim)
         (parse-or
           (parse-bind #t parse-end-of-line)
@@ -239,7 +239,7 @@
   (parse-with-context
     parse-delim-char
     (lambda (delim)
-      (parse-regex-lit delim))))
+      (parse-regex-lit* delim))))
 
 ;; Read lines of a command list and perform unescaping of newlines.
 ;; Returns a string which can then be further processed using
