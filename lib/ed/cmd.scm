@@ -88,26 +88,24 @@
 
 ;;> Define a new **print command**. Print commands can only consist of
 ;;> a single character and cannot receive any additional arguments.
-;;> For this reason, this macro expects a unique command `name`, a
-;;> executor procedure `proc`, the command character `cmd-char`, and
-;;> a default address value `addr`.
+;;> Contrary to other commands, print commands are not defined using a
+;;> macro.
 ;;>
-;;>    (define-print-cmd name proc cmd-char addr)
+;;> The procedure for defining print commands expects a unique command
+;;> `name`, an executor procedure `proc`, a unique command character
+;;> `cmd-char`, and a default address value `addr`.
 
-(define-syntax define-print-cmd
-  (syntax-rules ()
-    ((define-print-cmd NAME HANDLER CHAR ADDR)
-     (begin
-       (register-print-command CHAR HANDLER)
-       (register-command (quote NAME)
-         (parse-map
-           (parse-seq
-             (parse-blanks-seq (parse-cmd-char CHAR))
-             (parse-ignore (parse-optional parse-print-cmd))
-             (parse-ignore parse-blanks)
-             (parse-ignore parse-newline))
-           (lambda (args)
-             (make-cmd (quote NAME) ADDR HANDLER (car args)))))))))
+(define (define-print-cmd name handler char addr)
+  (register-print-command char handler)
+    (register-command (quote name)
+      (parse-map
+        (parse-seq
+          (parse-blanks-seq (parse-cmd-char char))
+          (parse-ignore (parse-optional parse-print-cmd))
+          (parse-ignore parse-blanks)
+          (parse-ignore parse-newline))
+        (lambda (args)
+          (make-cmd (quote name) addr handler (car args))))))
 
 ;;> Define a new **edit command**. Contrary to **print commands**, these
 ;;> commands can receive arbitrary additional arguments and hence require
