@@ -262,14 +262,6 @@
     (lambda (str)
       (string-append str "\n"))))
 
-;;> Parse a command list, as passed to the `g` and `v` command.
-
-(define unwrap-command-list
-  (parse-or
-    ;; empty command list is equivalent to the p command
-    (parse-bind "p\n" parse-end-of-line)
-    unwrap-command-list+))
-
 (define unwrap-command-list+
   (parse-map
     (parse-seq
@@ -279,6 +271,14 @@
       (string-append
         (apply string-append (first lst))
         (second lst)))))
+
+;;> Parse a command list, as passed to the `g` and `v` command.
+
+(define unwrap-command-list
+  (parse-or
+    ;; empty command list is equivalent to the p command
+    (parse-bind "p\n" parse-end-of-line)
+    unwrap-command-list+))
 
 ;; Returns list of editor command from a command list string as created
 ;; by the unwrap-command-list procedure. The list can afterwards be

@@ -170,6 +170,16 @@
     parse-backward-bre
     parse-relative))
 
+(define %parse-addr-with-off
+  (parse-repeat
+    (parse-map
+      (parse-seq
+        (parse-ignore parse-blanks)
+        (parse-or
+          parse-offset
+          parse-digits))
+      car)))
+
 ;;> Addresses can be followed by zero or more address offsets, optionally
 ;;> separated by blanks. Offsets are a decimal number optionally prefixed by
 ;;> `+` or `-` character. A `+` or `-` character not followed by a
@@ -183,16 +193,6 @@
         parse-addr
         %parse-addr-with-off))
     (parse-fail "unknown address format")))
-
-(define %parse-addr-with-off
-  (parse-repeat
-    (parse-map
-      (parse-seq
-        (parse-ignore parse-blanks)
-        (parse-or
-          parse-offset
-          parse-digits))
-      car)))
 
 ;; From POSIX-1.2008:
 ;;
@@ -234,17 +234,6 @@
     ((addr1 sep addr2)
      (make-range addr1 sep addr2))))
 
-;;> Parse an address chain consisting of multiple addresses separated by
-;;> `,` or `;`. Returns an address list which can be converted to a line
-;;> pair using the [addrlst->lpair][addrlst->lpair] procedure.
-;;>
-;;> [addrlst->lpair]: edward.ed.editor.html#addrlst->lpair
-
-(define parse-addrs
-  (parse-map
-    %parse-addrs
-    concatenate))
-
 (define %parse-addrs
   (parse-or
     (parse-repeat+
@@ -263,3 +252,14 @@
       parse-addr-with-off
       (lambda (addr)
         (list (make-range addr))))))
+
+;;> Parse an address chain consisting of multiple addresses separated by
+;;> `,` or `;`. Returns an address list which can be converted to a line
+;;> pair using the [addrlst->lpair][addrlst->lpair] procedure.
+;;>
+;;> [addrlst->lpair]: edward.ed.editor.html#addrlst->lpair
+
+(define parse-addrs
+  (parse-map
+    %parse-addrs
+    concatenate))
