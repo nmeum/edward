@@ -160,6 +160,13 @@
       (lambda (line reason)
         (editor-raise "parsing of interactive command failed")))))
 
+;;> Toggle visibility of the REPL prompt.
+
+(define (editor-toggle-prompt! editor)
+  (let* ((repl (text-editor-repl editor))
+         (prompt? (repl-prompt? repl)))
+    (repl-set-prompt! repl (not prompt?))))
+
 ;;> Returns the last executed shell command or raises an error if none.
 
 (define (editor-shell-cmd editor)

@@ -416,9 +416,7 @@
 ;;;;
 
 (define (exec-prompt editor)
-  (let* ((repl (text-editor-repl editor))
-         (prompt? (repl-prompt? repl)))
-    (repl-set-prompt! repl (not prompt?))))
+  (editor-toggle-prompt! editor))
 
 (define-edit-cmd (prompt exec-prompt)
   (parse-cmd-char #\P))

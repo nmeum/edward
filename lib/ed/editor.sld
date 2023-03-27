@@ -35,7 +35,7 @@
           text-editor-modified? text-editor-filename
           text-editor-filename-set! text-editor-modified-set!
           text-editor-help? text-editor-help-set!
-          text-editor-line text-editor-repl text-editor-error
+          text-editor-line text-editor-error
           text-editor-last-cmd-set!)
 
   (export editor-start editor-error editor-filename editor-make-regex
@@ -45,6 +45,6 @@
           editor-reset! editor-get-lnum editor-get-lines editor-in-range
           editor-undo! editor-lines editor-append! editor-replace!
           editor-join! editor-remove! editor-move! editor-line-numbers
-          addr->line range->lpair)
+          addr->line range->lpair editor-toggle-prompt!)
 
   (include "editor.scm"))
