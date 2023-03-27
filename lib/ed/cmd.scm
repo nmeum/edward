@@ -92,10 +92,12 @@
 ;;> macro.
 ;;>
 ;;> The procedure for defining print commands expects a unique command
-;;> `name`, an executor procedure `proc`, a unique command character
-;;> `cmd-char`, and a default address value `addr`.
+;;> `name`, an executor procedure `proc`, and a unique command character
+;;> `cmd-char`.
+;;>
+;;> Print commands always operate on the current line.
 
-(define (define-print-cmd name handler char addr)
+(define (define-print-cmd name handler char)
   (register-print-command char handler)
     (register-command (quote name)
       (parse-map
@@ -105,7 +107,7 @@
           (parse-ignore parse-blanks)
           (parse-ignore parse-newline))
         (lambda (args)
-          (make-cmd (quote name) addr handler (car args))))))
+          (make-cmd (quote name) (make-range) handler (car args))))))
 
 ;;> Define a new **edit command**. Contrary to **print commands**, these
 ;;> commands can receive arbitrary additional arguments and hence require

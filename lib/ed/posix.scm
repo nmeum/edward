@@ -274,7 +274,7 @@
               lst)
     (editor-goto! editor end)))
 
-(define-print-cmd 'list exec-list #\l (make-range))
+(define-print-cmd 'list exec-list #\l)
 
 ;;;;
 ;;> Move command.
@@ -397,7 +397,7 @@
       lst (editor-line-numbers lines))
     (editor-goto! editor eline)))
 
-(define-print-cmd 'number exec-number #\n (make-range))
+(define-print-cmd 'number exec-number #\n)
 
 ;;;;
 ;;> Print command.
@@ -409,7 +409,7 @@
     (for-each println lst)
     (editor-goto! editor end)))
 
-(define-print-cmd 'print exec-print #\p (make-range))
+(define-print-cmd 'print exec-print #\p)
 
 ;;;;
 ;;> Prompt command.
