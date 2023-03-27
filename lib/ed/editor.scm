@@ -314,7 +314,8 @@
       #f)))
 
 ;;> Return the content of the editor text buffer as a list of lines
-;;> for the specified line pair `lines`.
+;;> for the specified line pair `lines`. The start address of the
+;;> pair is inclusive while the end address is exclusive.
 
 (define (editor-get-lines editor lines)
   (if (buffer-empty? (text-editor-buffer editor))
