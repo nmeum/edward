@@ -112,7 +112,7 @@
 (define (exec-delete editor lines)
   (let ((saddr (car lines)))
     (editor-remove! editor lines)
-    (if (buffer-empty? (text-editor-buffer editor))
+    (if (zero? (editor-lines editor))
       (editor-goto! editor 0)
       (editor-goto! editor (min (editor-lines editor) saddr)))))
 
@@ -503,7 +503,7 @@
   (if (zero? line)
     (editor-raise "invalid address")
     (begin
-      (println (list-ref (buffer->list (text-editor-buffer editor)) (dec line)))
+      (println (car (editor-get-lines editor (cons line line))))
       (editor-goto! editor line))))
 
 (define-file-cmd (null exec-null (make-addr '(current-line) '(+1)))

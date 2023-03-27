@@ -34,7 +34,7 @@
   (export make-text-editor text-editor? text-editor-prevcmd
           text-editor-modified? text-editor-filename
           text-editor-filename-set! text-editor-modified-set!
-          text-editor-buffer text-editor-help? text-editor-help-set!
+          text-editor-help? text-editor-help-set!
           text-editor-line text-editor-repl text-editor-error
           text-editor-last-cmd-set!)
 
