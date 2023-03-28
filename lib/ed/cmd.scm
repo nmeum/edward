@@ -99,7 +99,7 @@
 
 (define (define-print-cmd name handler char)
   (register-print-command char handler)
-    (register-command (quote name)
+    (register-command name
       (parse-map
         (parse-seq
           (parse-blanks-seq (parse-cmd-char char))
@@ -107,7 +107,7 @@
           (parse-ignore parse-blanks)
           (parse-ignore parse-newline))
         (lambda (args)
-          (make-cmd (quote name) (make-range) handler (car args))))))
+          (make-cmd name (make-range) handler (car args))))))
 
 ;;> Define a new **edit command**. Contrary to **print commands**, these
 ;;> commands can receive arbitrary additional arguments and hence require
