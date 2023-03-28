@@ -245,8 +245,9 @@
   (unless (text-editor-silent? editor)
     (apply println objs)))
 
-;;> Print `?` followed by `msg` (if the editor is in help mode).
-;;> Also set the current editor error accordingly (if any).
+;;> Print `?` optionally followed by `msg`, if the editor is in help mode.
+;;> If standard input does not refer to a terminal device, the editor
+;;> terminates with a non-zero exit status.
 
 (define (editor-error editor msg)
   (text-editor-error-set! editor msg)
