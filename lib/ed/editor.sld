@@ -40,7 +40,7 @@
 
   (export editor-start editor-error editor-filename editor-make-regex
           editor-exec-cmdlist editor-mark-line editor-shell-cmd
-          editor-xexec editor-exec make-cmd cmd-args editor-raise
+          editor-xexec editor-exec make-cmd cmd? cmd-args editor-raise
           editor-goto! editor-interactive editor-restr editor-verbose
           editor-reset! editor-get-lnum editor-get-lines editor-in-range?
           editor-undo! editor-lines editor-append! editor-replace!

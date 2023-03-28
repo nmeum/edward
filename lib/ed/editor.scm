@@ -611,12 +611,14 @@
   ;;> `symbol` and procedure `proc` which receives an editor object and
   ;;> the given `args` as procedure arguments.
   (make-cmd symbol default-addr proc args)
-  editor-cmd?
+  ;;> Predicate which returns true if the given `obj` was created using
+  ;;> the [make-cmd][#make-cmd] procedure.
+  cmd?
   (default-addr cmd-default-addr)
   (symbol cmd-symbol)
   (proc cmd-proc)
   (args
-    ;;> Retrive additional arguments defined for this command.
+    ;;> Retrieve additional arguments defined for this command.
     ;;> The returned list value does not include the editor object.
     cmd-args))
 
