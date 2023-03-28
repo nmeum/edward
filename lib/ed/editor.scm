@@ -595,10 +595,11 @@
 ;;> operations. These commands can then be executed by the users via
 ;;> the REPL spawned by [editor-start][editor-start].
 ;;>
-;;> The procedures documented here provide a low-level interface for
-;;> defining custom editor commands. However, it is highly discouraged
-;;> to use this interface directly. Instead, editor commands should be
-;;> defined through the macros provided by [edward ed cmd][edward ed cmd].
+;;> **Warning:** The procedures documented here provide a low-level
+;;> interface for defining custom editor commands. However, it is highly
+;;> discouraged to use this interface directly. Instead, editor commands
+;;> should be defined through the macros provided by [edward ed
+;;> cmd][edward ed cmd].
 ;;>
 ;;> [editor-start]: #editor-start
 ;;> [section operations]: #section-editor-operations
@@ -632,23 +633,11 @@
             read substitute copy global-unmatched interactive
             interactive-unmatched)))
 
-;;> Execute given `cmd` using given `editor` state on a fixed `line-addr`.
-
-(define (editor-xexec editor line-addr cmd)
-  (let ((default-addr (cmd-default-addr cmd)))
-    (when (and (null? default-addr) line-addr)
-      (editor-raise "unexpected address"))
-    (when (and (range? default-addr) (zero? (car line-addr)))
-      (editor-raise "ranges cannot start at address zero"))
-
-    (apply (cmd-proc cmd)
-           editor
-           (if (null? (cmd-default-addr cmd)) ;; doesn't expect address
-             (cmd-args cmd)
-             (append (list line-addr) (cmd-args cmd))))))
-
-;;> Execute an editor command `cmd` on the addresses specified by
-;;> `addrlst` using the provided `editor` state.
+;;> Execute an editor command `cmd` using the given `editor` state
+;;> on the addresses given by `addrlst`. The given addresses are
+;;> translated to line addresses internally. If a command should
+;;> be executed on a line address directly use the
+;;> [editor-xexec][#editor-xexec] procedure instead.
 
 (define (editor-exec editor addrlst cmd)
   ;; XXX: Special handling for write command with empty buffer.
@@ -673,6 +662,27 @@
                           line-pair
                           (car line-pair))))
           (editor-xexec editor line-addr cmd))))
+
+;;> Execute given `cmd` using given `editor` state on the address
+;;> `addr`. The address can either be a single line address, a
+;;> line pair, or an empty list depending on the default address
+;;> specified for `cmd`. If the command doesn't specify a default
+;;> address (i.e. doesn't expect an address argument) then it is
+;;> an error to pass anything other than the empty list as an
+;;> `addr` value to this procedure.
+
+(define (editor-xexec editor addr cmd)
+  (let ((default-addr (cmd-default-addr cmd)))
+    (when (and (null? default-addr) addr)
+      (editor-raise "unexpected address"))
+    (when (and (range? default-addr) (zero? (car addr)))
+      (editor-raise "ranges cannot start at address zero"))
+
+    (apply (cmd-proc cmd)
+           editor
+           (if (null? (cmd-default-addr cmd)) ;; doesn't expect address
+             (cmd-args cmd)
+             (append (list addr) (cmd-args cmd))))))
 
 ;;> Execute a list of commands using given editor state.
 
