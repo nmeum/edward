@@ -23,7 +23,6 @@
           (edward util)
           (edward parse)
           (edward replace)
-          (edward buffer)
           (edward ed cmd)
           (edward ed addr)
           (edward ed editor))
