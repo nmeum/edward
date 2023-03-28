@@ -480,8 +480,8 @@
   (parse-cmd-char #\!)
   (parse-map
     (parse-seq
-      (parse-ignore-optional
-        (parse-bind '(previous-command) (parse-char #\!)))
+      (parse-optional
+        (parse-bind 'previous-command (parse-char #\!)))
       (parse-repeat
         (parse-commit
           (parse-or
@@ -491,7 +491,8 @@
                 (parse-or
                   (parse-esc (parse-char #\%))
                   (parse-not-char (char-set #\% #\newline)))))))))
-    concatenate))
+    (match-lambda
+      ((prefix cmd) (if prefix (cons prefix cmd) cmd)))))
 
 ;;;;
 ;;> Null command.

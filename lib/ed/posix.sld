@@ -16,6 +16,7 @@
           (srfi 14)
 
           (posix-regex)
+          (matchable)
 
           (chicken process)
           (chicken string)

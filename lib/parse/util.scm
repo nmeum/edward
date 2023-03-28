@@ -53,14 +53,6 @@
     (lambda (x)
       (if x x def))))
 
-;;> Optionally parse `f` but ignore its return value within a [parse-seq](#parse-seq).
-
-(define (parse-ignore-optional f)
-  (parse-map
-    (parse-optional f)
-    (lambda (x)
-      (if x x ignored-value))))
-
 ;;> Parse a newline character.
 
 (define parse-newline
