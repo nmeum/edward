@@ -258,6 +258,20 @@
   (unless (terminal-port? (current-input-port))
     (exit #f)))
 
+;;> Raise an R7RS editor error exception with the given `msg`. This
+;;> error is caught by an error handler and causes the `msg` to be
+;;> printed using the [editor-error](#editor-error) procedure.
+
+(define (editor-raise msg)
+  (raise (make-editor-error msg)))
+
+;; Editor-Error is a custom object raised to indicate a non-fatal
+;; error condition handled according to the ed(1) POSIX specification.
+(define-record-type Editor-Error
+  (make-editor-error msg)
+  editor-error?
+  (msg editor-error-msg))
+
 ;;> Reset all file-specific state of the editor.
 
 (define (editor-reset! editor)
@@ -588,21 +602,6 @@
 ;;> [editor-start]: #editor-start
 ;;> [section operations]: #section-editor-operations
 ;;> [edward ed cmd]: edward.ed.cmd.html
-
-;; Editor-Error is a custom object raised to indicate a non-fatal
-;; error condition handled according to the ed(1) POSIX specification.
-
-(define-record-type Editor-Error
-  (make-editor-error msg)
-  editor-error?
-  (msg editor-error-msg))
-
-;;> Raise a text editor error with the given `msg`. This error is
-;;> caught by the editor error handler and causes the `msg` to be
-;;> printed as an ed text editor error.
-
-(define (editor-raise msg)
-  (raise (make-editor-error msg)))
 
 ;;> Record type representing editor commands as defined in POSIX.1-2008.
 
