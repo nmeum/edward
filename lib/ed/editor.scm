@@ -613,8 +613,8 @@
   ;;> the given `args` as procedure arguments.
   (make-cmd symbol default-addr proc args)
   ;;> Predicate which returns true if the given `obj` was created using
-  ;;> the [make-cmd][#make-cmd] procedure.
-  cmd?
+  ;;> the [make-cmd](#make-cmd) procedure.
+  editor-cmd?
   (default-addr cmd-default-addr)
   (symbol cmd-symbol)
   (proc cmd-proc)
