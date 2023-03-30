@@ -2,7 +2,7 @@
 
 This generates the API documentation for the edward library interface.
 
-## Dependency
+## Dependencies
 
 In order to generate the documentation the following packages need to be installed:
 
