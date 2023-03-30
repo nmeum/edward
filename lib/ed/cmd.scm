@@ -1,19 +1,17 @@
-;;>| Command Interface
-;;>
-;;> Procedures for registering new editor commands.
-
 ;; Command parsers are registered in the following alist through macros
 ;; provided below. These macros use the register-command procedure.
 ;; Parsers can be obtained from the alist using get-command-parsers.
 
 (define command-parsers '())
 
-;;> This procedure can be used to register a new editor command. It
-;;> receives a unique command `name` and an executor procedure `proc` as
-;;> an argument. The amount of parameters passed to `proc` depends on the
-;;> associated parser combinator. Avoid calling this procedure directly
-;;> and instead use the high-level interface provided by the command
-;;> definition macros [described below](#section-defining-commands).
+;; This procedure can be used to register a new editor command. It
+;; receives a unique command `name` and an executor procedure `proc` as
+;; an argument. The amount of parameters passed to `proc` depends on the
+;; associated parser combinator.
+;;
+;; **Warning:** Avoid calling this procedure directly and instead use
+;; the high-level interface provided by the command definition macros
+;; [described below](#section-defining-commands).
 
 (define (register-command name proc)
   (set! command-parsers
@@ -40,89 +38,68 @@
 
 ;;>| Defining Commands
 ;;>
-;;> Abstractions for defining new editor commands. Conceptually, edward
-;;> distinguishes the following four command types:
+;;> Conceptually, edward distinguishes the following four command types:
 ;;>
-;;> 1. **Print commands**, e.g. the `p` command. These can be used as
-;;>    suffixes to editor commands.
-;;> 2. **Edit commands**, i.e. commands which modify the text editor
+;;> 1. *Print commands*, e.g. the `p` command. These can be used as
+;;>    suffixes to edit commands.
+;;> 2. *Edit commands*, i.e. commands which modify the text editor
 ;;>    buffer in some way (e.g. `d`).
-;;> 3. **File commands**, which perform I/O operations and cannot be
-;;>    suffixed with a print command.
-;;> 4. **Input-mode commands**. Like editor commands but read additional
+;;> 3. *Input-mode commands*. Like edit commands but read additional
 ;;>    data from input mode.
+;;> 4. *File commands*, which perform I/O operations and cannot be
+;;>    suffixed with a print command.
 ;;>
-;;> Command are defined using the macros below, as part of this
-;;> definition each command is assigned to one of the aforementioned
-;;> types. Additionally, an executor is specified for each command, the
-;;> parser created by the macro returns the executor and the arguments
-;;> which are supposed to be passed to the executor on a successful parse.
+;;> Commands of the different types are defined using the abstractions
+;;> described in this section. Every command definition requires at least
+;;> a unique command name (a symbol) and an executor procedure which is
+;;> passed the editor object and values returned by the command parser.
 
-;; According to POSIX.1-2008 it is invalid for more than one command to
-;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
-;; can be suffixed by the commands l, n, or p. In this case the suffixed
-;; command is executed and then the new current line is written as
-;; defined by the l, n, or p command.
-
-(define parse-print-cmd
-  (parse-lazy ;; must be lazy, otherwise print-commands is not populated.
-    (parse-strip-blanks
-      (parse-map
-        (parse-alist print-commands)
-        (lambda (proc)
-          (make-cmd 'print-suffix (make-range) proc '()))))))
-
-;; Define a new command which can be suffixed by a print command.
-
-(define (cmd-with-print symbol def-addr handler cmd-args print-cmd)
-  (make-cmd
-    symbol
-    def-addr
-    (lambda (editor . args)
-      (if (null? def-addr) ;; If command expects address
-        (editor-exec editor #f (make-cmd symbol def-addr handler args))
-        (editor-xexec editor (car args) (make-cmd symbol def-addr handler (cdr args))))
-      (when print-cmd
-        (editor-exec editor #f print-cmd)))
-    cmd-args))
-
-;;> Define a new **print command**. Print commands can only consist of
-;;> a single character and cannot receive any additional arguments.
-;;> Contrary to other commands, print commands are not defined using a
-;;> macro.
+;;> Define a new *file command*. Apart from the unique `name` and
+;;> executor procedure `proc`, commands of this type require a default
+;;> [edward address][edward ed addr] `addr` and a parser combinator
+;;> definition in the `body`. The combinators defined in the `body`
+;;> are expanded to a [parse-seq][parse-seq]. The first combinator
+;;> of the body must be a [parse-cmd-char][parse-cmd-char]. All
+;;> [non-ignored][parse-ignore] parser combinator return values are
+;;> passed to `proc` as procedure arguments.
 ;;>
-;;> The procedure for defining print commands expects a unique command
-;;> `name`, an executor procedure `proc`, and a unique command character
-;;> `cmd-char`.
+;;>    (define-file-cmd (name proc addr) body ...)
 ;;>
-;;> Print commands always operate on the current line.
+;;> [edward ed addr]: edward.ed.addr.html
+;;> [parse-seq]: edward.parse.html#parse-seq
+;;> [parse-ignore]: edward.parse.html#parse-seq
+;;> [parse-cmd-char]: #parse-cmd-char
 
-(define (define-print-cmd name handler char)
-  (register-print-command char handler)
-    (register-command name
-      (parse-map
-        (parse-seq
-          (parse-blanks-seq (parse-cmd-char char))
-          (parse-ignore (parse-optional parse-print-cmd))
-          (parse-ignore parse-blanks)
-          (parse-ignore parse-newline))
-        (lambda (args)
-          (make-cmd name (make-range) handler (car args))))))
+(define-syntax define-file-cmd
+  (syntax-rules ()
+    ((define-file-cmd (NAME EXECUTOR ADDR) BODY ...)
+     (register-command (quote NAME)
+       (parse-map
+         (parse-blanks-seq
+           BODY ...
+           (parse-ignore parse-newline))
+         (lambda (args)
+           (make-cmd (quote NAME) ADDR EXECUTOR args)))))
+    ((define-file-cmd (NAME EXECUTOR) BODY ...)
+     (define-file-cmd (NAME EXECUTOR '()) BODY ...))))
 
-;;> Define a new **edit command**. Contrary to **print commands**, these
-;;> commands can receive arbitrary additional arguments and hence require
-;;> a parser definition. The parser is defined using edward
-;;> [parser combinators][edward parse] as part of the definition `body`.
-;;> Additionally, the definition also requires a unique command name,
-;;> an executor procedure `proc` and a default `addr` value.
+;;> Define a new *edit command*. This commands are conceptually similar
+;;> to *file commands*. Therefore, please refer to the documentation of
+;;> [define-file-cmd][define-file-cmd] for more information on the
+;;> parameters.
+;;>
+;;> Contrary to file commands, edit commands can additionally be suffixed
+;;> with a *print command*. If a print command suffix is present, this
+;;> print command will be executed after the editor changes have been
+;;> performed by the edit command.
 ;;>
 ;;>    (define-edit-cmd (name proc addr) body ...)
 ;;>
-;;> [edward parse]: edward.parse.html
+;;> [define-file-cmd]: #define-file-cmd
 
 (define-syntax define-edit-cmd
   (syntax-rules ()
-    ((define-edit-cmd (NAME HANDLER ADDR) BODY ...)
+    ((define-edit-cmd (NAME EXECUTOR ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-seq
@@ -131,35 +108,28 @@
            (parse-ignore parse-blanks)
            (parse-ignore parse-newline))
          (lambda (args)
-           (cmd-with-print (quote NAME) ADDR HANDLER
+           (cmd-with-print (quote NAME) ADDR EXECUTOR
                            (first args) (second args))))))
-    ((define-edit-cmd (NAME HANDLER) BODY ...)
-     (define-edit-cmd (NAME HANDLER '()) BODY ...))))
+    ((define-edit-cmd (NAME EXECUTOR) BODY ...)
+     (define-edit-cmd (NAME EXECUTOR '()) BODY ...))))
 
-;;> Define a new **file command**.
+;;> Define a new *input command*. This commands are conceptually similar
+;;> to *edit commands*. Similar to edit commands, input commands can also
+;;> be suffixed with a print command. Therefore, please refer to the
+;;> documentation of [define-edit-cmd][define-edit-cmd] for more
+;;> information on the parameters.
 ;;>
-;;>    (define-file-cmd (name proc addr) body ...)
-
-(define-syntax define-file-cmd
-  (syntax-rules ()
-    ((define-file-cmd (NAME HANDLER ADDR) BODY ...)
-     (register-command (quote NAME)
-       (parse-map
-         (parse-blanks-seq
-           BODY ...
-           (parse-ignore parse-newline))
-         (lambda (args)
-           (make-cmd (quote NAME) ADDR HANDLER args)))))
-    ((define-file-cmd (NAME HANDLER) BODY ...)
-     (define-file-cmd (NAME HANDLER '()) BODY ...))))
-
-;;> Define a new **input command**.
+;;> Contrary to other command types, input commands additionally
+;;> read data using ed input mode. The received data is passed as a
+;;> list of lines as the last parameter to `proc`.
 ;;>
 ;;>    (define-input-cmd (name proc addr) body ...)
+;;>
+;;> [define-edit-cmd]: #define-edit-cmd
 
 (define-syntax define-input-cmd
   (syntax-rules ()
-    ((define-input-cmd (NAME HANDLER ADDR) BODY ...)
+    ((define-input-cmd (NAME EXECUTOR ADDR) BODY ...)
      (register-command (quote NAME)
        (parse-map
          (parse-seq
@@ -179,15 +149,120 @@
            (cmd-with-print
              (quote NAME)
              ADDR
-             HANDLER
+             EXECUTOR
              (append (first args) (list (third args)))
              (second args))))))))
 
+;; According to POSIX.1-2008 it is invalid for more than one command to
+;; appear on a line. However, commands other than e, E, f, q, Q, r, w, and !
+;; can be suffixed by the commands l, n, or p. In this case the suffixed
+;; command is executed and then the new current line is written as
+;; defined by the l, n, or p command.
+
+(define parse-print-cmd
+  (parse-lazy ;; must be lazy, otherwise print-commands is not populated.
+    (parse-strip-blanks
+      (parse-map
+        (parse-alist print-commands)
+        (lambda (proc)
+          (make-cmd 'print-suffix (make-range) proc '()))))))
+
+;; Define a new command which can be suffixed by a print command.
+
+(define (cmd-with-print symbol def-addr executor cmd-args print-cmd)
+  (make-cmd
+    symbol
+    def-addr
+    (lambda (editor . args)
+      (if (null? def-addr) ;; If command expects address
+        (editor-exec editor #f (make-cmd symbol def-addr executor args))
+        (editor-xexec editor (car args) (make-cmd symbol def-addr executor (cdr args))))
+      (when print-cmd
+        (editor-exec editor #f print-cmd)))
+    cmd-args))
+
+;;> Define a new *print command*. Print commands are automatically parsed
+;;> using [parse-cmd-char](#parse-cmd-char) based on the provided
+;;> `cmd-char` character. No custom parser combinators can be supplied
+;;> for these commands. Furthermore, print commands always use the
+;;> current line as the default address. Similar to other command types,
+;;> a unique command `name` (a symbol) must be defined. The executor
+;;> procedure `proc` is always passed an editor object and the address
+;;> range which was passed to the command.
+
+(define (define-print-cmd name proc char)
+  (register-print-command char proc)
+    (register-command name
+      (parse-map
+        (parse-seq
+          (parse-blanks-seq (parse-cmd-char char))
+          (parse-ignore (parse-optional parse-print-cmd))
+          (parse-ignore parse-blanks)
+          (parse-ignore parse-newline))
+        (lambda (args)
+          (make-cmd name (make-range) proc (car args))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;>| Parser Combinators
+;;>| Command Parsing
 ;;>
-;;> Utility parser combinators that are useful for defining editor command parsers.
+;;> Procedures to invoke parsers for defined editor commands.
+
+;; Parse any of the commands listed above and strip any trailing blanks
+;; as the command letter can be preceded by zero or more <blank>
+;; characters.
+;;
+;; Returns a list where car is the executor for the parsed commands and
+;; cdr are the arguments which are supposed to be passed to this
+;; executor.
+
+(define (%parse-cmd parsers)
+  (parse-map
+    (parse-seq
+      (parse-optional parse-addrs)
+      (apply
+        parse-or
+        (append parsers (list (parse-fail "unknown command")))))
+    (lambda (x)
+      (let ((cmd (last x))
+            (addr (first x)))
+        (cons addr cmd)))))
+
+;;> Parse a single, arbitrary command that was previously defined using
+;;> one of the abstractions [described above][define commands]. If no
+;;> command parser matches the input, then parsing fails with the error
+;;> message `"unknown command"`.
+;;>
+;;> [define commands]: #section-defining-commands
+
+(define (parse-cmd)
+  (%parse-cmd (get-command-parsers '())))
+
+(define (parse-global-cmd)
+  (%parse-cmd
+    ;; Filter out cmds producing undefined behaviour in global command.
+    (get-command-parsers '(%eof global interactive global-unmatched
+                           interactive-unmatched shell-escape))))
+
+(define (parse-interactive-cmd)
+  (parse-or
+    (parse-bind 'eof parse-end)
+    (parse-bind 'null-command parse-newline)
+    (parse-bind 'repeat-previous (parse-string "&\n"))
+    (%parse-cmd
+      ;; Filter out cmds not supported in interactive mode (as per POSIX).
+      (get-command-parsers '(%eof append change insert global interactive
+                             global-unmatched interactive-unmatched)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;>| Parser Utilities
+;;>
+;;> Utility parser combinators that are useful for defining editor
+;;> command parsers and, contrary to the combinators defined in
+;;> [edward parse][edward parse] are somewhat specific to ed(1).
+;;>
+;;> [edward parse]: edward.parse.html
 
 ;;> Parse a command character within a parse-blanks-seq / parse-seq. This
 ;;> character is ignored in the parse-blanks-seq and as such not
@@ -346,7 +421,7 @@
     ;; editor record is not updated then (see editor-start).
     (editor-error editor "Warning: buffer modified")))
 
-;;> Parameterizable handler for substitution cases where no addressed
+;;> Parameterizable executor for substitution cases where no addressed
 ;;> line matched the desired substitution. Can be overwritten using
 ;;> parameterize. By default, an error is raised if no substitution
 ;;> was performed.
@@ -424,29 +499,13 @@
       (values #t (string-copy fn 1))
       (values #f fn))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;>| IO Utilities
-;;>
-;;> Utility procedures for common input/output operations within editor commands.
-
-(define (with-io-error-handler fn thunk)
-  (call-with-current-continuation
-    (lambda (k)
-      (with-exception-handler
-        (lambda (eobj)
-          (fprintln (current-error-port) fn ": "
-                    (error-object-message eobj))
-          (k #f))
-        thunk))))
-
 ;;> Write given data to given filename. If filename starts with `!` (i.e.
 ;;> is a command according to [filename-cmd?](#filename-cmd?)), write data
 ;;> to standard input of given command string.
 
 (define (write-to filename data)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
-    (with-io-error-handler fn
+    (with-io-error-executor fn
       (lambda ()
         (let ((proc (lambda (port) (write-string data port))))
           (if fn-cmd?
@@ -463,55 +522,18 @@
 
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
-    (with-io-error-handler fn
+    (with-io-error-executor fn
       (lambda ()
         (if fn-cmd?
           (call-with-input-pipe fn port->lines)
           (call-with-input-file fn port->lines))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;>| Command Parsing
-;;>
-;;> Procedures to invoke parsers for defined editor commands.
-
-;; Parse any of the commands listed above and strip any trailing blanks
-;; as the command letter can be preceded by zero or more <blank>
-;; characters.
-;;
-;; Returns a list where car is the handler for the parsed commands and
-;; cdr are the arguments which are supposed to be passed to this
-;; handler.
-
-(define (%parse-cmd parsers)
-  (parse-map
-    (parse-seq
-      (parse-optional parse-addrs)
-      (apply
-        parse-or
-        (append parsers (list (parse-fail "unknown command")))))
-    (lambda (x)
-      (let ((cmd (last x))
-            (addr (first x)))
-        (cons addr cmd)))))
-
-;;> Parse a single, arbitrary command.
-
-(define (parse-cmd)
-  (%parse-cmd (get-command-parsers '())))
-
-(define (parse-global-cmd)
-  (%parse-cmd
-    ;; Filter out cmds producing undefined behaviour in global command.
-    (get-command-parsers '(%eof global interactive global-unmatched
-                           interactive-unmatched shell-escape))))
-
-(define (parse-interactive-cmd)
-  (parse-or
-    (parse-bind 'eof parse-end)
-    (parse-bind 'null-command parse-newline)
-    (parse-bind 'repeat-previous (parse-string "&\n"))
-    (%parse-cmd
-      ;; Filter out cmds not supported in interactive mode (as per POSIX).
-      (get-command-parsers '(%eof append change insert global interactive
-                             global-unmatched interactive-unmatched)))))
+(define (with-io-error-executor fn thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (with-exception-handler
+        (lambda (eobj)
+          (fprintln (current-error-port) fn ": "
+                    (error-object-message eobj))
+          (k #f))
+        thunk))))
