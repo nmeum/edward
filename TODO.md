@@ -1,6 +1,10 @@
 # Library Interface
 
-* Improve procedure names and provide better types for addresses, ranges, …
+* Introduce namespaces for command names
+    * By making command names a list, e.g. `'(posix quit)`
+    * POSIX namespace should be treated as reserved
+* Documentation: Clarify interaction between `edward ed addr` and `edward ed editor`
+* Provide dedicated types for addresses and ranges
 * Add `(chicken type)` annotations for the public API to catch more
   usage errors during compile-time instead of run-time.
 * Provide an `(edward)` meta-library which imports all sub-libraries.
