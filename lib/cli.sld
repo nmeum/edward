@@ -1,7 +1,7 @@
 ;;> Library implementing the edward command line interface.
 ;;> Most importantly, this library is responsible for parsing
-;;> the command line options manadated by [POSIX][ed options]
-;;> and afterwards starts the read-eval-print loop of the editor.
+;;> the command line options mandated by [POSIX][ed options]
+;;> and afterward starts the read-eval-print loop of the editor.
 ;;>
 ;;> [ed options]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_04
 

@@ -120,7 +120,7 @@
 ;;> Run a parser interactively within the REPL. That is, deviate from
 ;;> the standard REPL parser and instead parse the next input line
 ;;> with the given parser `f`. On success, returns the result of `f`
-;;> otherwise invokes the provided failure continuation `fk`.
+;;> otherwise, invokes the provided failure continuation `fk`.
 
 (define (repl-interactive repl f fk)
   (repl-parse repl f (lambda (line value) value) fk))

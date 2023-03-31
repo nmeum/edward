@@ -23,7 +23,7 @@
 ;;>     cadr))
 ;;> ```
 ;;>
-;;> This parser recognizes hexademical integers using the character set definition
+;;> This parser recognizes hexadecimal integers using the character set definition
 ;;> provided by [SRFI 14][srfi 14] and transform these characters into a Scheme
 ;;> number type using [parse-map][parse-map]. Refer to the documentation below
 ;;> for more information on available combinators.

@@ -35,8 +35,8 @@
       (cons 'restr str))))
 
 ;;> Parse a replacement string within text enclosed with the delimiter
-;;> `delim`. While the combinator does not parse the enclosed character
-;;> it ensure that this `delim` character is escaped (using a `\`)
+;;> `delim`. While the combinator does not parse the enclosed character,
+;;> it ensures that this `delim` character is escaped (using a `\`)
 ;;> within the replacement.
 ;;>
 ;;> Refer to the documentation of the [ed substitute][ed substitute]
@@ -110,10 +110,10 @@
   (%regex-replace* subst 0 1))
 
 ;;> Replace `nth` occurrence of `regex` in `str` with `subst`. If `nth`
-;;> is zero all occurrences are replaced. Returns two results: The string
+;;> is zero, all occurrences are replaced. Returns two results: The string
 ;;> after performing all replacement and a boolean indicating if any
-;;> replacements where successfully performed.  The `regex` must be
-;;> created using [make-regex][make-regex] while the replacement string
+;;> replacements were successfully performed. The `regex` must be
+;;> created using [make-regex][make-regex], while the replacement string
 ;;> `subst` must be parsed using [parse-replace][parse-replace].
 ;;>
 ;;> [make-regex]: https://wiki.call-cc.org/eggref/5/posix-regex#make-regex

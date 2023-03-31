@@ -207,7 +207,7 @@
 
 ;;> Access a replacement string in the editor context. If
 ;;> the provided replacement string `subst` is `'previous-replace`
-;;> then the previously used replacment string is returned or an
+;;> then the previously used replacement string is returned or an
 ;;> editor error is raised if there is no previous replacement string.
 ;;> Otherwise, (if `subst` is a string) then the previous replacement
 ;;> is updated and `subst` is returned.
@@ -461,9 +461,9 @@
 ;;> Procedures for performing address translation. That is, procedures
 ;;> which convert an [edward ed addr][edward ed addr] to a line number
 ;;> (or a pair of line numbers) based on the current editor state. For
-;;> example, the ed address `.` would be convert to the current line
+;;> example, the ed address `.` would be converted to the current line
 ;;> number (as tracked in the [editor object][section text-editor]).
-;;> The resulting address can the be passed to an
+;;> The resulting address can then be passed to an
 ;;> [editor operation][section operations].
 ;;>
 ;;>
@@ -636,8 +636,8 @@
 ;;> Execute an editor command `cmd` using the given `editor` state
 ;;> on the addresses given by `addrlst`. The given addresses are
 ;;> translated to line addresses internally. If a command should
-;;> be executed on a line address directly use the
-;;> [editor-xexec][#editor-xexec] procedure instead.
+;;> be executed on a line address directly, use the
+;;> [editor-xexec](#editor-xexec) procedure instead.
 
 (define (editor-exec editor addrlst cmd)
   ;; XXX: Special handling for write command with empty buffer.
