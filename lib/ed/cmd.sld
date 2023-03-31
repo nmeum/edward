@@ -3,7 +3,7 @@
 ;;> The parser is defined using edward [parser combinators][edward parse].
 ;;> The executor receives an [editor object][editor object] as well as the
 ;;> return value of the parser combinator as procedure arguments and modifies
-;;> the editor state accordingly. Additionally, this library definies several
+;;> the editor state accordingly. Additionally, this library defines several
 ;;> utility procedures that are useful for defining [executor procedures][executor util]
 ;;> and ed [parser combinators][parser util].
 ;;>

@@ -44,8 +44,8 @@
 ;;>    suffixes to edit commands.
 ;;> 2. *Edit commands*, i.e. commands which modify the text editor
 ;;>    buffer in some way (e.g. `d`).
-;;> 3. *Input-mode commands*. Like edit commands but read additional
-;;>    data from input mode.
+;;> 3. *Input-mode commands*. Like the edit commands, but read
+;;>    additional data from input mode.
 ;;> 4. *File commands*, which perform I/O operations and cannot be
 ;;>    suffixed with a print command.
 ;;>
@@ -54,7 +54,7 @@
 ;;> a unique command name (a symbol) and an executor procedure which is
 ;;> passed the editor object and values returned by the command parser.
 
-;;> Define a new *file command*. Apart from the unique `name` and
+;;> Define a new file command. Apart from the unique `name` and
 ;;> executor procedure `proc`, commands of this type require a default
 ;;> [edward address][edward ed addr] `addr` and a parser combinator
 ;;> definition in the `body`. The combinators defined in the `body`
@@ -83,13 +83,13 @@
     ((define-file-cmd (NAME EXECUTOR) BODY ...)
      (define-file-cmd (NAME EXECUTOR '()) BODY ...))))
 
-;;> Define a new *edit command*. This commands are conceptually similar
-;;> to *file commands*. Therefore, please refer to the documentation of
+;;> Define a new edit command. These commands are conceptually similar
+;;> to file commands. Therefore, please refer to the documentation of
 ;;> [define-file-cmd][define-file-cmd] for more information on the
 ;;> parameters.
 ;;>
 ;;> Contrary to file commands, edit commands can additionally be suffixed
-;;> with a *print command*. If a print command suffix is present, this
+;;> with a print command. If a print command suffix is present, this
 ;;> print command will be executed after the editor changes have been
 ;;> performed by the edit command.
 ;;>
@@ -113,8 +113,8 @@
     ((define-edit-cmd (NAME EXECUTOR) BODY ...)
      (define-edit-cmd (NAME EXECUTOR '()) BODY ...))))
 
-;;> Define a new *input command*. This commands are conceptually similar
-;;> to *edit commands*. Similar to edit commands, input commands can also
+;;> Define a new input command. These commands are conceptually similar
+;;> to edit commands. Similar to edit commands, input commands can also
 ;;> be suffixed with a print command. Therefore, please refer to the
 ;;> documentation of [define-edit-cmd][define-edit-cmd] for more
 ;;> information on the parameters.
@@ -181,9 +181,9 @@
         (editor-exec editor #f print-cmd)))
     cmd-args))
 
-;;> Define a new *print command*. Print commands are automatically parsed
+;;> Define a new print command. Print commands are automatically parsed
 ;;> using [parse-cmd-char](#parse-cmd-char) based on the provided
-;;> `cmd-char` character. No custom parser combinators can be supplied
+;;> `cmd-char` character. No custom parser combinator can be supplied
 ;;> for these commands. Furthermore, print commands always use the
 ;;> current line as the default address. Similar to other command types,
 ;;> a unique command `name` (a symbol) must be defined. The executor
@@ -260,7 +260,7 @@
 ;;>
 ;;> Utility parser combinators that are useful for defining editor
 ;;> command parsers and, contrary to the combinators defined in
-;;> [edward parse][edward parse] are somewhat specific to ed(1).
+;;> [edward parse][edward parse], are somewhat specific to ed(1).
 ;;>
 ;;> [edward parse]: edward.parse.html
 
@@ -369,7 +369,7 @@
                        (fk s i "incomplete command list parse")))
                    (lambda (s i reason) (editor-raise reason))))
 
-;;> Parses a filename which is then read/written by ed. A file name is
+;;> Parses a filename, which is then read/written by ed. A file name is
 ;;> either a path to a file or a shell command as passed to the ed
 ;;> shell escape command. The latter is recognized by a `!` character
 ;;> prefix.
@@ -406,7 +406,7 @@
 ;;> If changes have been made to the current buffer since the last write
 ;;> of the buffer to a file, then ed should warn the user before the
 ;;> buffer is destroyed. Warnings must be confirmed by repeating the
-;;> command which destroys the buffer.
+;;> command, which closes the buffer.
 ;;>
 ;;> This procedure expects an editor record, the symbol of the command
 ;;> to be repeated and a thunk executed if the command was confirmed or
@@ -516,7 +516,7 @@
 ;;> with `!` (i.e. is a command), read data from the standard output of
 ;;> the given command.
 ;;>
-;;> If an error occurs returns false and prints an error message to the
+;;> If an error occurs, returns false and prints an error message to the
 ;;> current-error-port. Otherwise, returns a pair of retrieved lines and
 ;;> amount of total bytes received.
 
