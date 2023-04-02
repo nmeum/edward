@@ -505,7 +505,7 @@
 
 (define (write-to filename data)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
-    (with-io-error-executor fn
+    (with-io-error-handler fn
       (lambda ()
         (let ((proc (lambda (port) (write-string data port))))
           (if fn-cmd?
@@ -522,13 +522,13 @@
 
 (define (read-from filename)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
-    (with-io-error-executor fn
+    (with-io-error-handler fn
       (lambda ()
         (if fn-cmd?
           (call-with-input-pipe fn port->lines)
           (call-with-input-file fn port->lines))))))
 
-(define (with-io-error-executor fn thunk)
+(define (with-io-error-handler fn thunk)
   (call-with-current-continuation
     (lambda (k)
       (with-exception-handler
