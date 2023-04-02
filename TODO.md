@@ -4,6 +4,7 @@
     * By making command names a list, e.g. `'(posix quit)`
     * POSIX namespace should be treated as reserved
 * Documentation: Clarify interaction between `edward ed addr` and `edward ed editor`
+* `(edward ed cli)`: Allow defining custom command-line options
 * Provide dedicated types for addresses and ranges
 * Add `(chicken type)` annotations for the public API to catch more
   usage errors during compile-time instead of run-time.
