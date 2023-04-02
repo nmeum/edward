@@ -60,16 +60,16 @@
 ;;> provided, it is assumed that this command doesn't expect an address.
 ;;> Furthermore, a a parser combinator definition needs to be provided in
 ;;> the `body`. The combinators defined in the `body` are expanded to a
-;;> [parse-seq][parse-seq]. The first combinator of the body must be a
-;;> [parse-cmd-char][parse-cmd-char]. All [non-ignored][parse-ignore]
-;;> parser combinator return values are passed to `proc` as procedure
-;;> arguments.
+;;> [parse-blanks-seq][parse-blanks-seq]. The first combinator of the
+;;> body must be a [parse-cmd-char][parse-cmd-char]. All
+;;> [non-ignored][parse-ignore] parser combinator return values are
+;;> passed to `proc` as procedure arguments.
 ;;>
 ;;>    (define-file-cmd (name proc addr) body ...)
 ;;>
 ;;> [edward ed addr]: edward.ed.addr.html
-;;> [parse-seq]: edward.parse.html#parse-seq
-;;> [parse-ignore]: edward.parse.html#parse-seq
+;;> [parse-blanks-seq]: edward.parse.html#parse-blanks-seq
+;;> [parse-ignore]: edward.parse.html#parse-ignore
 ;;> [parse-cmd-char]: #parse-cmd-char
 
 (define-syntax define-file-cmd
