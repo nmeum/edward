@@ -56,12 +56,14 @@
 
 ;;> Define a new file command. Apart from the unique `name` and
 ;;> executor procedure `proc`, commands of this type require a default
-;;> [edward address][edward ed addr] `addr` and a parser combinator
-;;> definition in the `body`. The combinators defined in the `body`
-;;> are expanded to a [parse-seq][parse-seq]. The first combinator
-;;> of the body must be a [parse-cmd-char][parse-cmd-char]. All
-;;> [non-ignored][parse-ignore] parser combinator return values are
-;;> passed to `proc` as procedure arguments.
+;;> [edward address][edward ed addr] `addr`. If no default address is
+;;> provided, it is assumed that this command doesn't expect an address.
+;;> Furthermore, a a parser combinator definition needs to be provided in
+;;> the `body`. The combinators defined in the `body` are expanded to a
+;;> [parse-seq][parse-seq]. The first combinator of the body must be a
+;;> [parse-cmd-char][parse-cmd-char]. All [non-ignored][parse-ignore]
+;;> parser combinator return values are passed to `proc` as procedure
+;;> arguments.
 ;;>
 ;;>    (define-file-cmd (name proc addr) body ...)
 ;;>
