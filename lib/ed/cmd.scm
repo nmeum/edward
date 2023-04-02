@@ -266,9 +266,12 @@
 ;;>
 ;;> [edward parse]: edward.parse.html
 
-;;> Parse a command character within a parse-blanks-seq / parse-seq. This
-;;> character is ignored in the parse-blanks-seq and as such not
-;;> returned.
+;;> Parse a command character within a [parse-seq][parse-seq] /
+;;> [parse-blanks-seq][parse-blanks-seq]. This character is ignored
+;;> in the sequence and as such not returned.
+;;>
+;;> [parse-seq]: edward.parse.html#parse-seq
+;;> [parse-blanks-seq]: edward.parse.html#parse-blanks-seq
 
 (define (parse-cmd-char ch)
   ;; TODO: Prefix failure reason with command char that failed to parse.
