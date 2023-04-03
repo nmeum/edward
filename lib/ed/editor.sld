@@ -45,6 +45,6 @@
           editor-reset! editor-get-lnum editor-get-lines editor-in-range?
           editor-undo! editor-lines editor-append! editor-replace!
           editor-join! editor-remove! editor-move! editor-line-numbers
-          addr->line range->lpair editor-toggle-prompt!)
+          addr->line range->lpair editor-toggle-prompt! addrlst->lpair)
 
   (include "editor.scm"))

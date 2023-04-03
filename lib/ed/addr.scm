@@ -253,7 +253,11 @@
       (lambda (addr)
         (list (make-range addr))))))
 
-;;> Parse an address chain consisting of multiple addresses separated by `,` or `;`.
+;;> Parse an address chain consisting of multiple addresses separated by
+;;> `,` or `;`. Returns an address list which can be converted to a line
+;;> pair using the [addrlst->lpair][addrlst->lpair] procedure.
+;;>
+;;> [addrlst->lpair]: edward.ed.editor.html#addrlst->lpair
 
 (define parse-addrs
   (parse-map

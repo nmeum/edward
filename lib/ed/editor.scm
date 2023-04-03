@@ -466,14 +466,15 @@
 ;;> The resulting address can then be passed to an
 ;;> [editor operation][section operations].
 ;;>
-;;>
 ;;> [edward ed addr]: edward.ed.addr.html
 ;;> [section text-editor]: #section-text-editor-object
 ;;> [section operations]: #section-editor-operations
 
-;;> Convert a single address to a single line number. This is a procedure
-;;> which must be passed the text editor object and an edward ed address as
-;;> procedure arguments.
+;;> Convert a single address (i.e. as created via [make-addr][make-addr])
+;;> to a single line number. This is a procedure which must be passed the
+;;> text editor object and an edward ed address as procedure arguments.
+;;>
+;;> [make-addr]: edward.ed.addr.html#make-addr
 
 (define addr->line
   (match-lambda*
@@ -524,9 +525,11 @@
                     (editor-lines editor))))
         (editor-raise "no match")))))
 
-;;> Convert a `range` address to a line pair. This procedure does
-;;> not modify the current editor addresses, even for address range
-;;> like `5;6`.
+;;> Convert a `range` address (i.e. as created via [make-range][make-range])
+;;> to a line pair. This procedure does not modify the current editor
+;;> addresses, even for address range like `5;6`.
+;;>
+;;> [make-range]: edward.ed.addr.html#make-range
 
 (define (range->lpair editor range)
   (let* ((cur (make-addr '(current-line)))
@@ -578,6 +581,13 @@
                     cur))
                 (append stk (list cur))))
             '() lst))))
+
+;;> This procedure takes an addrlist, as returned by [parse-addrs][parse-addrs]
+;;> and an editor object as an argument and returns a concrete line pair
+;;> for this address. This line pair can then be passed to defined
+;;> editor commands.
+;;>
+;;> [parse-addrs]: edward.ed.addr.html#parse-addrs
 
 (define (addrlst->lpair editor lst)
   (let* ((cur (make-addr '(current-line)))
