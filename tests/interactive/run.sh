@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")"
 
+if [ -n "$TMUX" ] || ! command -v tmux 1>/dev/null 2>&1; then
+	echo "Skipping interactive tests" 1>&2
+	exit 0
+fi
+
 EDWARD="${EDWARD:-$(pwd)/../../bin/edward}"
 [ -x "${EDWARD}" ] || \
 	abort "Couldn't find edward executable '${EDWARD}'."

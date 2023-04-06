@@ -27,23 +27,38 @@ custom commands (refer to the library interface documentation below).
 
 ## Installation
 
-If a correctly configured CHICKEN 5.3 toolchain is available run:
+The program can be installed either using [GNU make][gnu make] or
+[chicken-install][chicken egg-install].
+
+### GNU make
+
+Installation via GNU make does not require any CHICKEN configuration
+and should work out-of-the-box. As such, it is especially useful for
+packaging purposes. In order to build edward using GNU make run the
+following commands:
+
+	$ make
+
+To install edward to system-wide directories run the following command:
+
+	$ make install
+
+The GNU make installation method only installs the edward binary. It
+does not install the library interface. If you want to interact with
+the edward library you need to install edward via chicken-install.
+
+### chicken-install
+
+Contrary to installation via GNU make, this installation method requires
+a properly configured CHICKEN toolchain. If CHICKEN has been configured
+correctly, run the following command to install both the library and the
+program component:
 
 	$ chicken-install
 
-This will compile `edward` and add the binary to your `$PATH`.
-
-### Building without installing
-
-For development setups, one can build `edward` as follows:
-
-	$ export CHICKEN_REPOSITORY_PATH="$(pwd):${CHICKEN_REPOSITORY_PATH}"
-	$ chicken-install -n
-
-This will create an executable binary in `./bin/edward`. Using the same
-commands, it also possible to create a fully statically-linked version
-of the binary. Refer to the comments in `edward.egg` for more
-information.
+The edward binary will be added to a directory in your `$PATH`,
+furthermore the edward library will be available in your CHICKEN library
+path. More usage information for the edward library is provided below.
 
 ## Tests
 
@@ -54,7 +69,7 @@ purpose.
 
 Both unit and integration tests can be run using:
 
-	$ ./run-tests.sh
+	$ make check
 
 Optionally, [tmux][tmux web] can be installed to also execute tests for
 edward's end-of-file handling in an interactive environment.
@@ -173,7 +188,9 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [ed posix]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html
+[gnu make]: https://www.gnu.org/software/make/
 [chicken]: https://call-cc.org
+[chicken egg-install]: https://wiki.call-cc.org/man/5/Extensions#installing-eggs
 [chicken matchable]: https://wiki.call-cc.org/eggref/5/matchable
 [chicken posix-regex]: https://wiki.call-cc.org/eggref/5/posix-regex
 [chicken process signal]: https://api.call-cc.org/5/doc/chicken/process/signal

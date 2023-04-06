@@ -1,4 +1,6 @@
 bin/edward
+output/
+vendor/
 edward*.build.sh
 edward*.import.scm
 edward*.import.so
