@@ -318,8 +318,7 @@
 (define parse-re
   (parse-with-context
     parse-delim-char
-    (lambda (delim)
-      (parse-regex-lit* delim))))
+    parse-regex-lit*))
 
 ;; Read lines of a command list and perform unescaping of newlines.
 ;; Returns a string which can then be further processed using
