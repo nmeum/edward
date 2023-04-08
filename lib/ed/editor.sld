@@ -1,14 +1,13 @@
 ;;> This library implements a [text editor object][section text-editor]
 ;;> which tracks an internal state that can be modified through defined
-;;> [editor operations][section operations]. Defined operations operate
-;;> on a pair of line numbers. POSIX [ed addresses][edward ed addr] can
-;;> be translated to a pair of line numbers using [range->lpair][range->lpair],
-;;> please refer to the [address translation section][section addr-translate]
-;;> for more information.
+;;> [editor operations][section operations]. These operations operate on
+;;> a pair of line numbers. POSIX [ed addresses][edward ed addr] can be
+;;> translated to a pair of line numbers using
+;;> [address translation][section translation] procedures described below.
 ;;>
 ;;> [section text-editor]: #section-text-editor-object
 ;;> [section operations]: #section-editor-operations
-;;> [section addr-translate]: #section-address-translation
+;;> [section translation]: #section-address-translation
 ;;> [edward ed addr]: edward.ed.addr.html
 ;;> [range->lpair]: #range->lpair
 
