@@ -98,47 +98,41 @@ both written by Brian W. Kernighan.
 Apart from an `ed(1)` implementation, `edward` also provides a library
 interface for extending the editor with custom commands. While the
 implementation provided here focuses solely on POSIX compatibility,
-extension to the POSIX standard can be supplied separately. The library
-interface is still in early stages of development, not well documented,
-and subject to change.
-
-The `edward` library can be used by creating a custom CHICKEN Scheme
-program which imports the required CHICKEN libraries, defines custom
-commands through provided hygienic macros, and executes `(edward-main)`
-to start the editor. For example, an `edward` variant which also
-provides the `z` command (included with many BSD implementations of
-`ed(1)`) could be implemented as follows:
+extension to the POSIX standard can be supplied separately using the
+library interface. The `edward` library can be used by creating a custom
+CHICKEN Scheme program which imports the edward libraries, defines
+custom commands through provided hygienic macros, and executes
+`(edward-main)` to start the editor. For example, an `edward` variant
+which provides a pipe command for passing a range of lines through
+a filter can be implemented as follows:
 
 	(import (scheme base)
-	        (chicken port)
+	        (chicken process)
+	        (srfi 14)
 	
 	        (edward cli)
+	        (edward util)
 	        (edward parse)
 	        (edward ed cmd)
 	        (edward ed addr)
 	        (edward ed posix)
 	        (edward ed editor))
 	
-	;; Executor for the 'z' command.
-	(define (exec-scroll editor amount)
-	  (let* ((start  (addr->line editor (make-addr '(current-line))))
-	         (end    (addr->line editor (make-addr
-	                                      (cons 'nth-line
-	                                            (min
-	                                              (editor-lines editor)
-	                                              (+ start amount)))))))
-	    (exec-print editor (cons start end))))
+	;; Executor for the pipe command
+	(define (exec-pipe editor range cmd)
+	  (let-values (((in out _) (process cmd))
+	               ((lines) (editor-get-lines editor range)))
+	    (write-string (lines->string lines) out)
+	    (close-output-port out)
+	    (let ((recv (port->lines in)))
+	      (close-input-port in)
+	      (exec-delete editor range)
+	      (exec-insert editor (car range) (car recv)))))
 	
-	;; Parser for the 'z' command.
-	(define-edit-cmd (scroll exec-scroll)
-	  (parse-cmd-char #\z)
-	  (parse-default
-	    parse-digits
-	    (let*-values (((port) (current-output-port))
-	                  ((rows _) (if (terminal-port? port)
-	                              (terminal-size port)
-	                              (values 22 72))))
-	      rows)))
+	;; Parser for the pipe command
+	(define-file-cmd (pipe exec-pipe (make-range))
+	  (parse-cmd-char #\|)
+	  (parse-token (char-set-complement (char-set #\newline))))
 	
 	;; Start the editor
 	(edward-main)
@@ -147,12 +141,10 @@ Save this code in `edward++.scm` and compile it as follows:
 
 	$ csc -R r7rs edward++.scm
 
-Afterwards, drop the resulting `edward++` binary somewhere in your
-`$PATH` and invoke it as you normally would invoke `edward` and enjoy
-scrolling through text with the new `z` command. Of cause, it is
-entirely possible to define multiple commands in this way. Refer to
-`lib/ed/posix.scm` to see how the commands mandated by POSIX are
-implemented using this interface.
+Drop the resulting `edward++` binary somewhere in your `$PATH` and
+invoke it as usual. Naturally, it is possible to define multiple
+custom commands. Refer to `lib/ed/posix.scm` for the implementation
+of editor commands mandated by the POSIX standard.
 
 ## API Documentation
 
