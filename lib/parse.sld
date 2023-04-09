@@ -34,7 +34,7 @@
 ;;> [srfi 14]: https://srfi.schemers.org/srfi-14/srfi-14.html
 ;;> [parse-map]: #parse-map
 
-(define-library (edward.parse)
+(define-library (edward parse)
   (import (scheme base)
           (scheme char)
           (scheme file)

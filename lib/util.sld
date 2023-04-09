@@ -1,6 +1,6 @@
 ;;> This library provides various generic utility procedures.
 
-(define-library (edward.util)
+(define-library (edward util)
   (import (scheme base)
           (scheme write)
           (scheme file)

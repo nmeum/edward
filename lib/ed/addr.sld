@@ -10,10 +10,10 @@
 ;;> the last element of the pair as an argument.
 ;;>
 ;;> [parse-addrs]: #parse-addrs
-;;> [addrlst->lpair]: edward.ed.editor.html#addrlst->lpair
+;;> [addrlst->lpair]: edward/ed/editor.html#addrlst->lpair
 ;;> [ed addresses]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_02
 
-(define-library (edward.ed.addr)
+(define-library (edward ed addr)
   (import (scheme base)
           (scheme case-lambda)
 

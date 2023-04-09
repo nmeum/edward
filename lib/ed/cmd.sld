@@ -7,12 +7,12 @@
 ;;> utility procedures that are useful for defining [executor procedures][executor util]
 ;;> and ed [parser combinators][parser util].
 ;;>
-;;> [edward parse]: edward.parse.html
-;;> [editor object]: edward.ed.editor.html#section-text-editor-object
+;;> [edward parse]: edward/parse.html
+;;> [editor object]: edward/ed/editor.html#section-text-editor-object
 ;;> [executor util]: #section-executor-utilities
 ;;> [parser util]: #section-parser-utilities
 
-(define-library (edward.ed.cmd)
+(define-library (edward ed cmd)
   (import (scheme base)
           (scheme file)
           (scheme lazy)

@@ -5,9 +5,9 @@
 ;;> implement new commands.
 ;;>
 ;;> [posix commands]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_03
-;;> [edward ed cmd]: edward.ed.cmd.html
+;;> [edward ed cmd]: edward/ed/cmd.html
 
-(define-library (edward.ed.posix)
+(define-library (edward ed posix)
   (import (scheme base)
           (scheme write)
           (scheme process-context)

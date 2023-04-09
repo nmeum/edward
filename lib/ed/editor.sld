@@ -8,10 +8,10 @@
 ;;> [section text-editor]: #section-text-editor-object
 ;;> [section operations]: #section-editor-operations
 ;;> [section translation]: #section-address-translation
-;;> [edward ed addr]: edward.ed.addr.html
+;;> [edward ed addr]: edward/ed/addr.html
 ;;> [range->lpair]: #range->lpair
 
-(define-library (edward.ed.editor)
+(define-library (edward ed editor)
   (import (scheme base)
           (scheme file)
           (scheme case-lambda)

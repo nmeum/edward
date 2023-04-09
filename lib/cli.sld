@@ -5,7 +5,7 @@
 ;;>
 ;;> [ed options]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_04
 
-(define-library (edward.cli)
+(define-library (edward cli)
   (import (scheme base)
           (scheme write)
           (scheme process-context)

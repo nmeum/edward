@@ -5,29 +5,28 @@ DISCOUNT = discount-theme
 DISCOUNT_FLAGS = -c +header,+idanchor
 
 SCMDOC = scmdoc
-SCMDOC_FLAGS = -s style.css
+SCMDOC_FLAGS = -s $(STYLESHEET)
 
-SCMDOC_FILES = edward.ed.editor.html \
-	edward.ed.cmd.html \
-	edward.ed.addr.html \
-	edward.ed.posix.html \
-	edward.cli.html \
-	edward.util.html \
-	edward.parse.html \
-	edward.replace.html \
-	edward.buffer.html
+SCMDOC_FILES = \
+	edward/ed/editor.html \
+	edward/ed/cmd.html \
+	edward/ed/addr.html \
+	edward/ed/posix.html \
+	edward/cli.html \
+	edward/util.html \
+	edward/parse.html \
+	edward/replace.html \
+	edward/buffer.html
 
-all: index.html style.css $(SCMDOC_FILES)
+all: index.html $(SCMDOC_FILES)
 clean:
-	$(RM) index.html style.css $(SCMDOC_FILES)
-style.css:
-	curl -sLo style.css $(STYLESHEET)
+	$(RM) index.html $(SCMDOC_FILES)
 index.html: index.md page.theme
 	$(DISCOUNT) $(DISCOUNT_FLAGS) -o $@ $<
 
-edward.%.html: %.sld
+edward/%.html: %.sld
 	$(SCMDOC) $(SCMDOC_FLAGS) $<
-edward.ed.%.html: ed/%.sld
+edward/ed/%.html: ed/%.sld
 	$(SCMDOC) $(SCMDOC_FLAGS) $<
 
 # XXX: This essentially duplicates the dependency tracking of edward.egg.
@@ -41,7 +40,7 @@ edward.replace.html: replace.sld replace.scm
 edward.parse.html: parse.sld parse/parse.scm parse/repl.scm parse/util.scm
 edward.buffer.html: buffer.sld buffer/buffer.scm buffer/stack.scm
 
-deploy: index.html style.css $(SCMDOC_FILES)
+deploy: index.html $(SCMDOC_FILES)
 	rsync $^ magnesium:/var/www/htdocs/files.8pit.net/edward/doc
 
 VPATH = ../lib
