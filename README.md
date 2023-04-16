@@ -142,9 +142,11 @@ Save this code in `edward++.scm` and compile it as follows:
 	$ csc -R r7rs edward++.scm
 
 Drop the resulting `edward++` binary somewhere in your `$PATH` and
-invoke it as usual. Naturally, it is possible to define multiple
-custom commands. Refer to `lib/ed/posix.scm` for the implementation
-of editor commands mandated by the POSIX standard.
+invoke it as usual. Naturally, it is possible to define multiple custom
+commands. Refer to `lib/ed/posix.scm` for the implementation of editor
+commands mandated by the POSIX standard. Additional commands are also
+available in a separate [edward-contrib][edward-contrib github]
+repository.
 
 ## API Documentation
 
@@ -199,3 +201,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [ed history]: https://lists.gnu.org/archive/html/bug-ed/2021-12/msg00001.html
 [tmux web]: https://tmux.github.io
 [scmdoc github]: https://github.com/nmeum/scmdoc
+[edward-contrib github]: https://github.com/nmeum/edward-contrib
