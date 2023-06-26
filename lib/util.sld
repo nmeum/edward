@@ -8,7 +8,8 @@
 
           (srfi 1)
 
-          (chicken port))
+          (chicken port)
+          (chicken io))
 
   (export inc dec id alist-values fprintln println empty-string?
           pad-string string->human-readable for-each-index sublist

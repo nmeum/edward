@@ -111,17 +111,14 @@
 ;;> newlines).
 
 (define (port->lines port)
-  (define (%port->lines lines numbytes)
-    (let ((l (read-line port)))
-      (if (eof-object? l)
-        (cons lines numbytes)
-        (%port->lines
-          (append lines (list l))
-          ;; inc for newline stripped by read-line
-          ;; XXX: Buggy if last line is not not terminated with \n.
-          (inc (+ numbytes (count-bytes l)))))))
+  (let ((lines (read-lines port)))
+    (cons
+      lines
+      (fold (lambda (l n)
+              ;; +1 for newline stripped by read-lines.
+              ;; XXX: Buggy if last line is not not terminated with \n.
+              (+ 1 n (count-bytes l))) 0 lines))))
 
-  (%port->lines '() 0))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;>| Miscellaneous
