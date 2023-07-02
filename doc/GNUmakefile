@@ -42,7 +42,7 @@ edward.parse.html: parse.sld parse/parse.scm parse/repl.scm parse/util.scm
 edward.buffer.html: buffer.sld buffer/buffer.scm buffer/stack.scm
 
 deploy: index.html style.css $(SCMDOC_FILES)
-	rsync $^ magnesium:/var/www/htdocs/files.8pit.net/edward/doc
+	rsync $^ magnesium:/var/www/htdocs/files.8pit.net/edward/latest/doc
 
 VPATH = ../lib
 .PHONY: all clean deploy

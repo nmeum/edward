@@ -155,7 +155,7 @@ comments. An HTML documentation can be generated from these comments
 using the [scmdoc][scmdoc github] utility. More information on that
 is provided in `doc/README.md`.
 
-The API documentation is available via: https://files.8pit.net/edward/doc/
+The API documentation is available via: https://files.8pit.net/edward/latest/doc/
 
 ## History
 
