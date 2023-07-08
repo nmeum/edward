@@ -34,7 +34,7 @@
   (define (byte->human-readable byte)
     (case byte
       ;; Mapping according to Table 5-1 in POSIX-1.2008.
-      ((#x5C) "\\")
+      ((#x5C) "\\\\")
       ((#x07) "\\a")
       ((#x08) "\\b")
       ((#x0C) "\\f")
