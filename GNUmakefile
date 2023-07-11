@@ -22,9 +22,12 @@ endif
 #
 # See: https://bugs.call-cc.org/ticket/1792
 
-export CHICKEN_INSTALL_PREFIX = $(CURDIR)/output
-export CHICKEN_INSTALL_REPOSITORY = $(CURDIR)/output
-export CHICKEN_REPOSITORY_PATH = $(CURDIR)/output:$(shell env -i chicken-install -repository)
+# Respect CHICKEN_REPOSITORY_PATH if set in the environment
+CHICKEN_REPOSITORY_PATH ?= $(shell env -i chicken-install -repository)
+
+export CHICKEN_INSTALL_PREFIX := $(CURDIR)/output
+export CHICKEN_INSTALL_REPOSITORY := $(CURDIR)/output
+export CHICKEN_REPOSITORY_PATH := $(CURDIR)/output:$(CHICKEN_REPOSITORY_PATH)
 
 # Optional dependency vendoring to build without network access
 #
