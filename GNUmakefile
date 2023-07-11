@@ -57,6 +57,7 @@ install:
 
 vendor:
 	env -i CHICKEN_EGG_CACHE=$(CHICKEN_EGG_CACHE) chicken-install -r -recursive -test
+	find $(CHICKEN_EGG_CACHE) \( -name STATUS -a -type f \) -exec rm {} +
 # XXX: Make sure to remove the vendor directory before running `make dist`.
 # As libraries are, unfortunately, build within the vendor directory.
 dist: VERSION = $(shell git describe --tags)
