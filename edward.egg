@@ -1,5 +1,5 @@
 ((author "Sören Tempel")
- (synopsis "A work in progress implementation of ed(1) as defined in POSIX.1-2008")
+ (synopsis "An extensible implementation of the ed text editor as defined in POSIX.1-2008")
  (version "1.0.0")
  (category tools)
  (license "GPLv3")
