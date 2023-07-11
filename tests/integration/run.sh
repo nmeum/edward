@@ -35,7 +35,7 @@ EDWARD="${EDWARD:-$(pwd)/../../bin/edward}"
 
 REF_IMPL="$(command -v ed)"
 [ -x "${REF_IMPL}" ] || \
-	abort "Reference implementation '${REF_IMPL}' not found."
+	abort "Reference implementation not found."
 
 TESTDIR="/tmp/edward-test"
 TESTCWD="${TESTDIR}/cwd"
