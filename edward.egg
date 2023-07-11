@@ -1,6 +1,6 @@
 ((author "Sören Tempel")
  (synopsis "An extensible implementation of the ed text editor as defined in POSIX.1-2008")
- (version "1.0.0")
+ (version "1.0.1")
  (category tools)
  (license "GPLv3")
  (platform unix)
