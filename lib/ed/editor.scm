@@ -452,7 +452,11 @@
     (buffer-move! buffer sline eline dest-line)
     (min
       (editor-lines editor)
-      (+ dest-line (inc (- eline sline))))))
+      (let ((diff (- eline sline)))
+        (+ dest-line
+           ;; If we moved multiple lines, we need to increment
+           ;; the destination lines by the amount of lines moved.
+           (if (zero? diff) diff (inc diff)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
