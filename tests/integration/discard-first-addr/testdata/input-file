@@ -1,0 +1,2 @@
+{-# LANGUAGE LambdaCase #-}
+import System.IO (hFlush, hPutStrLn, stdout)

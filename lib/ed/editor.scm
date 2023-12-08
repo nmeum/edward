@@ -674,7 +674,7 @@
              ;; or a line pair (depending on default address).
              (line-addr (if (or (not line-pair) (range? default-addr))
                           line-pair
-                          (car line-pair))))
+                          (cdr line-pair))))
           (editor-xexec editor line-addr cmd))))
 
 ;;> Execute given `cmd` using given `editor` state on the address
