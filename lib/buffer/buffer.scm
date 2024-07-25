@@ -12,17 +12,17 @@
 ;;> Create a new, initially empty, line buffer.
 
 (define (make-buffer)
-  (%make-buffer '() #f (make-stack)))
+  (%make-buffer #() #f (make-stack)))
 
 ;;> Convert the line buffer to a list of lines.
 
 (define (buffer->list buffer)
-  (buffer-lines buffer))
+  (vector->list (buffer-lines buffer)))
 
 ;;> Length of the buffer, i.e. amount of lines currently stored in it.
 
 (define (buffer-length buffer)
-  (length (buffer-lines buffer)))
+  (vector-length (buffer-lines buffer)))
 
 ;;> Predicate which returns true if the buffer is empty.
 
@@ -91,18 +91,23 @@
 ;;> beginning of the buffer.
 
 (define (buffer-append! buffer line text)
-  (let ((lines (buffer-lines buffer)))
+  (let ((lines (buffer-lines buffer))
+        ;; TODO: Require text to be a vector in the future.
+        (invec (if (vector? text)
+                 text
+                 (list->vector text)))
+        (inlen (if (vector? text)
+                 (vector-length text)
+                 (length text))))
     (buffer-lines-set!
       buffer
-      (append
-        (take lines line)
-        text
-        (drop lines line)))
+      (vector-append
+        (vector-copy lines 0 line)
+        invec
+        (vector-copy lines line)))
     (buffer-register-undo buffer
       (lambda (buffer)
-        ;; Will add an undo procedure to the stack, thus making
-        ;; the undo of the append operation itself reversible.
-        (buffer-remove! buffer (inc line) (+ line (length text)))))))
+        (buffer-remove! buffer (inc line) (+ line inlen))))))
 
 ;;> Removes all lines within the `buffer` at the given inclusive range
 ;;> range between `start` and `end`.
@@ -112,15 +117,15 @@
          (sline (max (dec start) 0)))
     (buffer-lines-set!
       buffer
-      (append
-        (sublist lines 0 sline)
-        (sublist lines end (length lines))))
+      (vector-append
+        (vector-copy lines 0 sline)
+        (vector-copy lines end)))
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the remove operation itself reversible.
         (buffer-append! buffer sline
-                        (sublist
+                        (vector-copy
                           lines
                           sline
                           end))))))
@@ -145,7 +150,8 @@
 (define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (joined (apply string-append (sublist lines sindex end))))
+         (joined (apply string-append
+                        (vector->list (vector-copy lines sindex end)))))
     (buffer-remove! buffer start end)
     (buffer-append!
       buffer
@@ -160,7 +166,7 @@
   ;; Assumption: dest is always outside [start, end].
   (let* ((lines (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (move  (sublist lines sindex end))
+         (move (vector-copy lines sindex end))
 
          (remove! (lambda () (buffer-remove! buffer start end)))
          (append! (lambda () (buffer-append! buffer dest move))))
