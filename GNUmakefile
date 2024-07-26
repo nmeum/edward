@@ -51,6 +51,9 @@ check:
 	@./tests/integration/run.sh
 	@./tests/interactive/run.sh
 
+bench:
+	csi -quiet -script benchmarks/run.scm
+
 install:
 	install -Dm755 $(CHICKEN_INSTALL_PREFIX)/bin/edward "$(DESTDIR)$(BINDIR)/edward"
 	install -Dm644 README.md "$(DESTDIR)$(DOCDIR)/README.md"
@@ -67,4 +70,4 @@ dist: vendor
 	tar -czf edward-$(VERSION).tar.gz edward-$(VERSION)
 	rm -rf edward-$(VERSION)
 
-.PHONY: all check install vendor dist
+.PHONY: all check bench install vendor dist
