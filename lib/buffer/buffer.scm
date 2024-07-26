@@ -102,9 +102,9 @@
     (buffer-lines-set!
       buffer
       (vector-append
-        (vector-copy lines 0 line)
+        (subvector lines 0 line)
         invec
-        (vector-copy lines line)))
+        (subvector lines line)))
     (buffer-register-undo buffer
       (lambda (buffer)
         (buffer-remove! buffer (inc line) (+ line inlen))))))
@@ -118,14 +118,14 @@
     (buffer-lines-set!
       buffer
       (vector-append
-        (vector-copy lines 0 sline)
-        (vector-copy lines end)))
+        (subvector lines 0 sline)
+        (subvector lines end)))
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the remove operation itself reversible.
         (buffer-append! buffer sline
-                        (vector-copy
+                        (subvector
                           lines
                           sline
                           end))))))
@@ -151,7 +151,7 @@
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
          (joined (apply string-append
-                        (vector->list (vector-copy lines sindex end)))))
+                        (vector->list (subvector lines sindex end)))))
     (buffer-remove! buffer start end)
     (buffer-append!
       buffer
@@ -166,7 +166,7 @@
   ;; Assumption: dest is always outside [start, end].
   (let* ((lines (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (move (vector-copy lines sindex end))
+         (move (subvector lines sindex end))
 
          (remove! (lambda () (buffer-remove! buffer start end)))
          (append! (lambda () (buffer-append! buffer dest move))))

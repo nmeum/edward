@@ -13,6 +13,8 @@
 
           (srfi 1)
 
+          (chicken base)
+
           (edward util))
 
   (export make-buffer buffer->list buffer-length buffer-empty?
