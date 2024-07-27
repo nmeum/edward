@@ -101,10 +101,14 @@
                  (length text))))
     (buffer-lines-set!
       buffer
-      (vector-append
-        (subvector lines 0 line)
-        invec
-        (subvector lines line)))
+      (if (eqv? line (buffer-length buffer))
+        ;; Fast path: Append at the very end.
+        (vector-append lines invec)
+        ;; Slow path: Insert in-between (or at the start).
+        (vector-append
+          (subvector lines 0 line)
+          invec
+          (subvector lines line))))
     (buffer-register-undo buffer
       (lambda (buffer)
         (buffer-remove! buffer (inc line) (+ line inlen))))))
