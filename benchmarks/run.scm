@@ -5,3 +5,4 @@
 
 (include-relative "util.scm")
 (include-relative "buffer.scm")
+(include-relative "editor.scm")
