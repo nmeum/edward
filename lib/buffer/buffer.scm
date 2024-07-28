@@ -154,6 +154,7 @@
 (define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
+         ;; TODO: Consider using vector-fold from SRFI 133 here.
          (joined (apply string-append
                         (vector->list (subvector lines sindex end)))))
     (buffer-remove! buffer start end)
