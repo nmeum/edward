@@ -7,8 +7,9 @@
     (thunk)
     (repeat (dec n) thunk)))
 
-(define (random-string)
-  (let* ((str (make-string 5000)))
+(define (random-string . rest)
+  (let* ((siz (if (null? rest) 5000 (car rest)))
+         (str (make-string siz)))
     (random-bytes str)
     str))
 
