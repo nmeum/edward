@@ -337,8 +337,9 @@
     '()
     (let ((sline (car lines))
           (eline (cdr lines))
-          (lst   (buffer->list (text-editor-buffer editor))))
-      (sublist lst (max (dec sline) 0) eline))))
+          (lines (buffer-lines (text-editor-buffer editor))))
+      ;; TODO: Make this function return a vector instead.
+      (vector->list (subvector lines (max (dec sline) 0) eline)))))
 
 ;;> Predicate which returns true if the given `line` is within
 ;;> the range specified by `lines`.

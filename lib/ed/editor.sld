@@ -22,6 +22,7 @@
           (matchable)
           (posix-regex)
 
+          (only (chicken base) subvector)
           (chicken process signal)
           (chicken port)
 
