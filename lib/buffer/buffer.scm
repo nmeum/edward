@@ -14,7 +14,9 @@
 (define (make-buffer)
   (%make-buffer #() #f (make-stack)))
 
-;;> Convert the line buffer to a list of lines.
+;;> Convert the line buffer to a list of lines. This is an *O(n)* operation.
+;;> This procedure is deprecated, use `(vector->list (buffer-lines buffer))`
+;;> instead.
 
 (define (buffer->list buffer)
   (vector->list (buffer-lines buffer)))
@@ -88,7 +90,9 @@
 
 ;;> Append the given `text` to the `buffer` after the given `line` number.
 ;;> The special line number 0 can be used here to add lines to the
-;;> beginning of the buffer.
+;;> beginning of the buffer. The `text` can either be a list or a vector
+;;> of strings. The former is deprecated and will be removed in a future
+;;> version.
 
 (define (buffer-append! buffer line text)
   (let ((lines (buffer-lines buffer))
