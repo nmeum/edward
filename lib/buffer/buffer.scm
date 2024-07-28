@@ -160,7 +160,7 @@
     (buffer-append!
       buffer
       sindex
-      (list joined))))
+      (vector joined))))
 
 ;;> Move lines in the inclusive range between `start` and `end`
 ;;> to the destination line number `dest`. The destination *must*
