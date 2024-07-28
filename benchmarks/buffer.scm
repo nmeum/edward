@@ -50,3 +50,15 @@
             (lambda ()
               (let ((len (buffer-length buffer)))
                 (buffer-remove! buffer len len))))))
+
+(define-bench (buffer-remove-entire-content)
+  (let ((buffer (make-buffer))
+        (elems 100000))
+    (buffer-append! buffer 0 (generate-list random-string elems))
+    (buffer-remove! buffer 1 elems)))
+
+(define-bench (buffer-join-entire-content)
+  (let ((buffer (make-buffer))
+        (elems 30000))
+    (buffer-append! buffer 0 (generate-list random-string elems))
+    (buffer-join! buffer 1 elems)))
