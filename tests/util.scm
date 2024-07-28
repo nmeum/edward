@@ -19,7 +19,7 @@
           (for-each-index
             (lambda (idx elem)
               (set! ret (append ret (list (cons idx elem)))))
-            inc '("foo" "bar" "baz") 0)
+            inc #("foo" "bar" "baz") 0)
           ret))
 
   (test "decrement index from middle"
@@ -28,7 +28,7 @@
           (for-each-index
             (lambda (idx elem)
               (set! ret (append ret (list (cons idx elem)))))
-            dec '("foo" "bar" "baz") 1)
+            dec #("foo" "bar" "baz") 1)
           ret))
 
   (test "zero list"
@@ -37,13 +37,13 @@
           (for-each-index
             (lambda (idx elem)
               (set! ret idx))
-            inc '() 0)
+            inc #() 0)
           ret))
 
   (test-error "invalid start index"
               (for-each-index
                 (lambda (idx elem) elem)
-                inc '(1 2 3) 3)))
+                inc #(1 2 3) 3)))
 
 (test-group "ports->lines"
   (test "multiple"
