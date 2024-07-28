@@ -8,10 +8,13 @@
     (repeat (dec n) thunk)))
 
 (define (random-string . rest)
-  (let* ((siz (if (null? rest) 5000 (car rest)))
-         (str (make-string siz)))
-    (random-bytes str)
-    str))
+  (let ((siz (if (null? rest) 100 (car rest))))
+    (list->string
+      (generate-list
+        (lambda ()
+          (let ((ascii (+ (pseudo-random-integer 126) 33)))
+            (integer->char ascii)))
+        siz))))
 
 (define (generate-list thunk size)
   (map
