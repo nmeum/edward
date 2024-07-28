@@ -13,7 +13,7 @@
 
           (srfi 1)
 
-          (chicken base)
+          (only (chicken base) subvector)
 
           (edward util))
 
