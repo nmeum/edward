@@ -320,12 +320,11 @@
 (define (editor-get-lnum editor line)
   (call-with-current-continuation
     (lambda (exit)
-      (for-each
-        (lambda (l num)
+      (for-each-index
+        (lambda (idx l)
           (if (eq? line l)
-            (exit num)))
-        (buffer->list (text-editor-buffer editor))
-        (iota (editor-lines editor) 1))
+            (exit (inc idx))))
+        inc (buffer-lines (text-editor-buffer editor)) 0)
       #f)))
 
 ;;> Return the content of the editor text buffer as a list of lines
