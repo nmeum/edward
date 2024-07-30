@@ -439,17 +439,18 @@
 
 (define (each-matched-line editor lines regex match-proc line-proc)
   (let ((bre (editor-make-regex editor regex)))
-    (for-each (lambda (line)
-                (when (match-proc bre line)
-                  ;; The executed command may perform modifications
-                  ;; which affect line numbers. As such, we find the
-                  ;; current number for the given line using pointer
-                  ;; comparision on the text editor buffer.
-                  (let ((lnum (editor-get-lnum editor line)))
-                    (when lnum ;; line has not been deleted by a preceeding command
-                      (parameterize ((subst-nomatch-handler id))
-                        (line-proc lnum line))))))
-              (editor-get-lines editor lines))))
+    (vector-for-each
+      (lambda (line)
+        (when (match-proc bre line)
+          ;; The executed command may perform modifications
+          ;; which affect line numbers. As such, we find the
+          ;; current number for the given line using pointer
+          ;; comparision on the text editor buffer.
+          (let ((lnum (editor-get-lnum editor line)))
+            (when lnum ;; line has not been deleted by a preceeding command
+              (parameterize ((subst-nomatch-handler id))
+                (line-proc lnum line))))))
+      (editor-get-lines editor lines))))
 
 ;;> Execute a command list, parsed using
 ;;> [unwrap-command-list](#unwrap-command-list), for the `g` and `v`

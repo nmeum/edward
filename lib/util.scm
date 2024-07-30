@@ -79,12 +79,12 @@
 (define (count-bytes str)
   (bytevector-length (string->utf8 str)))
 
-;;> Converts list of lines to newline-separated string.
+;;> Converts vector of lines to newline-separated string.
 
-(define (lines->string buffer)
-  (fold-right (lambda (x ys)
-                (string-append x "\n" ys))
-              "" buffer))
+(define (lines->string vec)
+  (vector-fold-right (lambda (acc x)
+                       (string-append x "\n" acc))
+                     "" vec))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

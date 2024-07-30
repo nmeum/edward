@@ -1,9 +1,9 @@
 (import (edward util))
 
 (test-group "lines->string"
-  (test "empty lines" "" (lines->string '()))
-  (test "sinlge line" "foo\n" (lines->string '("foo")))
-  (test "multiple lines" "foo\nbar\n" (lines->string '("foo" "bar"))))
+  (test "empty lines" "" (lines->string #()))
+  (test "sinlge line" "foo\n" (lines->string #("foo")))
+  (test "multiple lines" "foo\nbar\n" (lines->string #("foo" "bar"))))
 
 (test-group "for-each-index"
   (test "increment index from start"

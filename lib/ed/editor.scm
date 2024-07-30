@@ -100,7 +100,7 @@
 (define (handle-sighup editor)
   (when (text-editor-modified? editor)
     (let* ((buf (text-editor-buffer editor))
-           (data (lines->string (buffer->list buf)))
+           (data (lines->string buf))
            (success? (write-file "ed.hup" data)))
       (unless success?
         (write-file (path-join (user-home) "ed.hup") data))))
@@ -285,10 +285,10 @@
 
 (define (editor-mark-line editor line mark)
   (let ((lines (editor-get-lines editor (cons line line))))
-    (if (null? lines)
+    (if (zero? (vector-length lines))
       (editor-raise "invalid address")
       (text-editor-marks-set! editor
-        (alist-cons mark (car lines) (text-editor-marks editor))))))
+        (alist-cons mark (vector-ref lines 0) (text-editor-marks editor))))))
 
 (define (editor-get-mark editor mark)
   (let ((pair (assv mark (text-editor-marks editor))))
@@ -333,12 +333,11 @@
 
 (define (editor-get-lines editor lines)
   (if (buffer-empty? (text-editor-buffer editor))
-    '()
+    #()
     (let ((sline (car lines))
           (eline (cdr lines))
           (lines (buffer-lines (text-editor-buffer editor))))
-      ;; TODO: Make this function return a vector instead.
-      (vector->list (subvector lines (max (dec sline) 0) eline)))))
+      (subvector lines (max (dec sline) 0) eline))))
 
 ;;> Predicate which returns true if the given `line` is within
 ;;> the range specified by `lines`.
@@ -405,12 +404,16 @@
 ;;> Returns line number of last inserted line.
 
 (define (editor-append! editor line text)
-  (unless (null? text)
-    (text-editor-modified-set! editor #t))
+  ;; TODO: Remove this
+  (let ((inlen (if (vector? text)
+                 (vector-length text)
+                 (length text))))
+    (unless (zero? inlen)
+      (text-editor-modified-set! editor #t))
 
-  (let ((buf (text-editor-buffer editor)))
-    (buffer-append! buf line text)
-    (+ line (length text))))
+    (let ((buf (text-editor-buffer editor)))
+      (buffer-append! buf line text)
+      (+ line inlen))))
 
 ;;> Replace text of given lines with given data.
 ;;> Returns line number of last inserted line.

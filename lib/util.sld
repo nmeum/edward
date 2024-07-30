@@ -7,6 +7,7 @@
           (scheme process-context)
 
           (srfi 1)
+          (srfi 133)
 
           (chicken port)
           (chicken io))

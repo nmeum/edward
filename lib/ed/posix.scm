@@ -56,22 +56,23 @@
 ;;;;
 
 (define (exec-subst editor lines triplet nth)
-  (let* ((lst (editor-get-lines editor lines))
+  (let* ((vec (editor-get-lines editor lines))
          (bre (editor-make-regex editor (first triplet)))
          (rep (editor-restr editor (second triplet)))
          (print? (third triplet))
 
          ;; Replaces all lines in the selected range.
          ;; Returns line of last replaced line or zero if no line was replaced.
-         (re (fold (lambda (line lnum y)
-                     (let*-values (((r modified) (regex-replace bre rep line nth))
-                                   ((n) (string-split r "\n" #t))) ;; string → list
-                       (if (not modified)
-                         y
-                         (begin
-                           (editor-replace! editor (cons lnum lnum) n)
-                           (+ lnum (dec (length n)))))))
-                   0 lst (editor-line-numbers lines))))
+         (re (vector-fold
+               (lambda (y line lnum)
+                 (let*-values (((r modified) (regex-replace bre rep line nth))
+                               ((n) (string-split r "\n" #t))) ;; string → list
+                   (if (not modified)
+                     y
+                     (begin
+                       (editor-replace! editor (cons lnum lnum) n)
+                       (+ lnum (dec (length n)))))))
+               0 vec (list->vector (editor-line-numbers lines)))))
     (if (zero? re)
       ((subst-nomatch-handler) "no match")
       (editor-goto! editor re))
@@ -266,12 +267,12 @@
 ;;;;
 
 (define (exec-list editor lines)
-  (let ((lst (editor-get-lines editor lines))
+  (let ((vec (editor-get-lines editor lines))
         (end (cdr lines)))
-    (for-each (lambda (line)
-                (display
-                  (string->human-readable (string-append line "\n"))))
-              lst)
+    (vector-for-each (lambda (line)
+                       (display
+                         (string->human-readable (string-append line "\n"))))
+                     vec)
     (editor-goto! editor end)))
 
 (define-print-cmd 'list exec-list #\l)
@@ -389,12 +390,12 @@
 ;;;;
 
 (define (exec-number editor lines)
-  (let ((lst (editor-get-lines editor lines))
+  (let ((vec (editor-get-lines editor lines))
         (eline (cdr lines)))
-    (for-each
+    (vector-for-each
       (lambda (line number)
         (println number "\t" line))
-      lst (editor-line-numbers lines))
+      vec (list->vector (editor-line-numbers lines)))
     (editor-goto! editor eline)))
 
 (define-print-cmd 'number exec-number #\n)
@@ -404,9 +405,9 @@
 ;;;;
 
 (define (exec-print editor lines)
-  (let ((lst (editor-get-lines editor lines))
+  (let ((vec (editor-get-lines editor lines))
         (end (cdr lines)))
-    (for-each println lst)
+    (vector-for-each println vec)
     (editor-goto! editor end)))
 
 (define-print-cmd 'print exec-print #\p)
@@ -502,7 +503,7 @@
   (if (zero? line)
     (editor-raise "invalid address")
     (begin
-      (println (car (editor-get-lines editor (cons line line))))
+      (println (vector-ref (editor-get-lines editor (cons line line)) 0))
       (editor-goto! editor line))))
 
 (define-file-cmd (null exec-null (make-addr '(current-line) '(+1)))
