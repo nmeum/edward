@@ -12,6 +12,7 @@
   (import (scheme base)
 
           (srfi 1)
+          (srfi 133)
 
           (only (chicken base) subvector)
 
