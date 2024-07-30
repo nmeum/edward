@@ -5,7 +5,7 @@
 (define (exec-append editor line data)
   (editor-goto!
     editor
-    (editor-append! editor line data)))
+    (editor-append! editor line (list->vector data))))
 
 (define-input-cmd (append exec-append (make-addr '(current-line)))
   (parse-cmd-char #\a))
@@ -22,7 +22,7 @@
 (define (exec-change editor lines data)
   (editor-goto!
     editor
-    (editor-replace! editor lines data)))
+    (editor-replace! editor lines (list->vector data))))
 
 (define-input-cmd (change exec-change (make-range))
   (parse-cmd-char #\c))
@@ -41,7 +41,7 @@
 
     (if in
       (begin
-        (editor-append! editor line (car in))
+        (editor-append! editor line (list->vector (car in)))
         (editor-goto! editor (editor-lines editor))
 
         ;; Print amount of bytes read (unless in silent mode).
@@ -70,7 +70,7 @@
                    (if (not modified)
                      y
                      (begin
-                       (editor-replace! editor (cons lnum lnum) n)
+                       (editor-replace! editor (cons lnum lnum) (list->vector n))
                        (+ lnum (dec (length n)))))))
                0 vec (list->vector (editor-line-numbers lines)))))
     (if (zero? re)
@@ -230,7 +230,7 @@
   (let* ((sline (max (dec line) 0)))
     (editor-goto!
       editor
-      (editor-append! editor sline data))))
+      (editor-append! editor sline (list->vector data)))))
 
 (define-input-cmd (insert exec-insert (make-addr '(current-line)))
   (parse-cmd-char #\i))

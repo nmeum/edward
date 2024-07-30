@@ -400,20 +400,17 @@
         (eline (cdr lines)))
     (iota (inc (- eline sline)) sline)))
 
-;;> Append the text at the current address.
+;;> Append the `text` after the given `line`.
+;;> The `text` must be a vector of strings.
 ;;> Returns line number of last inserted line.
 
 (define (editor-append! editor line text)
-  ;; TODO: Remove this
-  (let ((inlen (if (vector? text)
-                 (vector-length text)
-                 (length text))))
-    (unless (zero? inlen)
-      (text-editor-modified-set! editor #t))
+  (unless (zero? (vector-length text))
+    (text-editor-modified-set! editor #t))
 
-    (let ((buf (text-editor-buffer editor)))
-      (buffer-append! buf line text)
-      (+ line inlen))))
+  (let ((buf (text-editor-buffer editor)))
+    (buffer-append! buf line text)
+    (+ line (vector-length text))))
 
 ;;> Replace text of given lines with given data.
 ;;> Returns line number of last inserted line.
@@ -424,7 +421,7 @@
          (eline  (cdr lines))
          (buffer (text-editor-buffer editor)))
     (buffer-replace! buffer sline eline data)
-    (+ (max 0 (dec sline)) (length data))))
+    (+ (max 0 (dec sline)) (vector-length data))))
 
 ;;> Join given lines to single line. Return value is undefined.
 

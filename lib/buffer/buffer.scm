@@ -83,32 +83,23 @@
 
 ;;> Append the given `text` to the `buffer` after the given `line` number.
 ;;> The special line number 0 can be used here to add lines to the
-;;> beginning of the buffer. The `text` can either be a list or a vector
-;;> of strings. The former is deprecated and will be removed in a future
-;;> version.
+;;> beginning of the buffer. The `text` must be a vector of strings.
 
 (define (buffer-append! buffer line text)
-  (let ((lines (buffer-lines buffer))
-        ;; TODO: Require text to be a vector in the future.
-        (invec (if (vector? text)
-                 text
-                 (list->vector text)))
-        (inlen (if (vector? text)
-                 (vector-length text)
-                 (length text))))
+  (let ((lines (buffer-lines buffer)))
     (buffer-lines-set!
       buffer
       (if (eqv? line (buffer-length buffer))
         ;; Fast path: Append at the very end.
-        (vector-append lines invec)
+        (vector-append lines text)
         ;; Slow path: Insert in-between (or at the start).
         (vector-append
           (subvector lines 0 line)
-          invec
+          text
           (subvector lines line))))
     (buffer-register-undo buffer
       (lambda (buffer)
-        (buffer-remove! buffer (inc line) (+ line inlen))))))
+        (buffer-remove! buffer (inc line) (+ line (vector-length text)))))))
 
 ;;> Removes all lines within the `buffer` at the given inclusive range
 ;;> range between `start` and `end`.
