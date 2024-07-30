@@ -14,13 +14,6 @@
 (define (make-buffer)
   (%make-buffer #() #f (make-stack)))
 
-;;> Convert the line buffer to a list of lines. This is an *O(n)* operation.
-;;> This procedure is deprecated, use `(vector->list (buffer-lines buffer))`
-;;> instead.
-
-(define (buffer->list buffer)
-  (vector->list (buffer-lines buffer)))
-
 ;;> Length of the buffer, i.e. amount of lines currently stored in it.
 
 (define (buffer-length buffer)
