@@ -15,3 +15,10 @@
         (n 100000))
     (editor-append! e 0 (generate-list random-string n))
     (editor-get-lines e (cons 0 (/ n 2)))))
+
+(define-bench (editor-get-line-number-last)
+  (let ((e (make-text-editor #f "" "" #f))
+        (n 100000))
+    (editor-append! e 0 (generate-list random-string n))
+    (let ((p (editor-get-lines e (cons n n))))
+      (editor-get-lnum e (car p)))))
