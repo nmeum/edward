@@ -92,12 +92,15 @@
 
 (define (buffer-append! buffer line text)
   (let ((lines (buffer-lines buffer)))
-    (buffer-lines-set!
-      buffer
-      (append
-        (take lines line)
-        text
-        (drop lines line)))
+    (buffer-lines-set! buffer
+      (if (eqv? line (buffer-length buffer))
+        ;; Fast path: Append at the very end.
+        (append! lines text)
+        ;; Slow path: Insert in-between (or at the start).
+        (append
+          (take lines line)
+          text
+          (drop lines line))))
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
