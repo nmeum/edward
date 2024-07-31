@@ -515,13 +515,7 @@
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
     (with-io-error-handler fn
       (lambda ()
-        (let ((proc (lambda (port)
-                      (fold (lambda (line num)
-                              (let* ((line (string-append line "\n"))
-                                     (bytes (string->utf8 line)))
-                                (write-bytevector bytes port)
-                                (+ num (bytevector-length bytes))))
-                            0 lines))))
+        (let ((proc (lambda (port) (lines->port lines port))))
           (if fn-cmd?
             (call-with-output-pipe fn proc)
             (call-with-output-file fn proc)))))))

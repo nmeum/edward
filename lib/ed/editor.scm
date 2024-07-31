@@ -98,12 +98,23 @@
       (string-append prefix msg))))
 
 (define (handle-sighup editor)
+  ;; Returns `#t` if writes to file succeeded and `#f` otherwise.
+  (define (write-file filename lines)
+    (guard
+      (eobj
+        ((file-error? eobj) #f))
+      ;; TODO: If file exists behavior is unspecified
+      (call-with-output-file filename
+        (lambda (port)
+          (lines->port lines port)))
+      #t))
+
   (when (text-editor-modified? editor)
     (let* ((buf (text-editor-buffer editor))
-           (data (lines->string (buffer->list buf)))
-           (success? (write-file "ed.hup" data)))
+           (lines (buffer->list buf))
+           (success? (write-file "ed.hup" lines)))
       (unless success?
-        (write-file (path-join (user-home) "ed.hup") data))))
+        (write-file (path-join (user-home) "ed.hup") lines))))
   (exit))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

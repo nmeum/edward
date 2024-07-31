@@ -122,8 +122,9 @@ a filter can be implemented as follows:
 	(define (exec-pipe editor range cmd)
 	  (let-values (((in out _) (process cmd))
 	               ((lines) (editor-get-lines editor range)))
-	    (write-string (lines->string lines) out)
-	    (close-output-port out)
+	    (call-with-port
+	      out
+	      (lambda (port) (lines->port lines port)))
 	    (let ((recv (port->lines in)))
 	      (close-input-port in)
 	      (exec-delete editor range)

@@ -79,32 +79,23 @@
 (define (count-bytes str)
   (bytevector-length (string->utf8 str)))
 
-;;> Converts list of lines to newline-separated string.
-
-(define (lines->string buffer)
-  (fold-right (lambda (x ys)
-                (string-append x "\n" ys))
-              "" buffer))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;>| IO Procedures
 ;;>
 ;;> Procedures which deal with input/output.
 
-;;> Write given data to a given file, returns `#t` if write was
-;;> successful, `#f` otherwise. If the file doesn't exist it is created,
-;;> otherwise it is truncated.
+;;> Write `lines`, i.e. a list of non-newline terminated strings to a
+;;> given `port`. Returns the amount of bytes written to the port
+;;> (including any newline characters).
 
-(define (write-file filename data)
-  (guard
-    (eobj
-      ((file-error? eobj) #f))
-    ;; TODO: If file exists behavior is unspecified
-    (call-with-output-file filename
-      (lambda (port)
-        (write-string data port)))
-    #t))
+(define (lines->port lines port)
+  (fold (lambda (line num)
+          (let* ((line (string-append line "\n"))
+                 (bytes (string->utf8 line)))
+            (write-bytevector bytes port)
+            (+ num (bytevector-length bytes))))
+        0 lines))
 
 ;;> Read from given `port` as a list of lines. Returns pair of retrieved
 ;;> lines and total amount of bytes read from the port (including

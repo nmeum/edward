@@ -7,11 +7,6 @@
   (test-error "upper out-of-bounds" (sublist '(1 2) 0 3))
   (test-error "lower out-of-bounds" (sublist '(1 2) -1 2)))
 
-(test-group "lines->string"
-  (test "empty lines" "" (lines->string '()))
-  (test "sinlge line" "foo\n" (lines->string '("foo")))
-  (test "multiple lines" "foo\nbar\n" (lines->string '("foo" "bar"))))
-
 (test-group "for-each-index"
   (test "increment index from start"
         '((0 . "foo") (1 . "bar") (2 . "baz"))
