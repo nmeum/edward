@@ -112,12 +112,26 @@
 
 (define (buffer-remove! buffer start end)
   (let* ((lines (buffer-lines buffer))
-         (sline (max (dec start) 0)))
-    (buffer-lines-set!
-      buffer
-      (append
-        (sublist lines 0 sline)
-        (sublist lines end (length lines))))
+         (sline (max (dec start) 0))
+         (bufsiz (length lines)))
+    (buffer-lines-set! buffer
+      (cond
+        ;; Fast path: Remove everything.
+        ((and (zero? sline) (eqv? bufsiz end))
+         '())
+        ;; Fast path: Remove at the beginning.
+        ((zero? sline)
+         (let ((remaining (- bufsiz end)))
+           (take-right lines remaining)))
+        ;; Fast path: Remove at the end.
+        ((eqv? end bufsiz)
+         (let ((to-remove (- end sline)))
+           (take lines (- bufsiz to-remove))))
+        ;; Slow path: Remove in-between.
+        (else
+          (append
+            (sublist lines 0 sline)
+            (sublist lines end (length lines))))))
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
