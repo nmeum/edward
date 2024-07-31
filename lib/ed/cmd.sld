@@ -30,7 +30,7 @@
   ;; Utility procedures to define custom editor commands.
   (export define-edit-cmd define-input-cmd define-print-cmd define-file-cmd
           parse-cmd-char parse-cmd parse-re parse-re-pair unwrap-command-list
-          exec-command-list parse-filename parse-file-cmd write-to
+          exec-command-list parse-filename parse-file-cmd write-lines
           read-from call-when-confirmed subst-nomatch-handler
           filename-cmd? register-command exec-command-list-interactive)
 

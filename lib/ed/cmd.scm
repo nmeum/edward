@@ -503,15 +503,25 @@
       (values #t (string-copy fn 1))
       (values #f fn))))
 
-;;> Write given data to given filename. If filename starts with `!` (i.e.
+;;> Write a list of `lines` (represented as a string without a terminating
+;;> newline) to a given `filename`. If `filename` starts with `!` (i.e.
 ;;> is a command according to [filename-cmd?](#filename-cmd?)), write data
 ;;> to standard input of given command string.
+;;>
+;;> Returns amount of bytes written to the `filename` on success and false
+;;> if an error occurred.
 
-(define (write-to filename data)
+(define (write-lines filename lines)
   (let-values (((fn-cmd? fn) (filename-unwrap filename)))
     (with-io-error-handler fn
       (lambda ()
-        (let ((proc (lambda (port) (write-string data port))))
+        (let ((proc (lambda (port)
+                      (fold (lambda (line num)
+                              (let* ((line (string-append line "\n"))
+                                     (bytes (string->utf8 line)))
+                                (write-bytevector bytes port)
+                                (+ num (bytevector-length bytes))))
+                            0 lines))))
           (if fn-cmd?
             (call-with-output-pipe fn proc)
             (call-with-output-file fn proc)))))))

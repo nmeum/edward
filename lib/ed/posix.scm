@@ -356,12 +356,12 @@
 ;;;;
 
 (define (exec-write editor lines filename)
-  (let ((fn (editor-filename editor filename))
-        (data (lines->string (editor-get-lines editor lines))))
-    (unless (write-to fn data)
+  (let* ((fn (editor-filename editor filename))
+         (lines (editor-get-lines editor lines))
+         (written (write-lines fn lines)))
+    (unless written
       (editor-raise "cannot open output file"))
-    ;; Assuming write-to *always* writes all bytes.
-    (editor-verbose editor (count-bytes data))
+    (editor-verbose editor written)
 
     (unless (filename-cmd? filename)
       (if (empty-string? (text-editor-filename editor))
