@@ -4,7 +4,7 @@
  (category tools)
  (license "GPLv3")
  (platform unix)
- (dependencies r7rs srfi-1 srfi-14 srfi-37 matchable posix-regex)
+ (dependencies r7rs srfi-1 srfi-14 srfi-37 srfi-214 matchable posix-regex)
  (test-dependencies test)
  (component-options (csc-options "-d3" "-O3" "-X" "r7rs" "-R" "r7rs"))
  (cond-expand

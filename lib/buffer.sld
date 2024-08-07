@@ -12,6 +12,7 @@
   (import (scheme base)
 
           (srfi 1)
+          (srfi 214)
 
           (edward util))
 
