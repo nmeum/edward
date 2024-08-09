@@ -132,9 +132,11 @@
 (define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (joined (flexvector-fold
+         ;; XXX: For some reason using flexvector-fold here is very!!! slow.
+         ;; Execute/Debug the buffer-join-entire-content for more details.
+         (joined (apply
                    string-append
-                   "" (flexvector-copy lines sindex end))))
+                   "" (flexvector->list (flexvector-copy lines sindex end)))))
     (buffer-remove! buffer start end)
     (buffer-append!
       buffer
