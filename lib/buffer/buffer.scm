@@ -104,6 +104,7 @@
 (define (buffer-remove! buffer start end)
   (let* ((lines (buffer-lines buffer))
          (sline (max (dec start) 0))
+         ;; TODO https://srfi-email.schemers.org/srfi-214/msg/25428358/
          (bkvec (flexvector->list (flexvector-copy lines sline end))))
     (flexvector-remove-range! (buffer-lines buffer) sline end)
     (buffer-register-undo buffer
@@ -136,6 +137,7 @@
          ;; Execute/Debug the buffer-join-entire-content for more details.
          (joined (apply
                    string-append
+                   ;; TODO https://srfi-email.schemers.org/srfi-214/msg/25428358/
                    "" (flexvector->list (flexvector-copy lines sindex end)))))
     (buffer-remove! buffer start end)
     (buffer-append!
@@ -151,6 +153,7 @@
   ;; Assumption: dest is always outside [start, end].
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
+         ;; TODO https://srfi-email.schemers.org/srfi-214/msg/25428358/
          (move   (flexvector->list (flexvector-copy lines sindex end)))
 
          (remove! (lambda () (buffer-remove! buffer start end)))
