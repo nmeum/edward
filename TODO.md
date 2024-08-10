@@ -12,22 +12,6 @@
 
 # Miscellaneous
 
-* Refactor the buffer implementation to improve it's performance
-	* Presently, the buffer uses a list internally but Scheme doesn't allow
-	  us to efficiently resize lists and insert data at the end of a list.
-	  Hence, `buffer-append!` creates a new list and is an *O(n)* operation.
-	* Ideally, we would use some sort of mutable variable-length data structure
-	  within the buffer implementation. In CHICKEN we could build upon vectors
-	  and use the non-standard `vector-resize` procedure to this end. Within
-	  CHICKEN itself, this is also done in `csi.scm` for history tracking.
-	* There are also some efforts concerning themselves with standardizing a
-	  mutable variable-length data structure. For more information see:
-		* The most relevant prior work in this regard is
-		  https://small.r7rs.org/wiki/BuffersCowan/
-		* https://srfi.schemers.org/srfi-214/srfi-214.html
-		  follow-up work which specifies resizeable "flexvectors"
-		* https://srfi.schemers.org/srfi-118/srfi-118.html
-		  (references the Cowan's buffer draft)
 * Consider using Declarations and (chicken type) to enable more optimizations
 	* https://wiki.call-cc.org/programming-for-performance
 	* https://wiki.call-cc.org/man/5/Declarations
