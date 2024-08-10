@@ -27,8 +27,9 @@
 
 (define (grow! fv)
   (define old-vec (vec fv))
-  (define new-vec (make-vector (quotient (* (vector-length old-vec) 3) 2)))
-  (vector-copy! new-vec 0 old-vec)
+  (define
+    new-vec
+    (vector-resize old-vec (quotient (* (vector-length old-vec) 3) 2)))
   (set-vec! fv new-vec)
   new-vec)
 

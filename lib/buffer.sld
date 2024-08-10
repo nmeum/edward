@@ -14,6 +14,8 @@
 
           (srfi 1)
 
+          (only (chicken base) vector-resize)
+
           (edward util))
 
   (export make-buffer buffer->list buffer-length buffer-empty?
