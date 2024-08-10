@@ -48,17 +48,17 @@
 ;;> in thunk undoable.
 
 (define (buffer-with-undo buffer thunk)
-    (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
-    (buffer-undo-set! buffer #t)
+  (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
+  (buffer-undo-set! buffer #t)
 
-    (guard
-      (eobj
-        (else
-          (buffer-undo-set! buffer #f)
-          (raise eobj)))
-      (let ((r (thunk)))
+  (guard
+    (eobj
+      (else
         (buffer-undo-set! buffer #f)
-        r)))
+        (raise eobj)))
+    (let ((r (thunk)))
+      (buffer-undo-set! buffer #f)
+      r)))
 
 ;;> Predicate to check if the undo stack is empty, returns false if it is.
 
