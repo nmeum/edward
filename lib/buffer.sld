@@ -10,9 +10,9 @@
 
 (define-library (edward.buffer)
   (import (scheme base)
+          (scheme case-lambda)
 
           (srfi 1)
-          (srfi 214)
 
           (edward util))
 
@@ -21,4 +21,5 @@
           buffer-undo! buffer-replace! buffer-join! buffer-move!)
 
   (include "buffer/stack.scm"
+           "buffer/srfi214-minimal.scm"
            "buffer/buffer.scm"))
