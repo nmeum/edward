@@ -14,10 +14,13 @@
 (define (make-buffer)
   (%make-buffer (flexvector) #f (make-stack)))
 
-;;> Convert the line buffer to a list of lines.
+;;> Convert the line buffer to a list of lines. Additionally, this
+;;> procedure accepts an optional `start` and `end` parameter. If
+;;> these parameters are given the list only contains the elements
+;;> between `start` and `end`. By default the whole buffer is converted.
 
-(define (buffer->list buffer)
-  (flexvector->list (buffer-lines buffer)))
+(define (buffer->list buffer . o)
+  (apply flexvector->list (buffer-lines buffer) o))
 
 ;;> Length of the buffer, i.e. amount of lines currently stored in it.
 
