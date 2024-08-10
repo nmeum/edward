@@ -35,9 +35,6 @@
 (define (flexvector)
   (%make-flexvector (make-vector 4) 0))
 
-(define (flexvector-ref fv index)
-  (vector-ref (vec fv) index))
-
 (define (flexvector-add-all! fv i xs)
   (let* ((len (flexvector-length fv))
          (xv (list->vector xs))
@@ -59,43 +56,11 @@
       (set-flexvector-length! fv new-len)))
   fv)
 
-(define (flexvector-fold-right kons knil fv1 . o)
-  (let ((len (flexvector-length fv1)))
-    (if (null? o)
-      (let lp ((i (- len 1)) (acc knil))
-        (if (negative? i) acc (lp (- i 1) (kons acc (flexvector-ref fv1 i)))))
-      (let lp ((i (- len 1)) (acc knil))
-        (if (negative? i)
-          acc
-          (lp (- i 1)
-              (apply kons acc (flexvector-ref fv1 i)
-                     (map (lambda (fv) (flexvector-ref fv i)) o))))))))
-
-(define vector->flexvector
-  (case-lambda
-    ((vec)
-      (vector->flexvector vec 0 (vector-length vec)))
-    ((vec start)
-      (vector->flexvector vec start (vector-length vec)))
-    ((vec start end)
-      (let ((len (- end start)))
-        (cond
-          ((< len 4)
-            (let ((new-vec (make-vector 4)))
-              (vector-copy! new-vec 0 vec start end)
-              (%make-flexvector new-vec len)))
-          (else
-            (%make-flexvector (vector-copy vec start end) len)))))))
-
-(define flexvector-copy
+(define flexvector->list
   (case-lambda
     ((fv)
-      (%make-flexvector (vector-copy (vec fv))
-                        (flexvector-length fv)))
+     (flexvector->list fv 0 (flexvector-length fv)))
     ((fv start)
-      (flexvector-copy fv start (flexvector-length fv)))
+     (flexvector->list fv start (flexvector-length fv)))
     ((fv start end)
-      (vector->flexvector (vector-copy (vec fv) start end)))))
-
-(define (flexvector->list fv)
-  (flexvector-fold-right (lambda (x y) (cons y x)) '() fv))
+     (vector->list (vector-copy (vec fv) start end)))))
