@@ -27,6 +27,25 @@
                  (buffer-append! b 0 '("foo"))
                  (buffer-append! b 1 '("123")))))
 
+(test-group "buffer->list"
+  (test "same start/end index"
+        '()
+        (let ((b (make-buffer)))
+          (buffer-append! b 0 '("1" "2" "3"))
+          (buffer->list b 1 1)))
+
+  (test "sublist in between"
+        '("2" "3")
+        (let ((b (make-buffer)))
+          (buffer-append! b 0 '("1" "2" "3" "4" "5"))
+          (buffer->list b 1 3)))
+
+  (test "sublist including end"
+        '("4" "5")
+        (let ((b (make-buffer)))
+          (buffer-append! b 0 '("1" "2" "3" "4" "5"))
+          (buffer->list b 3 5))))
+
 (test-group "remove"
   (test-buffer "remove start full"
                '()

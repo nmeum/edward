@@ -57,6 +57,17 @@
       (set-flexvector-length! fv new-len)))
   fv)
 
+;; Inspired by chez-scheme's SRFI 214 flexvector->list implementation.
+(define (%flexvector->list fv start end)
+  (if (< end start)
+    (error "invalid sublist specification")
+    (let ((vec (vec fv)))
+      (let lp ((acc '()) (idx (dec end)))
+        (if (< idx start)
+          acc
+          (lp (cons (vector-ref vec idx) acc)
+              (dec idx)))))))
+
 (define flexvector->list
   (case-lambda
     ((fv)
@@ -64,4 +75,4 @@
     ((fv start)
      (flexvector->list fv start (flexvector-length fv)))
     ((fv start end)
-     (vector->list (vector-copy (vec fv) start end)))))
+     (%flexvector->list fv start end))))
