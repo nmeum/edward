@@ -5,24 +5,27 @@
 (define-record-type Line-Buffer
   (%make-buffer lines undo? undo-stack)
   line-buffer?
-  (lines buffer-lines buffer-lines-set!)
+  (lines buffer-lines)
   (undo? buffer-undo? buffer-undo-set!)
   (undo-stack buffer-undo-stack buffer-undo-stack-set!))
 
 ;;> Create a new, initially empty, line buffer.
 
 (define (make-buffer)
-  (%make-buffer '() #f (make-stack)))
+  (%make-buffer (flexvector) #f (make-stack)))
 
-;;> Convert the line buffer to a list of lines.
+;;> Convert the line buffer to a list of lines. Additionally, this
+;;> procedure accepts an optional `start` and `end` parameter. If
+;;> these parameters are given the list only contains the elements
+;;> between `start` and `end`. By default the whole buffer is converted.
 
-(define (buffer->list buffer)
-  (buffer-lines buffer))
+(define (buffer->list buffer . o)
+  (apply flexvector->list (buffer-lines buffer) o))
 
 ;;> Length of the buffer, i.e. amount of lines currently stored in it.
 
 (define (buffer-length buffer)
-  (length (buffer-lines buffer)))
+  (flexvector-length (buffer-lines buffer)))
 
 ;;> Predicate which returns true if the buffer is empty.
 
@@ -45,17 +48,17 @@
 ;;> in thunk undoable.
 
 (define (buffer-with-undo buffer thunk)
-    (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
-    (buffer-undo-set! buffer #t)
+  (stack-clear! (buffer-undo-stack buffer)) ;; no multi-level undo
+  (buffer-undo-set! buffer #t)
 
-    (guard
-      (eobj
-        (else
-          (buffer-undo-set! buffer #f)
-          (raise eobj)))
-      (let ((r (thunk)))
+  (guard
+    (eobj
+      (else
         (buffer-undo-set! buffer #f)
-        r)))
+        (raise eobj)))
+    (let ((r (thunk)))
+      (buffer-undo-set! buffer #f)
+      r)))
 
 ;;> Predicate to check if the undo stack is empty, returns false if it is.
 
@@ -91,39 +94,26 @@
 ;;> beginning of the buffer.
 
 (define (buffer-append! buffer line text)
-  (let ((lines (buffer-lines buffer)))
-    (buffer-lines-set!
-      buffer
-      (append
-        (take lines line)
-        text
-        (drop lines line)))
-    (buffer-register-undo buffer
-      (lambda (buffer)
-        ;; Will add an undo procedure to the stack, thus making
-        ;; the undo of the append operation itself reversible.
-        (buffer-remove! buffer (inc line) (+ line (length text)))))))
+  (flexvector-add-all! (buffer-lines buffer) line text)
+  (buffer-register-undo buffer
+    (lambda (buffer)
+      ;; Will add an undo procedure to the stack, thus making
+      ;; the undo of the append operation itself reversible.
+      (buffer-remove! buffer (inc line) (+ line (length text))))))
 
 ;;> Removes all lines within the `buffer` at the given inclusive range
 ;;> range between `start` and `end`.
 
 (define (buffer-remove! buffer start end)
   (let* ((lines (buffer-lines buffer))
-         (sline (max (dec start) 0)))
-    (buffer-lines-set!
-      buffer
-      (append
-        (sublist lines 0 sline)
-        (sublist lines end (length lines))))
+         (sline (max (dec start) 0))
+         (bkvec (flexvector->list lines sline end)))
+    (flexvector-remove-range! (buffer-lines buffer) sline end)
     (buffer-register-undo buffer
       (lambda (buffer)
         ;; Will add an undo procedure to the stack, thus making
         ;; the undo of the remove operation itself reversible.
-        (buffer-append! buffer sline
-                        (sublist
-                          lines
-                          sline
-                          end))))))
+        (buffer-append! buffer sline bkvec)))))
 
 ;; The following operations are all implemented in terms of
 ;; buffer-append! and buffer-undo! and are therefore reversible.
@@ -145,7 +135,9 @@
 (define (buffer-join! buffer start end)
   (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (joined (apply string-append (sublist lines sindex end))))
+         (joined (apply
+                   string-append
+                   "" (flexvector->list lines sindex end))))
     (buffer-remove! buffer start end)
     (buffer-append!
       buffer
@@ -158,9 +150,9 @@
 
 (define (buffer-move! buffer start end dest)
   ;; Assumption: dest is always outside [start, end].
-  (let* ((lines (buffer-lines buffer))
+  (let* ((lines  (buffer-lines buffer))
          (sindex (max (dec start) 0))
-         (move  (sublist lines sindex end))
+         (move   (flexvector->list lines sindex end))
 
          (remove! (lambda () (buffer-remove! buffer start end)))
          (append! (lambda () (buffer-append! buffer dest move))))

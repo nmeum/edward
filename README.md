@@ -169,18 +169,25 @@ but is not derived from Andrew's original implementation.
 
 ## License
 
-This program is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation, either version 3 of the License, or (at your
-option) any later version.
+This program includes code from [chibi-scheme][chibi-scheme github]
+(`lib/parse/parse.scm`) written by Alex Shinn and licensed under a
+BSD-style license. Furthermore, it includes a stripped-down and slightly
+modified version of the [SRFI 214][srfi 214] reference implementation
+(`lib/buffer/srfi214-minimal.scm`) written by Adam Nelson under MIT.
+The program itself is licensed as follows:
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-Public License for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program. If not, see <https://www.gnu.org/licenses/>.
+> This program is free software: you can redistribute it and/or modify it
+> under the terms of the GNU General Public License as published by the
+> Free Software Foundation, either version 3 of the License, or (at your
+> option) any later version.
+>
+> This program is distributed in the hope that it will be useful, but
+> WITHOUT ANY WARRANTY; without even the implied warranty of
+> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+> Public License for more details.
+>
+> You should have received a copy of the GNU General Public License along
+> with this program. If not, see <https://www.gnu.org/licenses/>.
 
 [ed posix]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html
 [gnu make]: https://www.gnu.org/software/make/
@@ -192,6 +199,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [gnu ed]: https://www.gnu.org/software/ed/
 [srfi]: https://srfi.schemers.org/
 [srfi 204]: https://srfi.schemers.org/srfi-204/
+[srfi 214]: https://srfi.schemers.org/srfi-214/
 [r7rs]: https://small.r7rs.org/
 [parser combinators]: https://en.wikipedia.org/wiki/Parser_combinator
 [GNU readline]: https://tiswww.cwru.edu/php/chet/readline/rltop.html
@@ -203,3 +211,4 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 [tmux web]: https://tmux.github.io
 [scmdoc github]: https://github.com/nmeum/scmdoc
 [edward-contrib github]: https://github.com/nmeum/edward-contrib
+[chibi-scheme github]: https://github.com/ashinn/chibi-scheme

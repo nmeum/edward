@@ -41,6 +41,7 @@
               (source "./lib/buffer.sld")
               (source-dependencies
                 "./lib/buffer/stack.scm"
+                "./lib/buffer/srfi214-minimal.scm"
                 "./lib/buffer/buffer.scm"))
    (extension edward.ed.addr
               (csc-options "-X" "r7rs" "-R" "r7rs")

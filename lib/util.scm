@@ -167,14 +167,6 @@
         (%for-each-index vec start len)
         (error "invalid start index")))))
 
-;;> Return `sublist` with `start` inclusive and `end` exclusive.
-
-(define (sublist lst start end)
-  (if (> start end)
-    (error "invalid sublist specification")
-    (let ((l (drop lst start)))
-      (drop-right l (- (length lst) end)))))
-
 ;;> Return path to home directory of current user.
 ;;> This procedure emits an error if the environment variable `HOME` is unset.
 

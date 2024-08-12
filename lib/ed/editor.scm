@@ -347,9 +347,11 @@
   (if (buffer-empty? (text-editor-buffer editor))
     '()
     (let ((sline (car lines))
-          (eline (cdr lines))
-          (lst   (buffer->list (text-editor-buffer editor))))
-      (sublist lst (max (dec sline) 0) eline))))
+          (eline (cdr lines)))
+      (buffer->list
+        (text-editor-buffer editor)
+        (max (dec sline) 0)
+        eline))))
 
 ;;> Predicate which returns true if the given `line` is within
 ;;> the range specified by `lines`.
