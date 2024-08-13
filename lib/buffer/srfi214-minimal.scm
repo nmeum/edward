@@ -36,6 +36,9 @@
 (define (flexvector)
   (%make-flexvector (make-vector 4) 0))
 
+(define (flexvector-ref fv index)
+  (vector-ref (vec fv) index))
+
 (define (flexvector-add-all! fv i xs)
   (let* ((len (flexvector-length fv))
          (xv (list->vector xs))
