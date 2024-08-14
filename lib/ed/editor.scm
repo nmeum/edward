@@ -517,26 +517,24 @@
       nline)))
 
 (define (match-line direction editor bre)
-  (let ((lines (buffer->list (text-editor-buffer editor)))
-        (regex (editor-make-regex editor bre))
-        (cont-proc (case direction
-                          ((forward) inc)
-                          ((backward) dec))))
-    (call-with-current-continuation
-      (lambda (exit)
-        (unless (zero? (editor-lines editor))
-          (for-each-index
-            (lambda (idx elem)
-              (when (regex-match? regex elem)
-                (exit (inc idx))))
-            cont-proc
-            lines
-            ;; Forward/Backward search start at next/previous line.
-            (modulo (cont-proc
-                      ;; Convert line number to index.
-                      (max (dec (text-editor-line editor)) 0))
-                    (editor-lines editor))))
-        (editor-raise "no match")))))
+  (define (next-index idx)
+    (modulo
+      (case direction
+        ((forward) (inc idx))
+        ((backward) (dec idx)))
+      (editor-lines editor)))
+
+  (when (zero? (editor-lines editor))
+    (editor-raise "no match"))
+  (let* ((buffer (text-editor-buffer editor))
+         (regex (editor-make-regex editor bre))
+         (start-idx (max (dec (text-editor-line editor)) 0)))
+    (let lp ((idx (next-index start-idx)))
+      (if (regex-match? regex (buffer-ref buffer idx))
+        (inc idx) ;; convert index back to line number
+        (if (eqv? idx start-idx)
+          (editor-raise "no match")
+          (lp (next-index idx)))))))
 
 ;;> Convert a `range` address (i.e. as created via [make-range][make-range])
 ;;> to a line pair. This procedure does not modify the current editor
