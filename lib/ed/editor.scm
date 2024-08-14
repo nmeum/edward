@@ -329,15 +329,11 @@
 ;; which is the case with CHICKEN but technically this is undefinied behaviour.
 
 (define (editor-get-lnum editor line)
-  (call-with-current-continuation
-    (lambda (exit)
-      (for-each
-        (lambda (l num)
-          (if (eq? line l)
-            (exit num)))
-        (buffer->list (text-editor-buffer editor))
-        (iota (editor-lines editor) 1))
-      #f)))
+  (let ((buffer (text-editor-buffer editor)))
+    (find
+      (lambda (lnum)
+        (eq? (buffer-ref buffer (dec lnum)) line))
+      (iota (editor-lines editor) 1))))
 
 ;;> Return the content of the editor text buffer as a list of lines
 ;;> for the specified line pair `lines`. The start address of the
