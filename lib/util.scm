@@ -154,27 +154,6 @@
 (define (ascii-printable? integer)
   (and (>= integer #x20) (<= integer #x7e)))
 
-;;> Call `proc` for each element in `lst` starting at the `start` index.
-;;> For each element, the procedure `proc` is passed both the index as
-;;> well as the element value itself as a procedure parameter.
-
-(define (for-each-index proc cont-proc lst start)
-  (define (%for-each-index vector index rem)
-    (unless (zero? rem)
-      (proc index (vector-ref vector index))
-      (%for-each-index
-        vector
-        (modulo (cont-proc index) (vector-length vector))
-        (dec rem))))
-
-  (unless (null? lst)
-    (let* ((vec (list->vector lst))
-           (len (vector-length vec)))
-      (if (and (>= start 0)
-               (< start len))
-        (%for-each-index vec start len)
-        (error "invalid start index")))))
-
 ;;> Return path to home directory of current user.
 ;;> This procedure emits an error if the environment variable `HOME` is unset.
 

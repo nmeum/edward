@@ -12,7 +12,7 @@
           (chicken io))
 
   (export inc dec id alist-values fprintln println empty-string?
-          pad-string string->human-readable for-each-index path-join
-          user-home count-bytes lines->port port->lines)
+          pad-string string->human-readable path-join user-home
+          count-bytes lines->port port->lines)
 
   (include "util.scm"))

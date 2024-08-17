@@ -14,6 +14,11 @@
 (define (make-buffer)
   (%make-buffer (flexvector) #f (make-stack)))
 
+;;> Returns the element at `index` in the `buffer`, starting at zero.
+
+(define (buffer-ref buffer index)
+  (flexvector-ref (buffer-lines buffer) index))
+
 ;;> Convert the line buffer to a list of lines. Additionally, this
 ;;> procedure accepts an optional `start` and `end` parameter. If
 ;;> these parameters are given the list only contains the elements
