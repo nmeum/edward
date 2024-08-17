@@ -44,8 +44,6 @@
                 "./lib/buffer/srfi214-minimal.scm"
                 "./lib/buffer/buffer.scm"))
    (extension edward.ed.addr
-              (csc-options "-X" "r7rs" "-R" "r7rs")
-
               (component-dependencies edward.parse)
 
               (source "./lib/ed/addr.sld")
