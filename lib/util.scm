@@ -77,7 +77,15 @@
 ;;> Return amount of bytes in a string.
 
 (define (count-bytes str)
-  (bytevector-length (string->utf8 str)))
+  ;; Technically, we would have to convert the string to a bytevector here and
+  ;; then count the length of that bytevector to obtain the number of bytes
+  ;; and not the number of characters. However, CHICKEN 5 is not fully unicode
+  ;; aware and hence string-length actually counts bytes and not characters.
+  ;;
+  ;; Additionally a string->utf8 conversion is very expensive especially when
+  ;; loading large files using edward. Therefore, ideally, we would obtain the
+  ;; amount of bytes directly through the read procedure in the future.
+  (string-length str))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
