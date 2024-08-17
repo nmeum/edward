@@ -99,10 +99,9 @@
 
 (define (lines->port lines port)
   (fold (lambda (line num)
-          (let* ((line (string-append line "\n"))
-                 (bytes (string->utf8 line)))
-            (write-bytevector bytes port)
-            (+ num (bytevector-length bytes))))
+          (let ((line (string-append line "\n")))
+            (write-string line port)
+            (+ num (count-bytes line))))
         0 lines))
 
 ;;> Read from given `port` as a list of lines. Returns pair of retrieved

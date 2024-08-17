@@ -9,7 +9,7 @@
           (srfi 1)
 
           (chicken port)
-          (chicken io))
+          (only (chicken io) read-lines))
 
   (export inc dec id alist-values fprintln println empty-string?
           pad-string string->human-readable path-join user-home
