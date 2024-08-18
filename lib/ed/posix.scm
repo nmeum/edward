@@ -63,15 +63,20 @@
 
          ;; Replaces all lines in the selected range.
          ;; Returns line of last replaced line or zero if no line was replaced.
-         (re (fold (lambda (line lnum y)
-                     (let*-values (((r modified) (regex-replace bre rep line nth))
-                                   ((n) (string-split r "\n" #t))) ;; string → list
-                       (if (not modified)
-                         y
-                         (begin
-                           (editor-replace! editor (cons lnum lnum) n)
-                           (+ lnum (dec (length n)))))))
-                   0 lst (editor-line-numbers lines))))
+         (re (car
+               ;; acc is a pair of last replaced line and lnum offset. The offset
+               ;; accounts for prior substitions inserting multiple new file lines.
+               (fold (lambda (line lnum acc)
+                       (let*-values (((r modified) (regex-replace bre rep line nth))
+                                     ((n) (string-split r "\n" #t))) ;; string → list
+                         (if (not modified)
+                           acc
+                           (let* ((offset (cdr acc))
+                                  (lnum (+ lnum offset)))
+                             (cons
+                               (editor-replace! editor (cons lnum lnum) n)
+                               (+ offset (dec (length n))))))))
+                     '(0 . 0) lst (editor-line-numbers lines)))))
     (if (zero? re)
       ((subst-nomatch-handler) "no match")
       (editor-goto! editor re))

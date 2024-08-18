@@ -1,0 +1,4 @@
+<h2 id="status">Status</h2>
+This SRFI is currently in <em>final</em> status.
+<h2 id="abstract">Abstract</h2>
+A <em>flexvector</em>, also known as a dynamic array or an arraylist
