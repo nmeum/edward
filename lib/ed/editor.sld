@@ -22,8 +22,9 @@
           (matchable)
           (posix-regex)
 
-          (chicken process signal)
-          (chicken port)
+          (only (chicken process signal) signal-mask!
+                signal/quit signal/hup set-signal-handler!)
+          (only (chicken port) terminal-port?)
 
           (edward util)
           (edward parse)

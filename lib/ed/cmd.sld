@@ -20,7 +20,7 @@
           (srfi 1)
           (srfi 14)
 
-          (chicken process)
+          (only (chicken process) call-with-input-pipe call-with-output-pipe)
 
           (edward util)
           (edward parse)

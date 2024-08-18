@@ -8,7 +8,7 @@
 
           (srfi 1)
 
-          (chicken port)
+          (only (chicken port) terminal-port? terminal-size)
           (only (chicken io) read-lines))
 
   (export inc dec id alist-values fprintln println empty-string?

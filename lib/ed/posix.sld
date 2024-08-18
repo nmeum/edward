@@ -18,8 +18,8 @@
           (posix-regex)
           (matchable)
 
-          (chicken process)
-          (chicken string)
+          (only (chicken process) system)
+          (only (chicken string) string-split)
 
           (edward util)
           (edward parse)
