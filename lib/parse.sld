@@ -45,8 +45,8 @@
 
           (edward util)
 
-          (chicken file posix)
-          (chicken process signal))
+          (only (chicken file posix) file-read file-close fileno/stdin)
+          (only (chicken process signal) set-signal-handler! signal/int))
 
   ;; repl.scm
   (export make-repl repl? repl-run repl-interactive repl-prompt?  repl-set-prompt!)
