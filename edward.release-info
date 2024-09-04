@@ -2,3 +2,4 @@
 
 (uri targz "https://codeload.github.com/nmeum/{egg-name}/tar.gz/{egg-release}")
 (release "1.0.1")
+(release "1.1.0")
