@@ -1,8 +1,7 @@
 # This Makefile is a wrapper around chicken-install(1) which eases building
 # edward without superuser rights and without requiring any configuration
 # of chicken-install. Furthermore, it supports optional dependency vendoring
-# to build edward without network access. Vendoring is only performed if a
-# vendor/ directory exists, otherwise the default CHICKEN_EGG_CACHE is used.
+# to build edward without network access.
 #
 # By default, the Makefile builds a statically linked binary. For development
 # purposes it can be desirable to do dynamic linked builds instead. To do so
@@ -33,15 +32,14 @@ export CHICKEN_REPOSITORY_PATH := $(CURDIR)/output:$(CHICKEN_REPOSITORY_PATH)
 #
 # Release tarballs include vendored dependencies (see make dist).
 
-CHICKEN_EGG_CACHE = $(CURDIR)/vendor
-ifneq ($(wildcard $(CHICKEN_EGG_CACHE)/*),)
+VENDOR_DIRECTORY = $(CURDIR)/vendor
+ifneq ($(wildcard $(VENDOR_DIRECTORY)/*),)
 	VENDORED=1
-	export CHICKEN_EGG_CACHE
 endif
 
 all:
 ifdef VENDORED
-	chicken-install -cached $(shell ls $(CHICKEN_EGG_CACHE))
+	chicken-install -location $(VENDOR_DIRECTORY) $(shell ls $(VENDOR_DIRECTORY))
 endif
 	chicken-install $(INSTALL_FLAGS)
 
@@ -59,8 +57,8 @@ install:
 	install -Dm644 README.md "$(DESTDIR)$(DOCDIR)/README.md"
 
 vendor:
-	env -i CHICKEN_EGG_CACHE=$(CHICKEN_EGG_CACHE) chicken-install -r -recursive -test
-	find $(CHICKEN_EGG_CACHE) \( -name STATUS -a -type f \) -exec rm {} +
+	env -i CHICKEN_EGG_CACHE=$(VENDOR_DIRECTORY) chicken-install -r -recursive -test
+	find $(VENDOR_DIRECTORY) \( -name STATUS -a -type f \) -exec rm {} +
 # XXX: Make sure to remove the vendor directory before running `make dist`.
 # As libraries are, unfortunately, build within the vendor directory.
 dist: VERSION = $(shell git describe --tags)
