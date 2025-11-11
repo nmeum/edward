@@ -183,7 +183,5 @@
 (define (parse-with-context ctx f)
   (lambda (source index sk fk)
     (let* ((yield (lambda (r s i fk) r))
-           (value (call-with-parse ctx source index yield)))
-      (if value ;; default fk returns #f on error
-        ((f value) source index sk fk)
-        (fk source index "context parser failed")))))
+           (value (call-with-parse ctx source index yield fk)))
+      ((f value) source index sk fk))))
