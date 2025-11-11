@@ -51,7 +51,7 @@
   (parse-map
     (parse-optional f)
     (lambda (x)
-      (if x x def))))
+      (or x def))))
 
 ;;> Parse a newline character.
 
