@@ -1,0 +1,13 @@
+!# From POSIX:
+!#  A line can be split by substituting a <newline> into it. […]
+!#  Such substitution cannot be done as part of a g or v command list.
+a
+foo
+bar
+baz
+.
+g/foo/s/foo/test\
+foo\
+bar
+1,$n
+Q
