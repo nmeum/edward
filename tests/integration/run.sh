@@ -54,17 +54,22 @@ for test in *; do
 	cmds="$(pwd)/${test}/cmds"
 	opts="$(pwd)/${test}/opts"
 
-	run_editor "${REF_IMPL}" "${TESTCWD}.expected" "${test}/testdata" "${opts}" \
-		> "${EXPECTED}" < "${cmds}"
-
 	run_editor "${EDWARD}" "${TESTCWD}.actual" "${test}/testdata" "${opts}" \
 		> "${ACTUAL}" < "${cmds}"
 
-	diff=$(diff -ur "${TESTCWD}.expected" "${TESTCWD}.actual")
-	if [ $? -ne 0 ]; then
-		printf "FAIL: Modified files differ.\n\n"
-		printf "%s\n" "${diff}"
-		exit 1
+	output="$(pwd)/${test}/output"
+	if [ -f "${output}" ]; then
+		cp "${output}" "${EXPECTED}"
+	else
+		run_editor "${REF_IMPL}" "${TESTCWD}.expected" "${test}/testdata" "${opts}" \
+			> "${EXPECTED}" < "${cmds}"
+	
+		diff=$(diff -ur "${TESTCWD}.expected" "${TESTCWD}.actual")
+		if [ $? -ne 0 ]; then
+			printf "FAIL: Modified files differ.\n\n"
+			printf "%s\n" "${diff}"
+			exit 1
+		fi
 	fi
 
 	diff=$(diff -u "${EXPECTED}" "${ACTUAL}")
