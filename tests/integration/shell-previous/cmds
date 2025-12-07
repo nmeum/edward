@@ -1,2 +1,2 @@
-!echo "foobar"
+!printf "1\n2\n3\n"
 !!
