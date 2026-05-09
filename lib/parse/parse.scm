@@ -93,19 +93,24 @@
         (buf (parse-stream-buffer source))
         (src (parse-stream-port source)))
     (if (<= off i)
-      ;; Optionally, the parse-stream-port can refer to a POSIX
-      ;; file descriptor. In which case data will be accessed
-      ;; using the (file-read) procedure. This is required in
-      ;; order to read past EOF (required by ed(1)).
+      ;; This code is very hacky with respect to UTF-8 multibyte characters
+      ;; because it uses two different APIs for reading from the underlying
+      ;; stream: (1) read-char, which is UTF-8 aware and (2) file-read, which
+      ;; is not and returns a bytevector. We need file-read to read beyond
+      ;; the end-of-file (cannot do that with read-char) and ideally we want
+      ;; to build a UTF-8 aware wrapper around it. However, the CS6 UTF-8
+      ;; routines are currently not exposed so we would have to duplicate
+      ;; that here. To avoid doing that, we currently don't validate the
+      ;; result of utf8->string and just add invalid UTF-8 sequences.
       ;;
-      ;; TODO Currently a bit hacky, revisit after CHICKEN 6.
+      ;; TODO: Revisit this once CHICKEN exoses the UTF-8 functions.
       (if (port? src)
         (do ((off off (+ off 1)))
             ((> off i) (parse-stream-offset-set! source off))
           (vector-set! buf off (read-char src)))
         (let* ((siz (inc (- i off)))
-               (str (make-string siz))
-               (num (cadr (file-read src siz str))))
+               (vec (make-bytevector siz))
+               (num (cadr (file-read src siz vec))))
           (if (zero? num)
             ;; When EOF was encountered, add one eof-object to
             ;; the buffer, then read past the EOF through recursion.
@@ -118,7 +123,7 @@
             ;; XXX: Can't copy to vector buffer directly, unfortunately.
             (do ((off off (+ off 1)))
                 ((> off i) (parse-stream-offset-set! source off))
-              (vector-set! buf off (string-ref str (- i off)))))))
+              (vector-set! buf off (string-ref (utf8->string vec #f) (- i off)))))))
       #f)))
 
 ;;> Returns true iff `i` is the first character position in the

@@ -140,7 +140,7 @@ a filter can be implemented as follows:
 
 Save this code in `edward++.scm` and compile it as follows:
 
-	$ csc -R r7rs edward++.scm
+	$ csc edward++.scm
 
 Drop the resulting `edward++` binary somewhere in your `$PATH` and
 invoke it as usual. Naturally, it is possible to define multiple custom

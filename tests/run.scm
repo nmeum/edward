@@ -1,4 +1,4 @@
-(import r7rs test (edward parse))
+(import (scheme base) test (edward parse))
 
 (define (%test-parse parser input)
   (define (parse-with-error parser stream)

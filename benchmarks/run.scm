@@ -1,4 +1,4 @@
-(import r7rs)
+(import (scheme base))
 
 ;; Amount of execution per benchmark.
 (define BENCHMARK_ITERATIONS 3)
