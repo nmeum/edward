@@ -76,11 +76,10 @@
 
 ;;> Return amount of bytes in a string.
 
+;; XXX: Could consider renaming this to string-size.
+;; This is what chibi-scheme and Gauche use.
 (define (count-bytes str)
-  ;; The implementation here is taken from the internal implementation of
-  ;; string->utf8. It calculates the amount of bytes required by a unicode
-  ;; string without performing utf-8 validation or memory allocations.
-  (fx- (##sys#size (##sys#slot str 0)) 1))
+  (number-of-bytes str))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

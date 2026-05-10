@@ -10,10 +10,10 @@
 
           (chicken foreign)
           (only (chicken base) assert)
-          (only (chicken fixnum) fx-)
           (only (chicken condition) condition-case)
           (only (chicken port) terminal-port? terminal-size)
           (only (chicken file posix) file-stat file-read port->fileno)
+          (only (chicken memory representation) number-of-bytes)
           (only (chicken io) read-lines))
 
   (export inc dec id alist-values fprintln println empty-string?
