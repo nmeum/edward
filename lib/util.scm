@@ -17,7 +17,7 @@
 ;;> Convert string to a human readable representation as mandated
 ;;> by the ed [list command][ed list].
 ;;>
-;;> [ed list]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_17
+;;> [ed list]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html#tag_20_38_13_17
 
 (define (string->human-readable str)
   ;; Length at which lines are folded.

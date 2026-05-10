@@ -44,7 +44,7 @@
 ;;> the replacement. All of these special characters can also be
 ;;> escaped.
 ;;>
-;;> [ed substitute]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_25
+;;> [ed substitute]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html#tag_20_38_13_25
 
 (define (parse-replace delim)
   (parse-map

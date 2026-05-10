@@ -2,7 +2,7 @@
 ;;> of the existing [posix-regex][posix-regex egg] library.
 ;;>
 ;;> [posix-regex egg]: https://wiki.call-cc.org/eggref/5/posix-regex
-;;> [bre posix]: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html
+;;> [bre posix]: https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap09.html
 
 (define-library (edward.replace)
   (import (scheme base)
