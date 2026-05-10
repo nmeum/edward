@@ -12,7 +12,18 @@
     (%make-repl
       (if prompt? prompt "*")
       prompt?
-      (make-parse-stream "stdin" fileno/stdin)
+      (make-parse-stream "stdin"
+        (let ((stat (file-stat fileno/stdin)))
+          ;; Normally, we use our custom `file-read-char` to read from stdin.
+          ;; This procedure builds upon CHICKEN's `file-read` (i.e., read(3)) to
+          ;; be able to read beyond end-of-file. Sadly, currently this function
+          ;; doesn't do any internal buffering thus it will emit a lot of system
+          ;; calls. However, when stdin is a regular file, we cannot read beyond
+          ;; end-of-file anyhow so might as well use the buffered `read-char`
+          ;; provided by CHICKEN by passing a port, instead of a fileno here.
+          (if (is-regular? (vector-ref stat 1))
+            (current-input-port)
+            fileno/stdin)))
       0)))
 
 (define (repl-state-set! repl source index)

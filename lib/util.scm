@@ -166,6 +166,7 @@
 ;;> can thus—contrary to `read-char`—read beyond EOF.
 
 ;; TODO: Use buffering here instead of emitting ~1 syscall per character.
+;; However, we only use this when reading from stdin, not on regular files.
 (define (file-read-char fileno)
   ;; Use an internal CHICKEN function to check for multibyte sequences.
   (define (bytes-needed byte)
