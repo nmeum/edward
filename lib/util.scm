@@ -122,13 +122,6 @@
 ;;> newlines).
 
 (define (port->lines port)
-  ;; TODO: This should be provided directly by (chicken file posix).
-  (define is-reg?
-    ;; XXX: Technically, we expect a `mode_t` and not an `unsigned-int`
-    ;; here. However, this is just a type annotation for CHICKEN itself.
-    (foreign-lambda* bool ((unsigned-int mode))
-      "C_return(S_ISREG(mode));"))
-
   ;; Slow path used if port is not backed by a regular POSIX file.
   ;;
   ;; TODO: Ideally, we don't want to never count bytes manually but
@@ -147,10 +140,25 @@
       lines
       (if fileno
         (let ((stat (file-stat fileno)))
-          (if (is-reg? (vector-ref stat 1))
+          (if (is-regular? (vector-ref stat 1))
             (vector-ref stat 5)
             (count-each-line lines)))
         (count-each-line lines)))))
+
+;;> Expects the `mode` field of [`file-stat`][file-stat] and returns
+;;> if the mode indicates a regular file.
+;;>
+;;> [file-stat]: https://api.call-cc.org/6/doc/chicken/file/posix/file-stat
+
+;; TODO: This should be provided directly by (chicken file posix).
+(define (is-regular? mode)
+  (define %is-regular?
+    ;; XXX: Technically, we expect a `mode_t` and not an `unsigned-int`
+    ;; here. However, this is just a type annotation for CHICKEN itself.
+    (foreign-lambda* bool ((unsigned-int mode))
+      "C_return(S_ISREG(mode));"))
+
+  (%is-regular? mode))
 
 ;;> Read a single UTF-8 character from a `fileno`. Return a false value if
 ;;> end-of-file is reached. If EOF is reached within a multibyte sequence,

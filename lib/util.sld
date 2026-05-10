@@ -18,6 +18,6 @@
 
   (export inc dec id alist-values fprintln println empty-string?
           pad-string string->human-readable path-join user-home
-          count-bytes lines->port port->lines file-read-char)
+          count-bytes lines->port port->lines is-regular? file-read-char)
 
   (include "util.scm"))
