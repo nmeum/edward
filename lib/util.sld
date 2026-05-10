@@ -8,7 +8,10 @@
 
           (srfi 1)
 
+          (chicken foreign)
+          (only (chicken condition) condition-case)
           (only (chicken port) terminal-port? terminal-size)
+          (only (chicken file posix) file-stat port->fileno)
           (only (chicken io) read-lines))
 
   (export inc dec id alist-values fprintln println empty-string?

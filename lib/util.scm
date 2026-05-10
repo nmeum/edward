@@ -87,6 +87,24 @@
 ;;>
 ;;> Procedures which deal with input/output.
 
+;;> If `port` is a file or socket, return the underlying file descriptor.
+;;> If `port` is not backed by a file it returns a false value and throws
+;;> an exception otherwise.
+
+(define (%port->fileno port)
+  ;; If the port is not backed by a POSIX file (e.g., because it was
+  ;; created using open-input-string), then port->fileno raises a
+  ;; type-error using the standard library's posix-error function.
+  ;; The posix-error function then converts it to an (exn type) error.
+  ;;
+  ;; See:
+  ;;   * https://code.call-cc.org/githtml/chicken-core/chicken-6/files/posix-common.scm.html#L195
+  ;    * https://code.call-cc.org/githtml/chicken-core/chicken-6/files/library.scm.html#L6066
+  ;;
+  ;; Other exception raised by port->fileno are just re-raised then.
+  (condition-case (port->fileno port)
+    ((exn type) #f)))
+
 ;;> Write `lines`, i.e. a list of non-newline terminated strings to a
 ;;> given `port`. Returns the amount of bytes written to the port
 ;;> (including any newline characters).
@@ -94,6 +112,7 @@
 (define (lines->port lines port)
   (fold (lambda (line num)
           (let ((line (string-append line "\n")))
+            ;; TODO: Make write-string return the amount of bytes written.
             (write-string line port)
             (+ num (count-bytes line))))
         0 lines))
@@ -103,13 +122,35 @@
 ;;> newlines).
 
 (define (port->lines port)
-  (let ((lines (read-lines port)))
+  ;; TODO: This should be provided directly by (chicken file posix).
+  (define is-reg?
+    ;; XXX: Technically, we expect a `mode_t` and not an `unsigned-int`
+    ;; here. However, this is just a type annotation for CHICKEN itself.
+    (foreign-lambda* bool ((unsigned-int mode))
+      "C_return(S_ISREG(mode));"))
+
+  ;; Slow path used if port is not backed by a regular POSIX file.
+  ;;
+  ;; TODO: Ideally, we don't want to never count bytes manually but
+  ;; instead re-use the return value of the underlying read(2) syscall.
+  ;; Unfortunately, this value is not exposed by read-lines.
+  (define (count-each-line lines)
+    (fold (lambda (l n)
+            ;; +1 for newline stripped by read-lines.
+            ;; XXX: Buggy if last line is not not terminated with \n.
+            (+ 1 n (count-bytes l))) 0 lines))
+
+  (let ((fileno (%port->fileno port))
+        ;; TODO: make read-lines return the amount of bytes read.
+        (lines (read-lines port)))
     (cons
       lines
-      (fold (lambda (l n)
-              ;; +1 for newline stripped by read-lines.
-              ;; XXX: Buggy if last line is not not terminated with \n.
-              (+ 1 n (count-bytes l))) 0 lines))))
+      (if fileno
+        (let ((stat (file-stat fileno)))
+          (if (is-reg? (vector-ref stat 1))
+            (vector-ref stat 5)
+            (count-each-line lines)))
+        (count-each-line lines)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
