@@ -45,7 +45,7 @@
 
           (edward util)
 
-          (only (chicken file posix) file-read file-close fileno/stdin)
+          (only (chicken file posix) file-close fileno/stdin)
           (only (chicken process signal) set-signal-handler! signal/int))
 
   ;; repl.scm

@@ -93,37 +93,17 @@
         (buf (parse-stream-buffer source))
         (src (parse-stream-port source)))
     (if (<= off i)
-      ;; This code is very hacky with respect to UTF-8 multibyte characters
-      ;; because it uses two different APIs for reading from the underlying
-      ;; stream: (1) read-char, which is UTF-8 aware and (2) file-read, which
-      ;; is not and returns a bytevector. We need file-read to read beyond
-      ;; the end-of-file (cannot do that with read-char) and ideally we want
-      ;; to build a UTF-8 aware wrapper around it. However, the CS6 UTF-8
-      ;; routines are currently not exposed so we would have to duplicate
-      ;; that here. To avoid doing that, we currently don't validate the
-      ;; result of utf8->string and just add invalid UTF-8 sequences.
-      ;;
-      ;; TODO: Revisit this once CHICKEN exoses the UTF-8 functions.
-      (if (port? src)
-        (do ((off off (+ off 1)))
-            ((> off i) (parse-stream-offset-set! source off))
-          (vector-set! buf off (read-char src)))
-        (let* ((siz (inc (- i off)))
-               (vec (make-bytevector siz))
-               (num (cadr (file-read src siz vec))))
-          (if (zero? num)
+      (do ((off off (+ off 1)))
+          ((> off i) (parse-stream-offset-set! source off))
+        (let ((ch (if (port? src) (read-char src) (file-read-char src))))
+          (if ch
+            (vector-set! buf off ch)
             ;; When EOF was encountered, add one eof-object to
             ;; the buffer, then read past the EOF through recursion.
             (begin
               (vector-set! buf off (eof-object))
               (parse-stream-offset-set! source (inc off))
-              (parse-stream-fill! source i))
-
-            ;; Copy data retrieved from file (via file-read) to buffer.
-            ;; XXX: Can't copy to vector buffer directly, unfortunately.
-            (do ((off off (+ off 1)))
-                ((> off i) (parse-stream-offset-set! source off))
-              (vector-set! buf off (string-ref (utf8->string vec #f) (- i off)))))))
+              (parse-stream-fill! source i)))))
       #f)))
 
 ;;> Returns true iff `i` is the first character position in the

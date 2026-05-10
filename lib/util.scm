@@ -153,6 +153,39 @@
             (count-each-line lines)))
         (count-each-line lines)))))
 
+;;> Read a single UTF-8 character from a `fileno`. Return a false value if
+;;> end-of-file is reached. If EOF is reached within a multibyte sequence,
+;;> an exception is raised. This procedure uses `file-read` internally and
+;;> can thus—contrary to `read-char`—read beyond EOF.
+
+;; TODO: Use buffering here instead of emitting ~1 syscall per character.
+(define (file-read-char fileno)
+  ;; Use an internal CHICKEN function to check for multibyte sequences.
+  (define (bytes-needed byte)
+    (##core#inline "C_utf_bytes_needed" byte))
+
+  ;; UTF-8 multibyte sequences consists of a maximum of 4 bytes. Hence,
+  ;; a bytevector of size four will suffice. We first read a single byte.
+  ;; If it is a multibyte sequence, we read the remaining bytes afterward.
+  (let* ((buf (make-bytevector 4))
+         (ret (file-read fileno 1 buf))
+         (num (cadr ret)))
+    (if (zero? num)
+      #f
+      (let* ((last-byte (bytevector-u8-ref (car ret) (dec num)))
+             (num-needed (bytes-needed last-byte)))
+        (assert (and (> num-needed 0)
+                     (< num-needed (bytevector-length buf))))
+        (if (> num-needed 1)
+          (let* ((to-read (dec num-needed))
+                 (ret (file-read fileno to-read)))
+            (if (eqv? (cadr ret) to-read)
+              (begin
+                (bytevector-copy! buf 1 (car ret))
+                (string-ref (utf8->string buf) 0))
+              (error "unexpected short read in multibyte sequence")))
+          (integer->char last-byte))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;>| Miscellaneous
