@@ -9,6 +9,7 @@
           (srfi 1)
 
           (chicken foreign)
+          (only (chicken fixnum) fx-)
           (only (chicken condition) condition-case)
           (only (chicken port) terminal-port? terminal-size)
           (only (chicken file posix) file-stat port->fileno)
