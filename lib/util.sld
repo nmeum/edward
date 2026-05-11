@@ -10,9 +10,8 @@
 
           (chicken foreign)
           (only (chicken base) assert)
-          (only (chicken condition) condition-case)
           (only (chicken port) terminal-port? terminal-size)
-          (only (chicken file posix) file-stat file-read port->fileno)
+          (only (chicken file posix) file-read)
           (only (chicken memory representation) number-of-bytes)
           (only (chicken io) read-lines))
 
