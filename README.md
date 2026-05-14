@@ -28,7 +28,8 @@ custom commands (refer to the library interface documentation below).
 ## Installation
 
 The program can be installed either using [GNU make][gnu make] or
-[chicken-install][chicken egg-install].
+[chicken-install][chicken egg-install]. Both installation methods
+presuppose that CHICKEN 6 is installed.
 
 ### GNU make
 
