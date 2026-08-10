@@ -213,7 +213,7 @@
 ;;>
 ;;> [parse-addrs]: #parse-addrs
 ;;> [make-addr]: #make-addr
-;;> [ed addresses]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_02
+;;> [ed addresses]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html#tag_20_38_13_02
 
 (define expand-addr
   (match-lambda

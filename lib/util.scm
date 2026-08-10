@@ -17,7 +17,7 @@
 ;;> Convert string to a human readable representation as mandated
 ;;> by the ed [list command][ed list].
 ;;>
-;;> [ed list]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_17
+;;> [ed list]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html#tag_20_38_13_17
 
 (define (string->human-readable str)
   ;; Length at which lines are folded.
@@ -76,16 +76,10 @@
 
 ;;> Return amount of bytes in a string.
 
+;; XXX: Could consider renaming this to string-size.
+;; This is what chibi-scheme and Gauche use.
 (define (count-bytes str)
-  ;; Technically, we would have to convert the string to a bytevector here and
-  ;; then count the length of that bytevector to obtain the number of bytes
-  ;; and not the number of characters. However, CHICKEN 5 is not fully unicode
-  ;; aware and hence string-length actually counts bytes and not characters.
-  ;;
-  ;; Additionally a string->utf8 conversion is very expensive especially when
-  ;; loading large files using edward. Therefore, ideally, we would obtain the
-  ;; amount of bytes directly through the read procedure in the future.
-  (string-length str))
+  (number-of-bytes str))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -100,6 +94,7 @@
 (define (lines->port lines port)
   (fold (lambda (line num)
           (let ((line (string-append line "\n")))
+            ;; TODO: Make write-string return the amount of bytes written.
             (write-string line port)
             (+ num (count-bytes line))))
         0 lines))
@@ -109,6 +104,7 @@
 ;;> newlines).
 
 (define (port->lines port)
+  ;; TODO: make read-lines return the amount of bytes read.
   (let ((lines (read-lines port)))
     (cons
       lines
@@ -116,6 +112,55 @@
               ;; +1 for newline stripped by read-lines.
               ;; XXX: Buggy if last line is not not terminated with \n.
               (+ 1 n (count-bytes l))) 0 lines))))
+
+;;> Expects the `mode` field of [`file-stat`][file-stat] and returns
+;;> if the mode indicates a regular file.
+;;>
+;;> [file-stat]: https://api.call-cc.org/6/doc/chicken/file/posix/file-stat
+
+;; TODO: This should be provided directly by (chicken file posix).
+(define (is-regular? mode)
+  (define %is-regular?
+    ;; XXX: Technically, we expect a `mode_t` and not an `unsigned-int`
+    ;; here. However, this is just a type annotation for CHICKEN itself.
+    (foreign-lambda* bool ((unsigned-int mode))
+      "C_return(S_ISREG(mode));"))
+
+  (%is-regular? mode))
+
+;;> Read a single UTF-8 character from a `fileno`. Return a false value if
+;;> end-of-file is reached. If EOF is reached within a multibyte sequence,
+;;> an exception is raised. This procedure uses `file-read` internally and
+;;> can thus—contrary to `read-char`—read beyond EOF.
+
+;; TODO: Use buffering here instead of emitting ~1 syscall per character.
+;; However, we only use this when reading from stdin, not on regular files.
+(define (file-read-char fileno)
+  ;; Use an internal CHICKEN function to check for multibyte sequences.
+  (define (bytes-needed byte)
+    (##core#inline "C_utf_bytes_needed" byte))
+
+  ;; UTF-8 multibyte sequences consists of a maximum of 4 bytes. Hence,
+  ;; a bytevector of size four will suffice. We first read a single byte.
+  ;; If it is a multibyte sequence, we read the remaining bytes afterward.
+  (let* ((buf (make-bytevector 4))
+         (ret (file-read fileno 1 buf))
+         (num (cadr ret)))
+    (if (zero? num)
+      #f
+      (let* ((last-byte (bytevector-u8-ref (car ret) (dec num)))
+             (num-needed (bytes-needed last-byte)))
+        (assert (and (> num-needed 0)
+                     (< num-needed (bytevector-length buf))))
+        (if (> num-needed 1)
+          (let* ((to-read (dec num-needed))
+                 (ret (file-read fileno to-read)))
+            (if (eqv? (cadr ret) to-read)
+              (begin
+                (bytevector-copy! buf 1 (car ret))
+                (string-ref (utf8->string buf) 0))
+              (error "unexpected short read in multibyte sequence")))
+          (integer->char last-byte))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

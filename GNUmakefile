@@ -9,6 +9,7 @@
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 DOCDIR ?= $(PREFIX)/share/doc/edward
+TMPDIR ?= /tmp
 
 # By default, build a statically linked version for packaging.
 # If package is zero, build a dynamically linked version instead.
@@ -50,7 +51,8 @@ check:
 	@./tests/interactive/run.sh
 
 bench:
-	csi -quiet -script benchmarks/run.scm
+	csc -O3 -o $(TMPDIR)/edward-benchmark benchmarks/run.scm
+	$(TMPDIR)/edward-benchmark
 
 install:
 	install -Dm755 $(CHICKEN_INSTALL_PREFIX)/bin/edward "$(DESTDIR)$(BINDIR)/edward"

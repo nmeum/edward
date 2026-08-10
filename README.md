@@ -7,7 +7,7 @@ interface for extending the editor with custom commands.
 
 ## Status
 
-I am presently not aware of any POSIX.1-2008 conformance issues. The
+I am presently not aware of any POSIX.1-2024 conformance issues. The
 library interface, for extending `edward` with custom commands, is
 usable but still very experimental and subject to change. Refer to
 the `TODO.md` file for more information.
@@ -28,7 +28,8 @@ custom commands (refer to the library interface documentation below).
 ## Installation
 
 The program can be installed either using [GNU make][gnu make] or
-[chicken-install][chicken egg-install].
+[chicken-install][chicken egg-install]. Both installation methods
+presuppose that CHICKEN 6 is installed.
 
 ### GNU make
 
@@ -63,7 +64,7 @@ path. More usage information for the edward library is provided below.
 ## Tests
 
 This repository contains both unit tests and integration tests. The
-latter require a reference implementation of a POSIX.1-2008 compatible
+latter require a reference implementation of a POSIX.1-2024 compatible
 ed implementation. Currently, [GNU ed >= 1.22.3][gnu ed] is used for this
 purpose.
 
@@ -140,7 +141,7 @@ a filter can be implemented as follows:
 
 Save this code in `edward++.scm` and compile it as follows:
 
-	$ csc -R r7rs edward++.scm
+	$ csc edward++.scm
 
 Drop the resulting `edward++` binary somewhere in your `$PATH` and
 invoke it as usual. Naturally, it is possible to define multiple custom
@@ -189,7 +190,7 @@ The program itself is licensed as follows:
 > You should have received a copy of the GNU General Public License along
 > with this program. If not, see <https://www.gnu.org/licenses/>.
 
-[ed posix]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html
+[ed posix]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html
 [gnu make]: https://www.gnu.org/software/make/
 [chicken]: https://call-cc.org
 [chicken egg-install]: https://wiki.call-cc.org/man/5/Extensions#installing-eggs

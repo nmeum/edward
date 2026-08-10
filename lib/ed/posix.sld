@@ -4,7 +4,7 @@
 ;;> executor for all POSIX ed commands is exported and can be reused to
 ;;> implement new commands.
 ;;>
-;;> [posix commands]: https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ed.html#tag_20_38_13_03
+;;> [posix commands]: https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html#tag_20_38_13_03
 ;;> [edward ed cmd]: edward.ed.cmd.html
 
 (define-library (edward.ed.posix)

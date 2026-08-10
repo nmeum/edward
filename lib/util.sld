@@ -8,11 +8,15 @@
 
           (srfi 1)
 
+          (chicken foreign)
+          (only (chicken base) assert)
           (only (chicken port) terminal-port? terminal-size)
+          (only (chicken file posix) file-read)
+          (only (chicken memory representation) number-of-bytes)
           (only (chicken io) read-lines))
 
   (export inc dec id alist-values fprintln println empty-string?
           pad-string string->human-readable path-join user-home
-          count-bytes lines->port port->lines)
+          count-bytes lines->port port->lines is-regular? file-read-char)
 
   (include "util.scm"))

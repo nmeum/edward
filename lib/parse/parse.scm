@@ -93,32 +93,17 @@
         (buf (parse-stream-buffer source))
         (src (parse-stream-port source)))
     (if (<= off i)
-      ;; Optionally, the parse-stream-port can refer to a POSIX
-      ;; file descriptor. In which case data will be accessed
-      ;; using the (file-read) procedure. This is required in
-      ;; order to read past EOF (required by ed(1)).
-      ;;
-      ;; TODO Currently a bit hacky, revisit after CHICKEN 6.
-      (if (port? src)
-        (do ((off off (+ off 1)))
-            ((> off i) (parse-stream-offset-set! source off))
-          (vector-set! buf off (read-char src)))
-        (let* ((siz (inc (- i off)))
-               (str (make-string siz))
-               (num (cadr (file-read src siz str))))
-          (if (zero? num)
+      (do ((off off (+ off 1)))
+          ((> off i) (parse-stream-offset-set! source off))
+        (let ((ch (if (port? src) (read-char src) (file-read-char src))))
+          (if ch
+            (vector-set! buf off ch)
             ;; When EOF was encountered, add one eof-object to
             ;; the buffer, then read past the EOF through recursion.
             (begin
               (vector-set! buf off (eof-object))
               (parse-stream-offset-set! source (inc off))
-              (parse-stream-fill! source i))
-
-            ;; Copy data retrieved from file (via file-read) to buffer.
-            ;; XXX: Can't copy to vector buffer directly, unfortunately.
-            (do ((off off (+ off 1)))
-                ((> off i) (parse-stream-offset-set! source off))
-              (vector-set! buf off (string-ref str (- i off)))))))
+              (parse-stream-fill! source i)))))
       #f)))
 
 ;;> Returns true iff `i` is the first character position in the
