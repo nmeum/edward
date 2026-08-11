@@ -121,12 +121,13 @@ a filter can be implemented as follows:
 	
 	;; Executor for the pipe command
 	(define (exec-pipe editor range cmd)
-	  (let-values (((in out _) (process cmd))
-	               ((lines) (editor-get-lines editor range)))
+	  (let* ((proc (process cmd))
+	         (lines (editor-get-lines editor range)))
 	    (call-with-port
-	      out
+	      (process-input-port proc)
 	      (lambda (port) (lines->port lines port)))
-	    (let ((recv (port->lines in)))
+	    (let* ((in (process-output-port proc))
+	           (recv (port->lines in)))
 	      (close-input-port in)
 	      (exec-delete editor range)
 	      (exec-insert editor (car range) (car recv)))))
