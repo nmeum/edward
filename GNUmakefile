@@ -59,7 +59,10 @@ install:
 	install -Dm644 README.md "$(DESTDIR)$(DOCDIR)/README.md"
 
 vendor:
-	env -i CHICKEN_EGG_CACHE=$(VENDOR_DIRECTORY) chicken-install -r -recursive -test
+	# TODO: Start with CS6, `chicken-install -recursive` no longer searches the
+	# current directory for eggs. Thus we need to list the deps explicitly here.
+	env -i CHICKEN_EGG_CACHE=$(VENDOR_DIRECTORY) chicken-install -r -recursive \
+		srfi-1 srfi-14 srfi-37 matchable posix-regex test micro-benchmark
 	find $(VENDOR_DIRECTORY) \( -name STATUS -a -type f \) -exec rm {} +
 # XXX: Make sure to remove the vendor directory before running `make dist`.
 # As libraries are, unfortunately, build within the vendor directory.
