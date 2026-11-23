@@ -182,6 +182,7 @@
 
 (define (parse-with-context ctx f)
   (lambda (source index sk fk)
-    (let* ((yield (lambda (r s i fk) r))
-           (value (call-with-parse ctx source index yield fk)))
-      ((f value) source index sk fk))))
+    (let* ((succ (lambda (r s i newFk)
+                   ;; Invoke 'f' on the original position.
+                   ((f r) source index sk fk))))
+      (call-with-parse ctx source index succ fk))))
